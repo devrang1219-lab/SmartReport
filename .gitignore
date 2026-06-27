@@ -1,0 +1,86 @@
+## Build Results
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+## Visual Studio
+.vs/
+*.user
+*.userosscache
+*.suo
+*.rsuser
+
+## Rider
+.idea/
+
+## VS Code
+.vscode/
+
+## NuGet
+packages/
+*.nupkg
+
+# (PackageReference를 사용하는 경우는 제외)
+!packages/build/
+
+## Test Results
+TestResults/
+
+## Publish
+publish/
+Publish/
+
+## Generated files
+Generated Files/
+
+## ReSharper
+_ReSharper*/
+*.DotSettings.user
+
+## Rider
+*.sln.iml
+
+## Azure
+*.azurePubxml
+
+## SQL Server
+*.mdf
+*.ldf
+
+## Windows
+Thumbs.db
+Desktop.ini
+
+## Temp
+*.tmp
+*.temp
+
+## Logs
+*.log
+
+## Backup
+*.bak
+
+## Certificates
+*.pfx
+*.snk
+
+## App settings (필요 시)
+appsettings.Development.json
+secrets.json
+
+## Node (프론트 포함 시)
+node_modules/
+
+## Coverage
+coverage/
+*.coverage
+*.coveragexml
+
+## JetBrains
+.idea/
+
+## Others
+*.cache
+*.dbmdl
