@@ -2419,6 +2419,12 @@ namespace SmartReport
                                 .ToArray();
 
                             OcrDataToExcel.ProcessAll(
+                                sourceWs,
+                                evenFiles,
+                                reader,
+                                map);
+
+                            OcrDataToExcel.ProcessAll(
                                 ws,
                                 evenFiles,
                                 reader,
@@ -2426,6 +2432,7 @@ namespace SmartReport
                         }
 
                         wb.Save();
+                        newWb.Save();
 
                     }
                 }

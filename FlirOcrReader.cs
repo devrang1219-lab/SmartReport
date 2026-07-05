@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Tesseract;
 
@@ -36,7 +37,7 @@ namespace WindowsFormsApp1
 
                 using (Bitmap left = CropLeft(bmp))
                 using (Bitmap right = CropRightBottom(bmp))
-                using (Bitmap left2 = Preprocess(left, 4))
+                using (Bitmap left2 = Preprocess(left, 8))
                 using (Bitmap right2 = Preprocess(right, 6))
                 {
 #if DEBUG
@@ -70,6 +71,7 @@ namespace WindowsFormsApp1
 
                     result.Items = ParseItems(result.LeftRawText);
                     result.ScaleMinTemperature = ParseTemperature(result.RightRawText);
+                    //result.RemoveBelowScaleMinTemperature();
                 }
 
                 return result;
@@ -89,23 +91,98 @@ namespace WindowsFormsApp1
         {
             Dictionary<string, double> dic = new Dictionary<string, double>();
 
-            Regex regex = new Regex(@"([A-Za-z]{2}\d+).*?([\d]+\.[\d]+)");
+            //Regex regex = new Regex(@"([A-Za-z]{2}\d+).*?([\d]+\.[\d]+)");
+            Regex regex = new Regex(@"\d+\.?\d*");
+
+            double? prevValue = null;
+            int index = 0;
 
             foreach (Match m in regex.Matches(text))
             {
-                double value;
+                string s = NormalizeTemperature(m.Value);
 
                 if (double.TryParse(
-                    m.Groups[2].Value,
+                    s,
                     NumberStyles.Any,
                     CultureInfo.InvariantCulture,
-                    out value))
+                    out double value))
                 {
-                    dic[m.Groups[1].Value] = value;
+                    value = CorrectTemperature(value, prevValue);
+                    dic.Add(CreateItemKey(index++), value);
+                    prevValue = value;
                 }
             }
 
             return dic;
+        }
+
+        private double CorrectTemperature(double value, double? prevValue)
+        {
+            if (!prevValue.HasValue)
+            {
+                // 첫 값이 100 이상이면 앞자리 제거
+                while (value >= 100)
+                {
+                    string tmpS = value.ToString(CultureInfo.InvariantCulture);
+
+                    int dot = tmpS.IndexOf('.');
+                    if (dot <= 1)
+                        break;
+
+                    tmpS = tmpS.Substring(1);
+
+                    if (!double.TryParse(tmpS, NumberStyles.Any,
+                        CultureInfo.InvariantCulture, out value))
+                    {
+                        break;
+                    }
+                }
+
+                return value;
+            }
+
+            if (Math.Abs(value - prevValue.Value) <= 90)
+                return value;
+
+            string s = value.ToString(CultureInfo.InvariantCulture);
+
+            // 첫 글자를 하나 제거해가며 확인
+            while (s.Length > 3)
+            {
+                s = s.Substring(1);
+
+                if (double.TryParse(s,
+                    NumberStyles.Any,
+                    CultureInfo.InvariantCulture,
+                    out double newValue))
+                {
+                    if (Math.Abs(newValue - prevValue.Value) <= 90)
+                        return newValue;
+                }
+            }
+
+            return value;
+        }
+
+        private string NormalizeTemperature(string text)
+        {
+            // OCR이 소수점을 놓친 경우 보정
+            if (!text.Contains("."))
+            {
+                if (text.Length == 3)
+                    text = text.Insert(2, ".");
+
+                else if (text.Length == 4)
+                    text = text.Insert(3, ".");
+            }
+
+            return text;
+        }
+
+        private string CreateItemKey(int index)
+        {
+            // 현재는 Item1, Item2...
+            return $"Item{index + 1}";
         }
 
         private double ParseTemperature(string text)
@@ -121,10 +198,10 @@ namespace WindowsFormsApp1
         private Bitmap CropLeft(Bitmap bmp)
         {
             Rectangle r = new Rectangle(
-                (int)(bmp.Width * 0.2),
+                (int)(bmp.Width * 0.20),
                 (int)(bmp.Height * 0.01),
                 (int)(bmp.Width * 0.11),
-                (int)(bmp.Height * 0.23));
+                (int)(bmp.Height * 0.38));
 
             return bmp.Clone(r, bmp.PixelFormat);
         }
@@ -132,9 +209,9 @@ namespace WindowsFormsApp1
         private Bitmap CropRightBottom(Bitmap bmp)
         {
             Rectangle r = new Rectangle(
-                (int)(bmp.Width * 0.86),
+                (int)(bmp.Width * 0.87),
                 (int)(bmp.Height * 0.9),
-                (int)(bmp.Width * 0.14),
+                (int)(bmp.Width * 0.13),
                 (int)(bmp.Height * 0.09));
 
             return bmp.Clone(r, bmp.PixelFormat);
@@ -158,6 +235,8 @@ namespace WindowsFormsApp1
 
                     int gray = (int)(0.299 * c.R + 0.587 * c.G + 0.114 * c.B);
 
+                    //gray = gray > 140 ? 255 : 0;
+
                     bmp.SetPixel(x, y, Color.FromArgb(gray, gray, gray));
                 }
             }
@@ -180,5 +259,12 @@ namespace WindowsFormsApp1
         public string LeftRawText { get; set; }
 
         public string RightRawText { get; set; }
+
+        public void RemoveBelowScaleMinTemperature()
+        {
+            Items = Items
+                .Where(x => x.Value >= ScaleMinTemperature)
+                .ToDictionary(x => x.Key, x => x.Value);
+        }
     }
 }

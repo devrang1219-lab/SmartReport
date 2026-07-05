@@ -47,16 +47,16 @@ namespace WindowsFormsApp1
             {
                 FlirResult result = reader.Read(imageFiles[i]);
 
-                //Debug.WriteLine($"Image : {Path.GetFileName(imageFiles[i])}");
-                //Debug.WriteLine($"Item Count : {result.Items.Count}");
-                //Debug.WriteLine($"Scale Min : {result.ScaleMinTemperature}");
-                //Debug.WriteLine($"Left OCR : {result.LeftRawText}");
-                //Debug.WriteLine($"Right OCR : {result.RightRawText}");
+                Debug.WriteLine($"Image : {Path.GetFileName(imageFiles[i])}");
+                Debug.WriteLine($"Item Count : {result.Items.Count}");
+                Debug.WriteLine($"Scale Min : {result.ScaleMinTemperature}");
+                Debug.WriteLine($"Left OCR : {result.LeftRawText}");
+                Debug.WriteLine($"Right OCR : {result.RightRawText}");
 
-                foreach (var item in result.Items)
-                {
-                    Debug.WriteLine($"{item.Key} = {item.Value}");
-                }
+                //foreach (var item in result.Items)
+                //{
+                //    Debug.WriteLine($"{item.Key} = {item.Value}");
+                //}
 
                 Process(ws, result, map, i * map.RowOffset);
 
