@@ -11,6 +11,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using WindowsFormsApp1;
 using Action = System.Action;
 using Excel = Microsoft.Office.Interop.Excel;
 using Office = Microsoft.Office.Core;
@@ -2394,6 +2395,34 @@ namespace SmartReport
 
                                 imageIndex++;
                             }
+                        }
+
+                        using (var reader = new FlirOcrReader())
+                        {
+                            OcrExcelMap map = new OcrExcelMap
+                            {
+                                ValueCells = new[]
+                                {
+                                    "H49",
+                                    "P49",
+                                    "W49",
+                                    "H52",
+                                    "P52",
+                                    "W52"
+                                },
+                                MinTemperatureCell = "AD6",
+                                RowOffset = 56
+                            };
+
+                            string[] evenFiles = files
+                                .Where((file, index) => index % 2 == 0)
+                                .ToArray();
+
+                            OcrDataToExcel.ProcessAll(
+                                ws,
+                                evenFiles,
+                                reader,
+                                map);
                         }
 
                         wb.Save();
