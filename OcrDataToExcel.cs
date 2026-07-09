@@ -62,6 +62,10 @@ namespace WindowsFormsApp1
 
                 if (!double.IsNaN(result.ScaleMinTemperature))
                 {
+                    string cell = AddRow(map.MinTemperatureCell, i * map.RowOffset);
+
+                    ws.Range[cell].Value = result.ScaleMinTemperature;
+
                     minTemperature = Math.Min(minTemperature, result.ScaleMinTemperature);
                 }
             }

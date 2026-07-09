@@ -82,6 +82,8 @@ namespace SmartReport
             this.btFolder = new System.Windows.Forms.Button();
             this.tbFolder = new System.Windows.Forms.TextBox();
             this.pnlTop = new System.Windows.Forms.Panel();
+            this.btnGapjiPictureRelocate = new System.Windows.Forms.Button();
+            this.checkBoxPartial = new System.Windows.Forms.CheckBox();
             this.pnlMain.SuspendLayout();
             this.tabMain.SuspendLayout();
             this.tpFunction.SuspendLayout();
@@ -122,17 +124,18 @@ namespace SmartReport
             this.tpFunction.Controls.Add(this.gbImage);
             this.tpFunction.Controls.Add(this.panel4);
             this.tpFunction.Controls.Add(this.panel3);
-            this.tpFunction.Location = new System.Drawing.Point(4, 29);
+            this.tpFunction.Location = new System.Drawing.Point(4, 39);
             this.tpFunction.Margin = new System.Windows.Forms.Padding(4);
             this.tpFunction.Name = "tpFunction";
             this.tpFunction.Padding = new System.Windows.Forms.Padding(4);
-            this.tpFunction.Size = new System.Drawing.Size(1532, 697);
+            this.tpFunction.Size = new System.Drawing.Size(1532, 687);
             this.tpFunction.TabIndex = 1;
             this.tpFunction.Text = "기능";
             this.tpFunction.UseVisualStyleBackColor = true;
             // 
             // gbImage
             // 
+            this.gbImage.Controls.Add(this.checkBoxPartial);
             this.gbImage.Controls.Add(this.btnFeverImageFolder);
             this.gbImage.Controls.Add(this.textBoxFeverImageFolder);
             this.gbImage.Controls.Add(this.label5);
@@ -165,7 +168,7 @@ namespace SmartReport
             this.textBoxFeverImageFolder.Location = new System.Drawing.Point(157, 89);
             this.textBoxFeverImageFolder.Margin = new System.Windows.Forms.Padding(4);
             this.textBoxFeverImageFolder.Name = "textBoxFeverImageFolder";
-            this.textBoxFeverImageFolder.Size = new System.Drawing.Size(649, 27);
+            this.textBoxFeverImageFolder.Size = new System.Drawing.Size(649, 37);
             this.textBoxFeverImageFolder.TabIndex = 30;
             this.textBoxFeverImageFolder.Text = "01 열화상";
             // 
@@ -175,7 +178,7 @@ namespace SmartReport
             this.label5.Location = new System.Drawing.Point(13, 92);
             this.label5.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(82, 20);
+            this.label5.Size = new System.Drawing.Size(124, 30);
             this.label5.TabIndex = 29;
             this.label5.Text = "폴더명    : ";
             // 
@@ -186,7 +189,7 @@ namespace SmartReport
             this.checkBoxFeverPicture.CheckState = System.Windows.Forms.CheckState.Checked;
             this.checkBoxFeverPicture.Location = new System.Drawing.Point(35, 150);
             this.checkBoxFeverPicture.Name = "checkBoxFeverPicture";
-            this.checkBoxFeverPicture.Size = new System.Drawing.Size(73, 24);
+            this.checkBoxFeverPicture.Size = new System.Drawing.Size(105, 34);
             this.checkBoxFeverPicture.TabIndex = 28;
             this.checkBoxFeverPicture.Text = "열화상";
             this.checkBoxFeverPicture.UseVisualStyleBackColor = true;
@@ -198,7 +201,7 @@ namespace SmartReport
             this.checkBoxPicture.CheckState = System.Windows.Forms.CheckState.Checked;
             this.checkBoxPicture.Location = new System.Drawing.Point(339, 152);
             this.checkBoxPicture.Name = "checkBoxPicture";
-            this.checkBoxPicture.Size = new System.Drawing.Size(58, 24);
+            this.checkBoxPicture.Size = new System.Drawing.Size(83, 34);
             this.checkBoxPicture.TabIndex = 26;
             this.checkBoxPicture.Text = "사진";
             this.checkBoxPicture.UseVisualStyleBackColor = true;
@@ -210,7 +213,7 @@ namespace SmartReport
             this.checkBoxCorona.CheckState = System.Windows.Forms.CheckState.Checked;
             this.checkBoxCorona.Location = new System.Drawing.Point(250, 150);
             this.checkBoxCorona.Name = "checkBoxCorona";
-            this.checkBoxCorona.Size = new System.Drawing.Size(58, 24);
+            this.checkBoxCorona.Size = new System.Drawing.Size(83, 34);
             this.checkBoxCorona.TabIndex = 25;
             this.checkBoxCorona.Text = "영코";
             this.checkBoxCorona.UseVisualStyleBackColor = true;
@@ -222,7 +225,7 @@ namespace SmartReport
             this.checkBoxQuantity.CheckState = System.Windows.Forms.CheckState.Checked;
             this.checkBoxQuantity.Location = new System.Drawing.Point(143, 150);
             this.checkBoxQuantity.Name = "checkBoxQuantity";
-            this.checkBoxQuantity.Size = new System.Drawing.Size(58, 24);
+            this.checkBoxQuantity.Size = new System.Drawing.Size(83, 34);
             this.checkBoxQuantity.TabIndex = 24;
             this.checkBoxQuantity.Text = "품질";
             this.checkBoxQuantity.UseVisualStyleBackColor = true;
@@ -252,7 +255,7 @@ namespace SmartReport
             this.tbQuantityFile.Location = new System.Drawing.Point(158, 41);
             this.tbQuantityFile.Margin = new System.Windows.Forms.Padding(4);
             this.tbQuantityFile.Name = "tbQuantityFile";
-            this.tbQuantityFile.Size = new System.Drawing.Size(649, 27);
+            this.tbQuantityFile.Size = new System.Drawing.Size(649, 37);
             this.tbQuantityFile.TabIndex = 21;
             // 
             // lbQuantityFile
@@ -261,7 +264,7 @@ namespace SmartReport
             this.lbQuantityFile.Location = new System.Drawing.Point(14, 44);
             this.lbQuantityFile.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbQuantityFile.Name = "lbQuantityFile";
-            this.lbQuantityFile.Size = new System.Drawing.Size(82, 20);
+            this.lbQuantityFile.Size = new System.Drawing.Size(124, 30);
             this.lbQuantityFile.TabIndex = 20;
             this.lbQuantityFile.Text = "파일명    : ";
             // 
@@ -289,7 +292,7 @@ namespace SmartReport
             // 
             this.tbDefultDirectory.Location = new System.Drawing.Point(959, 93);
             this.tbDefultDirectory.Name = "tbDefultDirectory";
-            this.tbDefultDirectory.Size = new System.Drawing.Size(483, 27);
+            this.tbDefultDirectory.Size = new System.Drawing.Size(483, 37);
             this.tbDefultDirectory.TabIndex = 29;
             this.tbDefultDirectory.Text = "C:\\_D\\work\\한경이엔지\\NAS다운로드";
             // 
@@ -298,7 +301,7 @@ namespace SmartReport
             this.tbGapFeverPicture.Location = new System.Drawing.Point(724, 43);
             this.tbGapFeverPicture.Margin = new System.Windows.Forms.Padding(4);
             this.tbGapFeverPicture.Name = "tbGapFeverPicture";
-            this.tbGapFeverPicture.Size = new System.Drawing.Size(121, 27);
+            this.tbGapFeverPicture.Size = new System.Drawing.Size(121, 37);
             this.tbGapFeverPicture.TabIndex = 28;
             this.tbGapFeverPicture.Text = "0.2";
             // 
@@ -309,7 +312,7 @@ namespace SmartReport
             this.label4.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label4.Name = "label4";
             this.label4.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.label4.Size = new System.Drawing.Size(29, 20);
+            this.label4.Size = new System.Drawing.Size(42, 30);
             this.label4.TabIndex = 27;
             this.label4.Text = "cm";
             // 
@@ -320,7 +323,7 @@ namespace SmartReport
             this.lblGapFeverPicture.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblGapFeverPicture.Name = "lblGapFeverPicture";
             this.lblGapFeverPicture.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.lblGapFeverPicture.Size = new System.Drawing.Size(52, 20);
+            this.lblGapFeverPicture.Size = new System.Drawing.Size(78, 30);
             this.lblGapFeverPicture.TabIndex = 26;
             this.lblGapFeverPicture.Text = "간격 : ";
             // 
@@ -329,7 +332,7 @@ namespace SmartReport
             this.tbWidthFeverPicture.Location = new System.Drawing.Point(398, 38);
             this.tbWidthFeverPicture.Margin = new System.Windows.Forms.Padding(4);
             this.tbWidthFeverPicture.Name = "tbWidthFeverPicture";
-            this.tbWidthFeverPicture.Size = new System.Drawing.Size(121, 27);
+            this.tbWidthFeverPicture.Size = new System.Drawing.Size(121, 37);
             this.tbWidthFeverPicture.TabIndex = 25;
             this.tbWidthFeverPicture.Text = "8.9";
             // 
@@ -340,7 +343,7 @@ namespace SmartReport
             this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label3.Name = "label3";
             this.label3.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.label3.Size = new System.Drawing.Size(29, 20);
+            this.label3.Size = new System.Drawing.Size(42, 30);
             this.label3.TabIndex = 24;
             this.label3.Text = "cm";
             // 
@@ -351,7 +354,7 @@ namespace SmartReport
             this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
             this.label2.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.label2.Size = new System.Drawing.Size(29, 20);
+            this.label2.Size = new System.Drawing.Size(42, 30);
             this.label2.TabIndex = 23;
             this.label2.Text = "cm";
             // 
@@ -360,7 +363,7 @@ namespace SmartReport
             this.tbHeightFeverPicture.Location = new System.Drawing.Point(97, 38);
             this.tbHeightFeverPicture.Margin = new System.Windows.Forms.Padding(4);
             this.tbHeightFeverPicture.Name = "tbHeightFeverPicture";
-            this.tbHeightFeverPicture.Size = new System.Drawing.Size(121, 27);
+            this.tbHeightFeverPicture.Size = new System.Drawing.Size(121, 37);
             this.tbHeightFeverPicture.TabIndex = 22;
             this.tbHeightFeverPicture.Text = "7.63";
             // 
@@ -371,7 +374,7 @@ namespace SmartReport
             this.lblWidthFeverPicture.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblWidthFeverPicture.Name = "lblWidthFeverPicture";
             this.lblWidthFeverPicture.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.lblWidthFeverPicture.Size = new System.Drawing.Size(52, 20);
+            this.lblWidthFeverPicture.Size = new System.Drawing.Size(78, 30);
             this.lblWidthFeverPicture.TabIndex = 21;
             this.lblWidthFeverPicture.Text = "너비 : ";
             // 
@@ -382,7 +385,7 @@ namespace SmartReport
             this.lblHeightFeverPicture.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblHeightFeverPicture.Name = "lblHeightFeverPicture";
             this.lblHeightFeverPicture.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.lblHeightFeverPicture.Size = new System.Drawing.Size(52, 20);
+            this.lblHeightFeverPicture.Size = new System.Drawing.Size(78, 30);
             this.lblHeightFeverPicture.TabIndex = 20;
             this.lblHeightFeverPicture.Text = "높이 : ";
             // 
@@ -401,7 +404,7 @@ namespace SmartReport
             this.textBox1.Location = new System.Drawing.Point(158, 90);
             this.textBox1.Margin = new System.Windows.Forms.Padding(4);
             this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(580, 27);
+            this.textBox1.Size = new System.Drawing.Size(580, 37);
             this.textBox1.TabIndex = 18;
             // 
             // label1
@@ -410,12 +413,13 @@ namespace SmartReport
             this.label1.Location = new System.Drawing.Point(14, 93);
             this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(82, 20);
+            this.label1.Size = new System.Drawing.Size(124, 30);
             this.label1.TabIndex = 17;
             this.label1.Text = "폴더명    : ";
             // 
             // panel3
             // 
+            this.panel3.Controls.Add(this.btnGapjiPictureRelocate);
             this.panel3.Controls.Add(this.btErrorPageUpdate);
             this.panel3.Controls.Add(this.cbAutoExportPdf);
             this.panel3.Controls.Add(this.btnExportForPdf);
@@ -443,7 +447,7 @@ namespace SmartReport
             this.cbAutoExportPdf.AutoSize = true;
             this.cbAutoExportPdf.Location = new System.Drawing.Point(1053, 20);
             this.cbAutoExportPdf.Name = "cbAutoExportPdf";
-            this.cbAutoExportPdf.Size = new System.Drawing.Size(320, 24);
+            this.cbAutoExportPdf.Size = new System.Drawing.Size(471, 34);
             this.cbAutoExportPdf.TabIndex = 21;
             this.cbAutoExportPdf.Text = "자동으로 페이지 번호 매기고 PDF 내보내기";
             this.cbAutoExportPdf.UseVisualStyleBackColor = true;
@@ -473,7 +477,7 @@ namespace SmartReport
             this.tbFileNameForFunction.Location = new System.Drawing.Point(158, 20);
             this.tbFileNameForFunction.Margin = new System.Windows.Forms.Padding(4);
             this.tbFileNameForFunction.Name = "tbFileNameForFunction";
-            this.tbFileNameForFunction.Size = new System.Drawing.Size(649, 27);
+            this.tbFileNameForFunction.Size = new System.Drawing.Size(649, 37);
             this.tbFileNameForFunction.TabIndex = 18;
             // 
             // lblFileNmaeForFunction
@@ -482,7 +486,7 @@ namespace SmartReport
             this.lblFileNmaeForFunction.Location = new System.Drawing.Point(14, 23);
             this.lblFileNmaeForFunction.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblFileNmaeForFunction.Name = "lblFileNmaeForFunction";
-            this.lblFileNmaeForFunction.Size = new System.Drawing.Size(82, 20);
+            this.lblFileNmaeForFunction.Size = new System.Drawing.Size(124, 30);
             this.lblFileNmaeForFunction.TabIndex = 17;
             this.lblFileNmaeForFunction.Text = "파일명    : ";
             // 
@@ -500,11 +504,11 @@ namespace SmartReport
             // 
             this.tpGap.Controls.Add(this.panel2);
             this.tpGap.Controls.Add(this.panel1);
-            this.tpGap.Location = new System.Drawing.Point(4, 29);
+            this.tpGap.Location = new System.Drawing.Point(4, 39);
             this.tpGap.Margin = new System.Windows.Forms.Padding(4);
             this.tpGap.Name = "tpGap";
             this.tpGap.Padding = new System.Windows.Forms.Padding(4);
-            this.tpGap.Size = new System.Drawing.Size(1625, 697);
+            this.tpGap.Size = new System.Drawing.Size(1532, 687);
             this.tpGap.TabIndex = 0;
             this.tpGap.Text = "파일다운로드";
             this.tpGap.UseVisualStyleBackColor = true;
@@ -517,7 +521,7 @@ namespace SmartReport
             this.panel2.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel2.Location = new System.Drawing.Point(4, 4);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(1617, 44);
+            this.panel2.Size = new System.Drawing.Size(1524, 44);
             this.panel2.TabIndex = 17;
             this.panel2.Paint += new System.Windows.Forms.PaintEventHandler(this.panel2_Paint);
             // 
@@ -537,7 +541,7 @@ namespace SmartReport
             this.tbCompany.Location = new System.Drawing.Point(162, 15);
             this.tbCompany.Margin = new System.Windows.Forms.Padding(4);
             this.tbCompany.Name = "tbCompany";
-            this.tbCompany.Size = new System.Drawing.Size(649, 27);
+            this.tbCompany.Size = new System.Drawing.Size(649, 37);
             this.tbCompany.TabIndex = 16;
             this.tbCompany.Enter += new System.EventHandler(this.tbCompany_Enter);
             this.tbCompany.KeyDown += new System.Windows.Forms.KeyEventHandler(this.tbCompany_KeyDown);
@@ -548,7 +552,7 @@ namespace SmartReport
             this.lbCompany.Location = new System.Drawing.Point(18, 18);
             this.lbCompany.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbCompany.Name = "lbCompany";
-            this.lbCompany.Size = new System.Drawing.Size(82, 20);
+            this.lbCompany.Size = new System.Drawing.Size(124, 30);
             this.lbCompany.TabIndex = 15;
             this.lbCompany.Text = "업체명    : ";
             // 
@@ -558,7 +562,7 @@ namespace SmartReport
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(4, 4);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(1617, 689);
+            this.panel1.Size = new System.Drawing.Size(1524, 679);
             this.panel1.TabIndex = 16;
             // 
             // dgvFiles
@@ -578,7 +582,7 @@ namespace SmartReport
             this.lbName.Location = new System.Drawing.Point(18, 22);
             this.lbName.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbName.Name = "lbName";
-            this.lbName.Size = new System.Drawing.Size(87, 20);
+            this.lbName.Size = new System.Drawing.Size(132, 30);
             this.lbName.TabIndex = 5;
             this.lbName.Text = "측정자     : ";
             // 
@@ -588,7 +592,7 @@ namespace SmartReport
             this.cbName.Location = new System.Drawing.Point(164, 14);
             this.cbName.Margin = new System.Windows.Forms.Padding(4);
             this.cbName.Name = "cbName";
-            this.cbName.Size = new System.Drawing.Size(306, 28);
+            this.cbName.Size = new System.Drawing.Size(306, 38);
             this.cbName.TabIndex = 6;
             this.cbName.Text = "김희철 이사";
             // 
@@ -598,7 +602,7 @@ namespace SmartReport
             this.comboBox1.Location = new System.Drawing.Point(506, 14);
             this.comboBox1.Margin = new System.Windows.Forms.Padding(4);
             this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(306, 28);
+            this.comboBox1.Size = new System.Drawing.Size(306, 38);
             this.comboBox1.TabIndex = 7;
             this.comboBox1.Text = "김희철 이사";
             // 
@@ -608,7 +612,7 @@ namespace SmartReport
             this.lbFolder.Location = new System.Drawing.Point(19, 73);
             this.lbFolder.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbFolder.Name = "lbFolder";
-            this.lbFolder.Size = new System.Drawing.Size(87, 20);
+            this.lbFolder.Size = new System.Drawing.Size(130, 30);
             this.lbFolder.TabIndex = 8;
             this.lbFolder.Text = "폴더 위치 : ";
             // 
@@ -628,7 +632,7 @@ namespace SmartReport
             this.tbFolder.Location = new System.Drawing.Point(163, 64);
             this.tbFolder.Margin = new System.Windows.Forms.Padding(4);
             this.tbFolder.Name = "tbFolder";
-            this.tbFolder.Size = new System.Drawing.Size(649, 27);
+            this.tbFolder.Size = new System.Drawing.Size(649, 37);
             this.tbFolder.TabIndex = 9;
             // 
             // pnlTop
@@ -646,9 +650,31 @@ namespace SmartReport
             this.pnlTop.Size = new System.Drawing.Size(1540, 186);
             this.pnlTop.TabIndex = 3;
             // 
+            // btnGapjiPictureRelocate
+            // 
+            this.btnGapjiPictureRelocate.Location = new System.Drawing.Point(813, 84);
+            this.btnGapjiPictureRelocate.Name = "btnGapjiPictureRelocate";
+            this.btnGapjiPictureRelocate.Size = new System.Drawing.Size(247, 32);
+            this.btnGapjiPictureRelocate.TabIndex = 23;
+            this.btnGapjiPictureRelocate.Text = "갑지 사진 중앙 정렬";
+            this.btnGapjiPictureRelocate.UseVisualStyleBackColor = true;
+            this.btnGapjiPictureRelocate.Click += new System.EventHandler(this.btnGapjiPictureRelocate_Click);
+            // 
+            // checkBoxPartial
+            // 
+            this.checkBoxPartial.AutoSize = true;
+            this.checkBoxPartial.Checked = true;
+            this.checkBoxPartial.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxPartial.Location = new System.Drawing.Point(436, 152);
+            this.checkBoxPartial.Name = "checkBoxPartial";
+            this.checkBoxPartial.Size = new System.Drawing.Size(164, 34);
+            this.checkBoxPartial.TabIndex = 32;
+            this.checkBoxPartial.Text = "PD 부분방전";
+            this.checkBoxPartial.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 30F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1540, 916);
             this.Controls.Add(this.pnlMain);
@@ -730,6 +756,8 @@ namespace SmartReport
         private Button btnQuantityFile;
         private TextBox tbQuantityFile;
         private Label lbQuantityFile;
+        private Button btnGapjiPictureRelocate;
+        private CheckBox checkBoxPartial;
     }
 }
 
