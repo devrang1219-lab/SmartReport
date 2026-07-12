@@ -1,19 +1,20 @@
-﻿using Microsoft.Office.Interop.Excel;
-using PdfiumViewer;
+﻿using PdfiumViewer;
 using SynologyIntegration;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
-using System.Drawing.Printing;
+using System.Drawing;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WindowsFormsApp1;
+using WindowsFormsApp1.Comm;
+using static SynologyIntegration.SynologyFileDownloaderConfig;
 using Action = System.Action;
 using Excel = Microsoft.Office.Interop.Excel;
 using Office = Microsoft.Office.Core;
@@ -22,6 +23,7 @@ namespace SmartReport
 {
     public partial class Form1 : Form
     {
+        private SoborLog soborLog = null;
         public Form1()
         {
             InitializeComponent();
@@ -29,11 +31,12 @@ namespace SmartReport
             // 파일 드래그 앤 드롭을 허용하고 이벤트를 연결
             try
             {
-                tbFileNameForFunction.AllowDrop = true;
-                tbFileNameForFunction.DragEnter += TbFileNameForFunction_DragEnter;
-                tbFileNameForFunction.DragDrop += TbFileNameForFunction_DragDrop;
+                tbQuantityFile.AllowDrop = true;
+                tbQuantityFile.DragEnter += TbQuantityFile_DragEnter;
+                tbQuantityFile.DragDrop += TbQuantityFile_DragDrop;
             }
             catch { /* 디자이너에서 컨트롤이 아직 없을 수 있음 */ }
+
         }
 
         private void btnExportForPdf_MouseUp(object sender, MouseEventArgs e)
@@ -200,10 +203,12 @@ namespace SmartReport
                     {
                         //var newPath = CreateNewExcelFromTemplate(dlg.FileName);
                         var newPath = creatfileTemp(tbFolder.Text);
+                        AddLog("Info", $"새 엑셀 파일을 생성했습니다:\r\n{newPath}");
                         MessageBox.Show($"새 엑셀 파일을 생성했습니다:\r\n{newPath}", "완료", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     catch (Exception ex)
                     {
+                        AddLog("ERROR", $"파일 생성 중 오류: {ex.Message}");   
                         MessageBox.Show($"파일 생성 중 오류가 발생했습니다:\r\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
@@ -212,7 +217,7 @@ namespace SmartReport
         }
 
 
-        private void TbFileNameForFunction_DragEnter(object sender, DragEventArgs e)
+        private void TbQuantityFile_DragEnter(object sender, DragEventArgs e)
         {
             try
             {
@@ -224,7 +229,7 @@ namespace SmartReport
             }
         }
 
-        private void TbFileNameForFunction_DragDrop(object sender, DragEventArgs e)
+        private void TbQuantityFile_DragDrop(object sender, DragEventArgs e)
         {
             var files = e.Data.GetData(DataFormats.FileDrop) as string[];
             if (files == null || files.Length == 0) return;
@@ -240,13 +245,13 @@ namespace SmartReport
                     Task.Run(() =>
                     {
                         string content = File.ReadAllText(file);
-                        try { Invoke(new Action(() => tbFileNameForFunction.Text = content)); } catch { }
+                        try { Invoke(new Action(() => tbQuantityFile.Text = content)); } catch { }
                     });
                 }
                 else
                 {
                     // 경로만 표시
-                    tbFileNameForFunction.Text = file;
+                    tbQuantityFile.Text = file;
                 }
             }
             catch (Exception ex)
@@ -254,14 +259,6 @@ namespace SmartReport
                 MessageBox.Show($"파일 처리 중 오류: {ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
-        // 할 일
-        // 제출문 시트의 A20 셀을 2025년 7월 ==> 26년 6월로 변경하는 예시
-        // 연계획 시트의 A2 2025년을 2026으로 변경
-        // Sheet1 제거 (기본 생성)
-        // 측정자 셀 변경하기
-        // 페이지 번호 매기기
-
 
 
         private string creatfileTemp(string originalFilePath)
@@ -1286,6 +1283,7 @@ namespace SmartReport
 
         }
 
+        #region [다운로드]
         private SynologyFileDownloader _downloader;
         //private BindingList<SynologyFileGridItem> _gridFiles;
 
@@ -1320,26 +1318,72 @@ namespace SmartReport
             return (bytes / 1024.0 / 1024.0 / 1024.0).ToString("0.0") + " GB";
         }
 
-        public async Task TestSynologyAsync()
+        private void ExtractAllZipFiles(string folderPath, bool deleteZip = true)
+        {
+            if (!Directory.Exists(folderPath))
+                return;
+
+            foreach (string zipFile in Directory.GetFiles(folderPath, "*.zip"))
+            {
+                string extractPath = Path.Combine(
+                    folderPath,
+                    Path.GetFileNameWithoutExtension(zipFile));
+
+                Directory.CreateDirectory(extractPath);
+
+                if (Directory.Exists(extractPath))
+                {
+                    Directory.Delete(extractPath, true);
+                }
+                ZipFile.ExtractToDirectory(zipFile, folderPath);
+
+                if (deleteZip)
+                {
+                    File.Delete(zipFile);
+                }
+            }
+        }
+
+        private async Task DownloadPreviousReportAsync(string folderPath)
+        {
+            if (!Directory.Exists(folderPath))
+                return;
+
+            await _downloader.DownloadPreviousReportsAsync(folderPath);
+
+            AddLog("INFO", folderPath + "이전 보고서 다운로드 완료");
+        }
+
+        public async Task TestSynologyAsync(List<SearchFolderOption> folders = null, string keyword = null)
         {
             Cursor = Cursors.WaitCursor;
 
+            if (folders == null || folders.Count == 0)
+                folders = new System.Collections.Generic.List<SearchFolderOption>
+                {
+                    new SearchFolderOption
+                    {
+                        Folder = "/2_1전기직무고시점검보고서/2 본부(김희철)/0001 시흥보고서방/001열화상",
+                        Recursive = false
+                    }
+                };
+
+            if (string.IsNullOrEmpty(keyword)) keyword = "유랑진";
+
             try
             {
-
                 var config = new SynologyFileDownloaderConfig
                 {
                     BaseUrl = "http://hk2ng.synology.me:5000",
                     Username = "유량진",
                     Password = "HKeng717241",
-                    SearchFolder = "/2_1전기직무고시점검보고서/2 본부(김희철)/0001 시흥보고서방/001열화상",
-                    Keyword = tbCompany.Text,
+                    SearchFolders = folders,
+                    SearchFolder = "/2_1전기직무고시점검보고서",
+                    Keyword = keyword,
                     Extensions = new[] { ".xlsx", ".pdf" },
                     Recursive = true,
                     DownloadLatestOnly = false
                 };
-
-                //MessageBox.Show("1. config 생성 완료");
 
                 if (_downloader != null)
                 {
@@ -1349,25 +1393,35 @@ namespace SmartReport
 
 
                 _downloader = new SynologyFileDownloader(config);
-                //MessageBox.Show("2. downloader 생성 완료");
 
                 await _downloader.LoginAsync();
-                //MessageBox.Show("3. 로그인 완료");
 
-                //List<SynologyFileItem> files = await _downloader.SearchFilesAsync();
-                //MessageBox.Show("4. 검색 완료");
+                //_files = await _downloader.SearchFilesAsync();
+                //_fileBindingSource.DataSource = _files;
+                //dgvFiles.DataSource = _fileBindingSource;
 
-                //_gridFiles = ConvertToGridItems(files);
-                //dgvFiles.DataSource = _gridFiles;
+                //MessageBox.Show("검색 완료: " + _files.Count + "건");
 
-                _files = await _downloader.SearchFilesAsync();
-                _fileBindingSource.DataSource = _files;
-                dgvFiles.DataSource = _fileBindingSource;
+                int count = await _downloader.DownloadFoldersAsync(@"D:\work\Report\now");
 
-                MessageBox.Show("검색 완료: " + _files.Count + "건");
+                if (count > 0)
+                {
+                    ExtractAllZipFiles(@"D:\work\Report\now");
+                    AddLog("INFO", keyword + " 검색 완료: " + count + "건 다운로드 완료");
+
+                    await DownloadPreviousReportAsync(@"D:\work\Report\now");
+
+                    Process.Start("explorer.exe", @"D:\work\Report\now");
+                }
+                else
+                {
+                    AddLog("INFO", keyword + " 검색 완료: 다운로드할 폴더가 없습니다.");
+                    MessageBox.Show("다운로드할 폴더가 없습니다.");
+                }
             }
             catch (Exception ex)
             {
+                AddLog("ERROR", keyword + " 검색 중 오류 발생: " + ex.Message);
                 MessageBox.Show(ex.ToString(), "오류");
             }
             finally
@@ -1427,10 +1481,13 @@ namespace SmartReport
                 Width = 150
             });
         }
+        #endregion
+
 
         private void Form1_Load(object sender, EventArgs e)
         {
             InitGrid();
+            AddLog("INFO", "프로그램 시작");
         }
 
         private async void tbCompany_Enter(object sender, EventArgs e)
@@ -1487,12 +1544,12 @@ namespace SmartReport
             if (keyword == "")
                 return;
 
-            await TestSynologyAsync();
+            await TestSynologyAsync(null, keyword);
         }
 
         private void btnPageNumber_Click(object sender, EventArgs e)
         {
-            var filePath = tbFileNameForFunction.Text?.Trim();
+            var filePath = tbQuantityFile.Text?.Trim();
             if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
             {
                 MessageBox.Show("페이지 번호를 매길 엑셀 파일을 먼저 선택하세요.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -1585,6 +1642,8 @@ namespace SmartReport
             catch (Exception ex)
             {
                 MessageBox.Show($"페이지 번호 매기기 중 오류가 발생했습니다:\r\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                AddLog("Error", $"페이지 번호 매기기 중 오류가 발생했습니다: {ex.Message}");
             }
             finally
             {
@@ -1628,13 +1687,14 @@ namespace SmartReport
 
             try
             {
-                string filePath = tbFileNameForFunction.Text?.Trim();
+                string filePath = tbQuantityFile.Text?.Trim();
 
                 var result = ExportPdfAsync(filePath);
 
                 if (!result.Success)
                 {
                     MessageBox.Show(result.ErrorMessage);
+                    AddLog("Error", $"통합 PDF 내보내기 실패: {result.ErrorMessage}");
                 }
                 else
                 {
@@ -1703,7 +1763,8 @@ namespace SmartReport
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception("통합 PDF 내보내기 실패: " + ex.Message, ex);
+                    //throw new Exception("통합 PDF 내보내기 실패: " + ex.Message, ex);
+                    AddLog("Error", $"통합 PDF 내보내기 실패: {ex.Message}");
                 }
             }
             catch (Exception ex)
@@ -1774,25 +1835,25 @@ namespace SmartReport
 
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
-                    tbFileNameForFunction.Text = dlg.FileName;
+                    tbQuantityFile.Text = dlg.FileName;
 
-                    if (cbAutoExportPdf.Checked)
-                    {
+                    //if (cbAutoExportPdf.Checked)
+                    //{
 
 
-                        Cursor = Cursors.WaitCursor;
-                        btnPageNumber_Click(sender, e);
+                    //    Cursor = Cursors.WaitCursor;
+                    //    btnPageNumber_Click(sender, e);
 
-                        btnExportForPdf_Click(sender, e);
-                        Cursor = Cursors.Default;
-                    }
+                    //    btnExportForPdf_Click(sender, e);
+                    //    Cursor = Cursors.Default;
+                    //}
                 }
             }
         }
 
         private void btErrorPageUpdate_Click(object sender, EventArgs e)
         {
-            var filePath = tbFileNameForFunction.Text?.Trim();
+            var filePath = tbQuantityFile.Text?.Trim();
             if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
             {
                 MessageBox.Show("페이지 번호를 매길 엑셀 파일을 먼저 선택하세요.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -1813,7 +1874,8 @@ namespace SmartReport
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"페이지 번호 매기기 중 오류가 발생했습니다:\r\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                //MessageBox.Show($"페이지 번호 매기기 중 오류가 발생했습니다:\r\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                AddLog("Error", $"페이지 번호 매기기 중 오류가 발생했습니다: {ex.Message}");
             }
             finally
             {
@@ -1842,93 +1904,7 @@ namespace SmartReport
             }
         }
 
-        private void btnMakeExcel_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                if (!double.TryParse(tbWidthFeverPicture.Text.Trim(), out double imageWidthCm) || imageWidthCm <= 0)
-                {
-                    MessageBox.Show("이미지 가로(cm)를 올바르게 입력하세요.");
-                    return;
-                }
-
-                if (!double.TryParse(tbHeightFeverPicture.Text.Trim(), out double imageHeightCm) || imageHeightCm <= 0)
-                {
-                    MessageBox.Show("이미지 세로(cm)를 올바르게 입력하세요.");
-                    return;
-                }
-
-                if (!double.TryParse(tbGapFeverPicture.Text.Trim(), out double gapCm) || gapCm < 0)
-                {
-                    MessageBox.Show("이미지 가로 간격(cm)을 올바르게 입력하세요.");
-                    return;
-                }
-
-                // 이미지 폴더 선택
-                string selectedFolder = "";
-                using (FolderBrowserDialog fbd = new FolderBrowserDialog())
-                {
-                    fbd.Description = "이미지 폴더를 선택하세요.";
-
-                    // 기본 폴더 지정
-                    string defaultDir = tbDefultDirectory.Text.Trim();
-                    if (!string.IsNullOrEmpty(defaultDir) && Directory.Exists(defaultDir))
-                    {
-                        fbd.SelectedPath = defaultDir;
-                    }
-
-                    if (fbd.ShowDialog() != DialogResult.OK)
-                        return;
-
-                    selectedFolder = fbd.SelectedPath;
-                }
-
-                // 폴더 안 이미지 목록
-                string[] imageExtensions = new[] { ".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tif", ".tiff" };
-
-                var imageFiles = Directory.GetFiles(selectedFolder)
-                    .Where(x => imageExtensions.Contains(Path.GetExtension(x).ToLower()))
-                    .OrderBy(x => x, StringComparer.CurrentCultureIgnoreCase)
-                    .ToArray();
-
-                if (imageFiles.Length == 0)
-                {
-                    MessageBox.Show("선택한 폴더에 이미지 파일이 없습니다.");
-                    return;
-                }
-
-                // 상위 폴더의 Images.xlsx 경로
-                DirectoryInfo parent = Directory.GetParent(selectedFolder);
-                if (parent == null)
-                {
-                    MessageBox.Show("상위 폴더를 찾을 수 없습니다.");
-                    return;
-                }
-
-                string excelPath = Path.Combine(parent.FullName, "Images.xlsx");
-                if (!File.Exists(excelPath))
-                {
-                    MessageBox.Show("상위 폴더에 Images.xlsx 파일이 없습니다.\r\n" + excelPath);
-                    return;
-                }
-
-
-                InsertImagesToExistingWorkbook(
-                    excelPath,
-                    imageFiles,
-                    imageWidthCm,
-                    imageHeightCm,
-                    gapCm
-                );
-
-                MessageBox.Show("완료되었습니다.");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.ToString());
-            }
-        }
-
+        
         private void ClearAllShapes(Excel.Worksheet ws)
         {
             if (ws == null) return;
@@ -1950,12 +1926,12 @@ namespace SmartReport
         }
 
         private void CreateExcelWithImages(
-    string[] imageFiles,
-    string savePath,
-    double imageWidthCm,
-    double imageHeightCm,
-    double gapCm)
-        {
+            string[] imageFiles,
+            string savePath,
+            double imageWidthCm,
+            double imageHeightCm,
+            double gapCm)
+            {
             Excel.Application xlApp = null;
             Excel.Workbook wb = null;
             Excel.Worksheet ws = null;
@@ -2264,13 +2240,6 @@ namespace SmartReport
             }
         }
 
-        private void button3_Click(object sender, EventArgs e)
-        {
-            btnMakeExcel_Click(sender, e);
-        }
-
-
-        #region 품질관리 관련 기능
         private void btnQuantityFile_Click(object sender, EventArgs e)
         {
             using (var dlg = new OpenFileDialog())
@@ -2299,10 +2268,10 @@ namespace SmartReport
 
         private void btnQuntityFileRun_Click(object sender, EventArgs e)
         {
-            ProcQuantitySheet();
+            ProcImagesSheet();
         }
 
-        private void ProcQuantitySheet()
+        private void ProcImagesSheet()
         {
             var filePath = tbQuantityFile.Text?.Trim();
             if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
@@ -2314,10 +2283,7 @@ namespace SmartReport
             Cursor = Cursors.WaitCursor;
             Excel.Application xlApp = null;
             Excel.Workbook wb = null;
-            // 새 통합문서 생성
-            Excel.Workbook newWb = null;
             Excel.Worksheet ws = null;
-            Excel.Worksheet sourceWs = null;
 
             try
             {
@@ -2330,608 +2296,19 @@ namespace SmartReport
                 string pdfPath = Path.Combine(baseFolder, "02 전원품질", "K.pdf");
 
                 // 열화상
-                try
-                {
-
-                    if (checkBoxFeverPicture.Checked)
-                    {
-
-                        foreach (Excel.Worksheet sheet in wb.Worksheets)
-                        {
-                            if (sheet.Name.Trim().IndexOf("분기", StringComparison.OrdinalIgnoreCase) >= 0)
-                            {
-                                sourceWs = sheet;
-                                break;
-                            }
-                        }
-
-                        if (sourceWs == null)
-                            throw new Exception("분기 시트를 찾을 수 없습니다.");
-
-                        // 새 통합문서 생성
-                        newWb = xlApp.Workbooks.Add();
-
-                        try
-                        {
-                            // 기본 시트 삭제
-                            while (newWb.Worksheets.Count > 1)
-                            {
-                                ((Excel.Worksheet)newWb.Worksheets[2]).Delete();
-                            }
-
-                            // 분기 시트 복사
-                            sourceWs.Copy(Before: newWb.Worksheets[1]);
-
-                            // 기본 Sheet1 삭제
-                            ((Excel.Worksheet)newWb.Worksheets[newWb.Worksheets.Count]).Delete();
-
-                            // 복사된 시트
-                            ws = (Excel.Worksheet)newWb.Worksheets[1];
-
-                            string tempFile = Path.Combine(baseFolder, "images.xlsx");
-                            newWb.SaveAs(tempFile);
-                        } catch { }
-
-                            
-                        RemovePictures(ws);
-                        RemovePictures(sourceWs);
-
-
-                        string[] files = Directory.GetFiles(baseFolder + "\\"+ textBoxFeverImageFolder.Text, "*.jpg")
-                        //string[] files = Directory.GetFiles(baseFolder + "\\2. 부전기실", "*.jpg")
-                        //string[] files = Directory.GetFiles(baseFolder + "\\1.상생관", "*.jpg")
-                        .OrderBy(f =>
-                        {
-                            return int.TryParse(Path.GetFileNameWithoutExtension(f), out int n)
-                                ? n
-                                : int.MaxValue;
-                        })
-                        .ToArray();
-
-                        int imageIndex = 0;
-
-                        for (int page = 0; imageIndex < files.Length; page++)
-                        {
-                            int startRow = 27 + (page * 56);
-                            int endRow = 43 + (page * 56);
-
-                            string[] fromCols = { "A", "R" };
-                            string[] toCols = { "Q", "AC" };   // 실제 병합 끝 열에 맞게 수정
-
-                            for (int i = 0; i < fromCols.Length; i++)
-                            {
-                                if (imageIndex >= files.Length)
-                                    break;
-
-                                string fromCell = $"{fromCols[i]}{startRow}";
-                                string toCell = $"{toCols[i]}{endRow}";
-
-                                float gapRight = (i % 2 == 0) ? 2.4f : 2.8f;
-                                float gapLeft = (i % 2 == 0) ? 4.1f : 3.6f;
-
-                                float gapBottom = 2.8f;
-                                float gapTop = 4.8f;
-
-                                using (var inserter = new ImageInserter(ws, files[imageIndex]))
-                                {
-                                    inserter.InsertFit(
-                                        fromCell,
-                                        toCell,
-                                        new ImageInsertOptions
-                                        {
-                                            KeepAspectRatio = false,
-                                            //GapRight = 2.7f,
-                                            GapRight = gapRight,
-                                            //GapBottom = 2.6f,
-                                            GapBottom = gapBottom,
-                                            //GapLeft = 4.0f,
-                                            GapLeft = gapLeft,
-                                            GapTop = gapTop
-                                        });                                
-                                }
-
-                                using (var inserter = new ImageInserter(sourceWs, files[imageIndex]))
-                                {
-                                    inserter.InsertFit(
-                                        fromCell,
-                                        toCell,
-                                        new ImageInsertOptions
-                                        {
-                                            KeepAspectRatio = false,
-                                            //GapRight = 2.7f,
-                                            GapRight = gapRight,
-                                            GapBottom = gapBottom,
-                                            //GapLeft = 4.0f,
-                                            GapLeft = gapLeft,
-                                            GapTop = gapTop
-                                        });
-                                }
-
-                                imageIndex++;
-                            }
-                        }
-
-                        using (var reader = new FlirOcrReader())
-                        {
-                            OcrExcelMap map = new OcrExcelMap
-                            {
-                                ValueCells = new[]
-                                {
-                                        "H49",
-                                        "P49",
-                                        "W49",
-                                        "H52",
-                                        "P52",
-                                        "W52"
-                                    },
-                                MinTemperatureCell = "AD6",
-                                RowOffset = 56
-                            };
-
-                            string[] evenFiles = files
-                                .Where((file, index) => index % 2 == 0)
-                                .ToArray();
-
-                            OcrDataToExcel.ProcessAll(
-                                sourceWs,
-                                evenFiles,
-                                reader,
-                                map);
-
-                            OcrDataToExcel.ProcessAll(
-                                ws,
-                                evenFiles,
-                                reader,
-                                map);
-                        }
-
-                        wb.Save();
-                        newWb.Save();
-
-                    }
-                }
-
-                catch (Exception ex)
-                {
-                    throw new Exception("분기 이미지 삽입 실패: " + ex.Message, ex);
-                }
+                ProcFeverPicture(xlApp, wb, baseFolder, textBoxFeverImageFolder.Text);
 
 
                 // 품질
+                ProcQuantitySheet(xlApp, wb, baseFolder, textBoxQuntatyFolder.Text, comboBoxHwaveGraph.Text, comboBoxTestGraph.Text, comboBoxSignalGraph.Text);
 
 
-                if (checkBoxQuantity.Checked)
-                {
-                    try
-                    {
-                        foreach (Excel.Worksheet sheet in wb.Worksheets)
-                        {
-                            if (sheet.Name.Trim() == "품질")
-                            {
-                                ws = sheet;
-                                break;
-                            }
-                        }
-
-                        if (ws == null)
-                            throw new Exception("품질 시트를 찾을 수 없습니다.");
-
-                        RemovePictures(ws);
-                        pdfPath = Path.Combine(baseFolder, "02 전원품질", "K.pdf");
-                        using (ImageInserter inserter = new ImageInserter(ws, pdfPath))
-                        {
-                            inserter.Insert("U6", 0.8);
-
-                            //wb.Save();
-                        }
-
-                        pdfPath = Path.Combine(baseFolder, "02 전원품질", "시보.pdf");
-                        using (ImageInserter inserter = new ImageInserter(ws, pdfPath))
-                        {
-                            inserter.InsertFit(
-                                "A36",
-                                "R67",
-                                new ImageInsertOptions
-                                {
-                                    CropLeft = 195,
-                                    CropTop = 170,
-                                    CropRight = 210,
-                                    CropBottom = 1000,
-                                    GapTop = 0,
-                                    GapBottom = 5.0f
-                                });
-
-                            //wb.Save();
-                        }
-                        pdfPath = Path.Combine(baseFolder, "02 전원품질", "E.pdf");
-
-                        using (ImageInserter inserter = new ImageInserter(ws, pdfPath))
-                        {
-
-                            ImageInsertOptions option = new ImageInsertOptions
-                            {
-                                //CropLeft = 135,
-                                //CropTop = 55,
-                                //CropRight = 105,
-                                //CropBottom = 146
-                                GapTop = 0
-                            };
-
-                            // 1페이지
-                            inserter.InsertFit(0, "A68", "R100", option);
-
-                            // 2~5페이지
-                            string[,] group1 =
-                            {
-                                { "A101", "G116" },   // 2
-                                { "H101", "R116" },   // 3
-                                { "A117", "G132" },   // 4
-                                { "H117", "R132" }    // 5
-                            };
-
-                            // 6~9페이지
-                            string[,] group2 =
-                                      {
-                                { "A133", "G148" },   // 6
-                                { "H133", "R148" },   // 7
-                                { "A149", "G164" },   // 8
-                                { "H149", "R164" }    // 9
-                            };
-
-                            // 10~13페이지
-                            string[,] group3 =
-                            {
-                                { "A165", "G180" },   //10
-                                { "H165", "R180" },   //11
-                                { "A181", "G196" },   //12
-                                { "H181", "R196" }    //13
-                            };
-
-                            // 14~17페이지
-                            string[,] group4 =
-                            {
-                                { "A197", "G212" },   //14
-                                { "H197", "R212" },   //15
-                                { "A213", "G228" },   //16
-                                { "H213", "R228" }    //17
-                            };
-
-                            int page = 1;
-
-                            option.GapLeft = 2.8f;
-                            option.GapTop = 2.8f;
-                            option.GapRight = 2.8f;
-                            option.GapBottom = 2.8f;
-
-                            foreach (var group in new[] { group1, group2, group3, group4 })
-                            {
-                                for (int i = 0; i < 4 && page < 17; i++, page++)
-                                {
-                                    inserter.InsertFit(
-                                        page,
-                                        group[i, 0],
-                                        group[i, 1],
-                                        option);
-                                }
-                            }
-
-                            //wb.Save();
-                        }
-
-
-                        pdfPath = Path.Combine(baseFolder, "02 전원품질", "시그.pdf");
-
-                        using (ImageInserter inserter = new ImageInserter(ws, pdfPath))
-                        {
-
-                            ImageInsertOptions option = new ImageInsertOptions
-                            {
-                                CropLeft = 175,
-                                CropTop = 195,
-                                CropRight = 1300,
-                                CropBottom = 150
-                            };
-
-                            // 1페이지
-                            //inserter.InsertFit("A228", "R259", option);
-                            inserter.Insert("A228", 1.0);
-
-                            //wb.Save();
-                        }
-
-                        pdfPath = Path.Combine(baseFolder, "02 전원품질", "고그.pdf");
-
-                        using (ImageInserter inserter = new ImageInserter(ws, pdfPath))
-                        {
-
-                            ImageInsertOptions option = new ImageInsertOptions
-                            {
-                                CropLeft = 175,
-                                CropTop = 195,
-                                CropRight = 1100,
-                                CropBottom = 150
-                            };
-
-                            // 1페이지
-                            //inserter.InsertFit("A260", "R292", option);
-                            inserter.Insert("A228", 1.0);
-
-                            // wb.Save();
-                        }
-
-                        string[] files = Directory.GetFiles(baseFolder + "\\02 전원품질", "*.bmp")
-                            .OrderBy(f =>
-                            {
-                                return int.TryParse(Path.GetFileNameWithoutExtension(f), out int n)
-                                    ? n
-                                    : int.MaxValue;
-                            })
-                            .ToArray();
-
-                        int startRow = 293;
-                        int blockHeight = 8;   // 293~300 = 8행
-
-                        for (int i = 0; i < files.Length && i < 8; i++)
-                        {
-                            int row = i / 2;    // 0~3
-                            int col = i % 2;    // 0=좌, 1=우
-
-                            int fromRow = startRow + row * blockHeight;
-                            int toRow = fromRow + blockHeight - 1;
-
-                            string fromCell = col == 0
-                                ? $"A{fromRow}"
-                                : $"H{fromRow}";
-
-                            string toCell = col == 0
-                                ? $"G{toRow}"
-                                : $"R{toRow}";
-
-                            using (var inserter = new ImageInserter(ws, files[i]))
-                            {
-                                inserter.InsertFit(
-                                    fromCell,
-                                    toCell,
-                                    new ImageInsertOptions
-                                    {
-                                        KeepAspectRatio = false
-                                    });
-                            }
-                        }
-                        wb.Save();
-                    }
-
-                    catch (Exception ex)
-                    {
-                        throw new Exception("품질 이미지 삽입 실패: " + ex.Message, ex);
-                    }
-                }
-
-
-                // 영코
-
-                if (checkBoxCorona.Checked)
-                {
-                    try
-                    {
-
-
-                        foreach (Excel.Worksheet sheet in wb.Worksheets)
-                        {
-                            if (sheet.Name.Trim() == "영코")
-                            {
-                                ws = sheet;
-                                break;
-                            }
-                        }
-
-                        if (ws == null)
-                            throw new Exception("영코 시트를 찾을 수 없습니다.");
-
-                        RemovePictures(ws);
-
-                        string tmpFolder = Path.Combine(baseFolder, "05 영상코로나 또는 부분방전");
-
-                        pdfPath = Directory.GetFiles(tmpFolder, "*.pdf").FirstOrDefault();
-
-                        if (pdfPath == null)
-                        {
-                            throw new FileNotFoundException("PDF 파일을 찾을 수 없습니다.", tmpFolder);
-                        }
-                        using (ImageInserter inserter = new ImageInserter(ws, pdfPath))
-                        {
-                            ImageInsertOptions option = new ImageInsertOptions
-                            {
-                                CropLeft = 175,
-                                CropTop = 195,
-                                CropRight = 1200,
-                                CropBottom = 195
-                            };
-
-                            inserter.InsertFit(0,
-                                "A5",
-                                "I24"
-                                );
-
-                            for (int i = 1; i < inserter.ImageCount; i++)
-                            {
-                                string cellFrom = $"A{25 + (i - 1) * 25}";
-                                string cellTo = $"I{49 + (i - 1) * 25}";
-                                inserter.InsertFit(i,
-                                    cellFrom,
-                                    cellTo
-                                    );
-                            }
-
-                            wb.Save();
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("영코 이미지 삽입 실패: " + ex.Message, ex);
-                    }
-
-                }
-
-                // PD부분방전
-
-                if (checkBoxPartial.Checked)
-                {
-                    try
-                    {
-
-
-                        foreach (Excel.Worksheet sheet in wb.Worksheets)
-                        {
-                            if (sheet.Name.Trim() == "PD부분방전")
-                            {
-                                ws = sheet;
-                                break;
-                            }
-                        }
-
-                        if (ws == null)
-                            throw new Exception("PD부분방전 시트를 찾을 수 없습니다.");
-
-                        RemovePictures(ws, 1);
-
-                        string tmpFolder = Path.Combine(baseFolder, "05 영상코로나 또는 부분방전");
-
-                        string xlsPath = Directory.GetFiles(tmpFolder, "*.xls").FirstOrDefault();
-
-                        if (xlsPath == null)
-                        {
-                            throw new FileNotFoundException("xls 파일을 찾을 수 없습니다.", tmpFolder);
-                        }
-
-                        SetPrintArea(xlsPath);
-
-                        ExportExcelToPdf(xlsPath);
-                        // xls를 pdf로 변환한 파일을 찾음
-                        pdfPath = Directory.GetFiles(tmpFolder, "*.pdf").FirstOrDefault();
-
-                        if (pdfPath == null)
-                        {
-                            throw new FileNotFoundException("pdf 파일을 찾을 수 없습니다.", tmpFolder);
-                        }
-
-                        using (ImageInserter inserter = new ImageInserter(ws, pdfPath))
-                        {
-                            ImageInsertOptions option = new ImageInsertOptions
-                            {
-                                CropLeft = 260,
-                                CropTop = 350,
-                                CropRight = 260,
-                                CropBottom = 300
-                            };
-
-                            for (int i = 0; i < inserter.ImageCount; i++)
-                            {
-                                string cellFrom = $"A{25 + i * 25}";
-                                string cellTo = $"I{49 + i * 25}";
-                                inserter.InsertFit(i,
-                                    cellFrom,
-                                    cellTo,
-                                    option
-                                    );
-                            }
-
-                            wb.Save();
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("PD 부분방전 이미지 삽입 실패: " + ex.Message, ex);
-                    }
-
-                }
+                // 코로나
+                ProcCoronaSheet(xlApp, wb, baseFolder, textBoxCoronaFolder.Text);
 
                 // 점검사진
-
-
-                if (checkBoxPicture.Checked)
-                {
-                    try
-                    {
-
-                        foreach (Excel.Worksheet sheet in wb.Worksheets)
-                        {
-                            if (sheet.Name.Trim() == "사진")
-                            {
-                                ws = sheet;
-                                break;
-                            }
-                        }
-
-                        if (ws == null)
-                            throw new Exception("사진 시트를 찾을 수 없습니다.");
-
-                        RemovePictures(ws);
-
-
-                        string[] files = Directory.GetFiles(baseFolder + "\\03 점검사진", "*.jpg")
-                        .OrderBy(f =>
-                        {
-                            return int.TryParse(Path.GetFileNameWithoutExtension(f), out int n)
-                                ? n
-                                : int.MaxValue;
-                        })
-                        .ToArray();
-
-                        int imageIndex = 0;
-
-                        for (int page = 0; page < 3; page++)
-                        {
-                            int pageOffset = page * 42;
-
-                            for (int row = 0; row < 2; row++)
-                            {
-                                int rowOffset = row * 17;
-
-                                for (int col = 0; col < 2; col++)
-                                {
-                                    if (imageIndex >= files.Length)
-                                        break;
-
-                                    string fromCol = (col == 0) ? "A" : "O";
-                                    string toCol = (col == 0) ? "M" : "AA";
-
-                                    int startRow = 8 + pageOffset + rowOffset;
-                                    int endRow = 21 + pageOffset + rowOffset;
-
-                                    string cellFrom = $"{fromCol}{startRow}";
-                                    string cellTo = $"{toCol}{endRow}";
-
-                                    using (var inserter = new ImageInserter(ws, files[imageIndex]))
-                                    {
-                                        inserter.InsertFit(
-                                            cellFrom,
-                                            cellTo,
-                                            new ImageInsertOptions
-                                            {
-                                                KeepAspectRatio = false
-                                            });
-
-                                        wb.Save();
-                                    }
-
-                                    imageIndex++;
-                                }
-                            }
-                        }
-
-                    }
-
-                    catch (Exception ex)
-                    {
-                        throw new Exception("사진 이미지 삽입 실패: " + ex.Message, ex);
-                    }
-                }
+                ProcCheckPicture(xlApp, wb, baseFolder, textBoxPictureFolder.Text);
             }
-            //catch (Exception ex)
-            //{
-            //    throw new Exception("이미지 삽입 실패: " + ex.Message, ex);
-            //}
             catch (Exception ex)
             {
                 MessageBox.Show($"이미지 삽입 실패:\r\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -2946,13 +2323,6 @@ namespace SmartReport
                     {
                         wb.Close(false);
                         Marshal.ReleaseComObject(wb);
-                    }
-                    if (newWb != null)
-                    {
-                        newWb.Save();
-
-                        newWb.Close(false);
-                        Marshal.ReleaseComObject(newWb);
                     }
                 }
                 catch { }
@@ -2972,6 +2342,677 @@ namespace SmartReport
                 Cursor = Cursors.Default;
             }
         }
+
+        private Excel.Worksheet GetWorksheetByName(Excel.Workbook wb, string sheetName)
+        {
+            foreach (Excel.Worksheet sheet in wb.Worksheets)
+            {
+                if (sheet.Name.Trim().IndexOf(sheetName, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return sheet;
+                }
+                //Marshal.ReleaseComObject(sheet);
+            }
+            return null;
+        }   
+
+        private void ProcCoronaSheet(Excel.Application xlApp, Excel.Workbook wb, string baseFolder, string text)
+        {
+            if (!checkBoxCorona.Checked) return;
+
+            string tmpFolder = Path.Combine(baseFolder, text);
+
+            string xlsPath = Directory.GetFiles(tmpFolder, "*.xls").FirstOrDefault();
+
+            // PD 부분방전 결과지가 있으면 PD부분방전 처리, 없으면 영코 처리
+            if (xlsPath != null)
+            {
+                // PD부분방전
+                ProcPdCoronaSheet(xlApp, wb, baseFolder, text, xlsPath);
+                return;
+            }
+
+            // 영코
+            ProcVideoCoronaSheet(xlApp, wb, baseFolder, text);
+        }
+
+        #region [점검사진 시트 처리]
+        private void ProcCheckPicture(Excel.Application xlApp, Excel.Workbook wb, string baseFolder, object text)
+        {
+            if (!checkBoxPicture.Checked) return;
+
+            Excel.Worksheet ws = null;
+
+            try
+            {
+                ws = GetWorksheetByName(wb, "사진");
+
+                if (ws == null)
+                {
+                    throw new Exception("사진 시트를 찾을 수 없습니다.");
+                }
+
+                RemovePictures(ws);
+
+
+                string[] files = Directory.GetFiles(baseFolder + $"\\{text}", "*.jpg")
+                .OrderBy(f =>
+                {
+                    return int.TryParse(Path.GetFileNameWithoutExtension(f), out int n)
+                        ? n
+                        : int.MaxValue;
+                })
+                .ToArray();
+
+                int imageIndex = 0;
+
+                for (int page = 0; page < 3; page++)
+                {
+                    int pageOffset = page * 42;
+
+                    for (int row = 0; row < 2; row++)
+                    {
+                        int rowOffset = row * 17;
+
+                        for (int col = 0; col < 2; col++)
+                        {
+                            if (imageIndex >= files.Length)
+                                break;
+
+                            string fromCol = (col == 0) ? "A" : "O";
+                            string toCol = (col == 0) ? "M" : "AA";
+
+                            int startRow = 8 + pageOffset + rowOffset;
+                            int endRow = 21 + pageOffset + rowOffset;
+
+                            string cellFrom = $"{fromCol}{startRow}";
+                            string cellTo = $"{toCol}{endRow}";
+
+                            using (var inserter = new ImageInserter(ws, files[imageIndex]))
+                            {
+                                inserter.InsertFit(
+                                    cellFrom,
+                                    cellTo,
+                                    new ImageInsertOptions
+                                    {
+                                        KeepAspectRatio = false
+                                    });
+
+                                wb.Save();
+                            }
+
+                            imageIndex++;
+                        }
+                    }
+                }
+
+            }
+
+            catch (Exception ex)
+            {
+                AddLog("Error", $"사진 이미지 삽입 실패: {ex.Message}");
+
+            }
+            finally
+            {
+                try
+                {
+                    if (ws != null) Marshal.ReleaseComObject(ws);
+                }
+                catch { }
+            }
+        }
+        #endregion
+
+        #region [PD부분방전 시트 처리]
+        private void ProcPdCoronaSheet(object xla, Excel.Workbook wb, string baseFolder, string pdFolder, string xlsPath)
+        {
+            Excel.Worksheet ws = null;
+
+            try
+            {
+
+                string tmpFolder = Path.Combine(baseFolder, pdFolder);
+
+                // PD 부분방전 결과지가 있으므로 PD 부분 방전 처리를 했다는 뜻으로 변환 과정이 실패하더라도 모두 true를 반환하도록 함
+
+                ws = GetWorksheetByName(wb, "PD부분방전");
+
+                if (ws == null)
+                {
+                    throw new Exception("PD부분방전 시트를 찾을 수 없습니다.");
+                }
+                RemovePictures(ws, 1);
+
+
+                SetPrintArea(xlsPath);
+
+
+                ExportExcelToPdf(xlsPath);
+                // xls를 pdf로 변환한 파일을 찾음
+                string pdfPath = Directory.GetFiles(tmpFolder, "*.pdf").FirstOrDefault();
+
+                if (pdfPath == null)
+                {
+                    throw new Exception($"PD 부분방전 엑셀 파일을 pdf로 변환하지 못했습니다.: {tmpFolder}");
+                }
+
+                using (ImageInserter inserter = new ImageInserter(ws, pdfPath))
+                {
+                    ImageInsertOptions option = new ImageInsertOptions
+                    {
+                        CropLeft = 260,
+                        CropTop = 350,
+                        CropRight = 260,
+                        CropBottom = 300
+                    };
+
+                    for (int i = 0; i < inserter.ImageCount; i++)
+                    {
+                        string cellFrom = $"A{25 + i * 25}";
+                        string cellTo = $"I{49 + i * 25}";
+                        inserter.InsertFit(i,
+                            cellFrom,
+                            cellTo,
+                            option
+                            );
+                    }
+
+                    wb.Save();
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    if (ws != null) Marshal.ReleaseComObject(ws);
+                }
+                catch { }
+                AddLog("Error", $"PD 부분방전 이미지 삽입 실패: {ex.Message}");
+            }
+            finally
+            {
+                try
+                {
+                    if (ws != null) Marshal.ReleaseComObject(ws);
+                }
+                catch { }
+            }
+        }
+        #endregion
+
+        #region [영코 시트 처리]
+
+        private void ProcVideoCoronaSheet(Excel.Application xlApp, Excel.Workbook wb, string baseFolder, object text)
+        {
+            if (!checkBoxCorona.Checked) return;
+
+            Excel.Worksheet ws = null;
+
+            try
+            {
+                string tmpFolder = Path.Combine(baseFolder, "05 영상코로나 또는 부분방전");
+                string pdfPath = Directory.GetFiles(tmpFolder, "*.pdf").FirstOrDefault();
+
+                if (pdfPath == null)
+                {
+                    throw new FileNotFoundException("PDF 파일을 찾을 수 없습니다.", tmpFolder);
+                }
+
+                ws = GetWorksheetByName(wb, "영코");
+
+                if (ws == null)
+                {
+                    throw new Exception("영코 시트를 찾을 수 없습니다.");
+                }
+
+                RemovePictures(ws);
+                using (ImageInserter inserter = new ImageInserter(ws, pdfPath))
+                {
+                    ImageInsertOptions option = new ImageInsertOptions
+                    {
+                        CropLeft = 175,
+                        CropTop = 195,
+                        CropRight = 1200,
+                        CropBottom = 195
+                    };
+
+                    inserter.InsertFit(0,
+                        "A5",
+                        "I24"
+                        );
+
+                    for (int i = 1; i < inserter.ImageCount; i++)
+                    {
+                        string cellFrom = $"A{25 + (i - 1) * 25}";
+                        string cellTo = $"I{49 + (i - 1) * 25}";
+                        inserter.InsertFit(i,
+                            cellFrom,
+                            cellTo
+                            );
+                    }
+
+                    wb.Save();
+                }
+            }
+            catch (Exception ex)
+            {
+                AddLog("Error", $"영상코로나 이미지 삽입 실패: {ex.Message}");
+            }
+            finally
+            {
+                try
+                {
+                    if (ws != null) Marshal.ReleaseComObject(ws);
+                }
+                catch { }
+            }
+        }
+        #endregion
+
+        #region [품질 시트 처리]
+        private void ProcQuantitySheet(Excel.Application xlApp, Excel.Workbook wb, string baseFolder, string quantityFolder, string testReport, string testGraph, string HighGraph)
+        {
+            Excel.Worksheet ws = null;
+            string pdfPath = null;
+            if (checkBoxQuantity.Checked == false) return;
+
+            try
+            {
+                ws = GetWorksheetByName(wb, "품질");
+
+                if (ws == null)
+                {
+                    throw new Exception("품질 시트를 찾을 수 없습니다.");
+                }
+
+                RemovePictures(ws);
+
+                pdfPath = Path.Combine(baseFolder, quantityFolder, "K.pdf");
+                using (ImageInserter inserter = new ImageInserter(ws, pdfPath))
+                {
+                    inserter.Insert("U6", 0.8);
+
+                    //wb.Save();
+                }
+
+                pdfPath = Path.Combine(baseFolder, quantityFolder, testReport);
+                using (ImageInserter inserter = new ImageInserter(ws, pdfPath))
+                {
+                    inserter.InsertFit(
+                        "A36",
+                        "R67",
+                        new ImageInsertOptions
+                        {
+                            CropLeft = 195,
+                            CropTop = 170,
+                            CropRight = 210,
+                            CropBottom = 1000,
+                            GapTop = 0,
+                            GapBottom = 5.0f
+                        });
+
+                    //wb.Save();
+                }
+                pdfPath = Path.Combine(baseFolder, quantityFolder, "E.pdf");
+
+                using (ImageInserter inserter = new ImageInserter(ws, pdfPath))
+                {
+
+                    ImageInsertOptions option = new ImageInsertOptions
+                    {
+                        //CropLeft = 135,
+                        //CropTop = 55,
+                        //CropRight = 105,
+                        //CropBottom = 146
+                        GapTop = 0
+                    };
+
+                    // 1페이지
+                    inserter.InsertFit(0, "A68", "R100", option);
+
+                    // 2~5페이지
+                    string[,] group1 =
+                    {
+                                { "A101", "G116" },   // 2
+                                { "H101", "R116" },   // 3
+                                { "A117", "G132" },   // 4
+                                { "H117", "R132" }    // 5
+                            };
+
+                    // 6~9페이지
+                    string[,] group2 =
+                              {
+                                { "A133", "G148" },   // 6
+                                { "H133", "R148" },   // 7
+                                { "A149", "G164" },   // 8
+                                { "H149", "R164" }    // 9
+                            };
+
+                    // 10~13페이지
+                    string[,] group3 =
+                    {
+                                { "A165", "G180" },   //10
+                                { "H165", "R180" },   //11
+                                { "A181", "G196" },   //12
+                                { "H181", "R196" }    //13
+                            };
+
+                    // 14~17페이지
+                    string[,] group4 =
+                    {
+                                { "A197", "G212" },   //14
+                                { "H197", "R212" },   //15
+                                { "A213", "G228" },   //16
+                                { "H213", "R228" }    //17
+                            };
+
+                    int page = 1;
+
+                    option.GapLeft = 2.8f;
+                    option.GapTop = 2.8f;
+                    option.GapRight = 2.8f;
+                    option.GapBottom = 2.8f;
+
+                    foreach (var group in new[] { group1, group2, group3, group4 })
+                    {
+                        for (int i = 0; i < 4 && page < 17; i++, page++)
+                        {
+                            inserter.InsertFit(
+                                page,
+                                group[i, 0],
+                                group[i, 1],
+                                option);
+                        }
+                    }
+
+                    //wb.Save();
+                }
+
+
+                pdfPath = Path.Combine(baseFolder, quantityFolder, testGraph);
+
+                using (ImageInserter inserter = new ImageInserter(ws, pdfPath))
+                {
+
+                    ImageInsertOptions option = new ImageInsertOptions
+                    {
+                        CropLeft = 175,
+                        CropTop = 195,
+                        CropRight = 1300,
+                        CropBottom = 150
+                    };
+
+                    // 1페이지
+                    //inserter.InsertFit("A228", "R259", option);
+                    inserter.Insert("A228", 1.0);
+
+                    //wb.Save();
+                }
+
+                pdfPath = Path.Combine(baseFolder, quantityFolder, HighGraph);
+
+                using (ImageInserter inserter = new ImageInserter(ws, pdfPath))
+                {
+
+                    ImageInsertOptions option = new ImageInsertOptions
+                    {
+                        CropLeft = 175,
+                        CropTop = 195,
+                        CropRight = 1100,
+                        CropBottom = 150
+                    };
+
+                    // 1페이지
+                    //inserter.InsertFit("A260", "R292", option);
+                    inserter.Insert("A228", 1.0);
+
+                    // wb.Save();
+                }
+
+                string[] files = Directory.GetFiles(baseFolder + $"\\{quantityFolder}", "*.bmp")
+                    .OrderBy(f =>
+                    {
+                        return int.TryParse(Path.GetFileNameWithoutExtension(f), out int n)
+                            ? n
+                            : int.MaxValue;
+                    })
+                    .ToArray();
+
+                int startRow = 293;
+                int blockHeight = 8;   // 293~300 = 8행
+
+                for (int i = 0; i < files.Length && i < 8; i++)
+                {
+                    int row = i / 2;    // 0~3
+                    int col = i % 2;    // 0=좌, 1=우
+
+                    int fromRow = startRow + row * blockHeight;
+                    int toRow = fromRow + blockHeight - 1;
+
+                    string fromCell = col == 0
+                        ? $"A{fromRow}"
+                        : $"H{fromRow}";
+
+                    string toCell = col == 0
+                        ? $"G{toRow}"
+                        : $"R{toRow}";
+
+                    using (var inserter = new ImageInserter(ws, files[i]))
+                    {
+                        inserter.InsertFit(
+                            fromCell,
+                            toCell,
+                            new ImageInsertOptions
+                            {
+                                KeepAspectRatio = false
+                            });
+                    }
+                }
+                wb.Save();
+            }
+
+            catch (Exception ex)
+            {
+                AddLog("Error", $"품질 이미지 삽입 실패: {ex.Message}");
+            }
+            finally
+            {
+                try
+                {
+                    if (ws != null) Marshal.ReleaseComObject(ws);
+                }
+                catch { }
+            }
+        }
+
+        #region [열화상 이미지 분기 시트 삽입]
+
+        private void ProcFeverPicture(Excel.Application xlApp, Excel.Workbook wb, string baseFolder, string pictureFolder)
+        {
+
+            // 새 통합문서 생성
+            Excel.Workbook newWb = null;
+            Excel.Worksheet sourceWs = null;
+            Excel.Worksheet ws = null;
+
+            try
+            {
+
+                if (checkBoxFeverPicture.Checked)
+                {
+                    sourceWs = GetWorksheetByName(wb, "분기");
+
+                    if (sourceWs == null)
+                    {
+                        throw new Exception("분기 시트를 찾을 수 없습니다.");
+                    }
+
+                    // 새 통합문서 생성
+                    newWb = xlApp.Workbooks.Add();
+
+                    try
+                    {
+                        // 기본 시트 삭제
+                        while (newWb.Worksheets.Count > 1)
+                        {
+                            ((Excel.Worksheet)newWb.Worksheets[2]).Delete();
+                        }
+
+                        // 분기 시트 복사
+                        sourceWs.Copy(Before: newWb.Worksheets[1]);
+
+                        // 기본 Sheet1 삭제
+                        ((Excel.Worksheet)newWb.Worksheets[newWb.Worksheets.Count]).Delete();
+
+                        // 복사된 시트
+                        ws = (Excel.Worksheet)newWb.Worksheets[1];
+
+                        string tempFile = Path.Combine(baseFolder, "images.xlsx");
+                        newWb.SaveAs(tempFile);
+                    }
+                    catch { }
+
+
+                    RemovePictures(ws);
+                    RemovePictures(sourceWs);
+
+
+                    string[] files = Directory.GetFiles(baseFolder + "\\" + pictureFolder, "*.jpg")
+                    .OrderBy(f =>
+                    {
+                        return int.TryParse(Path.GetFileNameWithoutExtension(f), out int n)
+                            ? n
+                            : int.MaxValue;
+                    })
+                    .ToArray();
+
+                    int imageIndex = 0;
+
+                    for (int page = 0; imageIndex < files.Length; page++)
+                    {
+                        int startRow = 27 + (page * 56);
+                        int endRow = 43 + (page * 56);
+
+                        string[] fromCols = { "A", "R" };
+                        string[] toCols = { "Q", "AC" };   // 실제 병합 끝 열에 맞게 수정
+
+                        for (int i = 0; i < fromCols.Length; i++)
+                        {
+                            if (imageIndex >= files.Length)
+                                break;
+
+                            string fromCell = $"{fromCols[i]}{startRow}";
+                            string toCell = $"{toCols[i]}{endRow}";
+
+                            float gapRight = (i % 2 == 0) ? 2.4f : 2.8f;
+                            float gapLeft = (i % 2 == 0) ? 4.1f : 3.6f;
+
+                            float gapBottom = 2.8f;
+                            float gapTop = 4.8f;
+
+                            using (var inserter = new ImageInserter(ws, files[imageIndex]))
+                            {
+                                inserter.InsertFit(
+                                    fromCell,
+                                    toCell,
+                                    new ImageInsertOptions
+                                    {
+                                        KeepAspectRatio = false,
+                                        //GapRight = 2.7f,
+                                        GapRight = gapRight,
+                                        //GapBottom = 2.6f,
+                                        GapBottom = gapBottom,
+                                        //GapLeft = 4.0f,
+                                        GapLeft = gapLeft,
+                                        GapTop = gapTop
+                                    });
+                            }
+
+                            using (var inserter = new ImageInserter(sourceWs, files[imageIndex]))
+                            {
+                                inserter.InsertFit(
+                                    fromCell,
+                                    toCell,
+                                    new ImageInsertOptions
+                                    {
+                                        KeepAspectRatio = false,
+                                        //GapRight = 2.7f,
+                                        GapRight = gapRight,
+                                        GapBottom = gapBottom,
+                                        //GapLeft = 4.0f,
+                                        GapLeft = gapLeft,
+                                        GapTop = gapTop
+                                    });
+                            }
+
+                            imageIndex++;
+                        }
+                    }
+
+                    using (var reader = new FlirOcrReader())
+                    {
+                        OcrExcelMap map = new OcrExcelMap
+                        {
+                            ValueCells = new[]
+                            {
+                                        "H49",
+                                        "P49",
+                                        "W49",
+                                        "H52",
+                                        "P52",
+                                        "W52"
+                                    },
+                            MinTemperatureCell = "AD6",
+                            RowOffset = 56
+                        };
+
+                        string[] evenFiles = files
+                            .Where((file, index) => index % 2 == 0)
+                            .ToArray();
+
+                        OcrDataToExcel.ProcessAll(
+                            sourceWs,
+                            evenFiles,
+                            reader,
+                            map);
+
+                        OcrDataToExcel.ProcessAll(
+                            ws,
+                            evenFiles,
+                            reader,
+                            map);
+                    }
+
+                    wb.Save();
+                    newWb.Save();
+
+                }
+            }
+
+            catch (Exception ex)
+            {
+                //throw new Exception("분기 이미지 삽입 실패: " + ex.Message, ex);
+                AddLog("Error", $"분기 이미지 삽입 실패: {ex.Message}");
+            }
+            finally
+            {
+                try
+                {
+                    if (ws != null) Marshal.ReleaseComObject(ws);
+                    if (sourceWs != null) Marshal.ReleaseComObject(sourceWs);   
+                    if (newWb != null)
+                    {
+                        newWb.Close(false);
+                        Marshal.ReleaseComObject(newWb);
+                    }   
+                }
+                catch { }
+            }
+        }
+        #endregion
+
+        #region [엑셀 시트에서 그림 삭제]
 
         public void RemovePictures(Excel.Worksheet ws)
         {
@@ -3040,12 +3081,13 @@ namespace SmartReport
             }
         }
         #endregion
+        #endregion
 
         #region 갑지 이미지 중앙 정렬
         public void relocatePictures()
         {
 
-            var filePath = tbFileNameForFunction.Text?.Trim();
+            var filePath = tbQuantityFile.Text?.Trim();
             if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
             {
                 MessageBox.Show("페이지 번호를 매길 엑셀 파일을 먼저 선택하세요.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -3063,18 +3105,12 @@ namespace SmartReport
                 // Open for write because we modify PageSetup
                 wb = xlApp.Workbooks.Open(filePath, ReadOnly: false);
 
-                foreach (Excel.Worksheet sheet in wb.Worksheets)
-                {
-                    if (sheet.Name.Trim() == "갑지")
-                    {
-                        ws = sheet;
-                        break;
-                    }
-                }
+                ws = GetWorksheetByName(wb, "갑지");
 
                 if (ws == null)
-                    throw new Exception("갑지 시트를 찾을 수 없습니다.");
-
+                {
+                    AddLog("Error", "갑지 시트를 찾을 수 없습니다.");
+                }
 
 
                 ws.PageSetup.LeftMargin = 28.35;   // 약 1cm
@@ -3145,7 +3181,8 @@ namespace SmartReport
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"페이지 번호 매기기 중 오류가 발생했습니다:\r\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                //MessageBox.Show($"갑지 시트 위치 조정 중 오류가 발생했습니다:\r\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                AddLog("Error", $"갑지 시트 위치 조정 중 오류가 발생했습니다: {ex.Message}");
             }
             finally
             {
@@ -3312,7 +3349,159 @@ namespace SmartReport
         #endregion
 
         #region [로그 넣기]
+        private void WriteLog(string log)
+        {
+            if (soborLog == null) {
+                soborLog = new SoborLog();
+            }
+
+            if (log == "")
+            {
+                return;
+            }
+            try
+            {
+                soborLog.Add(log);
+            }
+            catch
+            {
+                //throw ex;
+            }
+        }
+
+        private void AddLog(string level, string message)
+        {
+            Color color = Color.Black;
+
+            switch ((level ?? "").ToUpperInvariant())
+            {
+                case "ERROR":
+                    color = Color.Red;
+                    break;
+
+                case "WARNING":
+                    color = Color.DarkOrange;
+                    break;
+
+                case "INFO":
+                    color = Color.Black;
+                    break;
+
+                case "SUCCESS":
+                    color = Color.Green;
+                    break;
+            }
+            if (richTextBox1 == null) return;
+
+            Action doAppend = () =>
+            {
+                try
+                {
+                    // 날짜+시간 표시 추가
+                    string ts = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    richTextBox1.SelectionStart = richTextBox1.TextLength;
+                    richTextBox1.SelectionColor = Color.Gray;
+                    richTextBox1.AppendText($"[{ts}] ");
+
+                    // 레벨 색상으로 출력
+                    richTextBox1.SelectionStart = richTextBox1.TextLength;
+                    richTextBox1.SelectionColor = color;
+                    richTextBox1.AppendText($"[{level}] ");
+
+                    // 메시지
+                    richTextBox1.SelectionColor = Color.Black;
+                    richTextBox1.AppendText(message + Environment.NewLine);
+
+                    // 탭 자동 선택 (All 로그 탭이 있으면 표시)
+                    try
+                    {
+                        if (tapLog != null && all != null)
+                        {
+                            tapLog.SelectedTab = all;
+                        }
+                    }
+                    catch { }
+
+                    richTextBox1.ScrollToCaret();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"AddLog failed: {ex.Message}");
+                }
+            };
+
+            if (richTextBox1.InvokeRequired)
+            {
+                richTextBox1.BeginInvoke(doAppend);
+            }
+            else
+            {
+                doAppend();
+            }
+
+            WriteLog(log: $"[{level}] {message}");
+        }
         #endregion
+
+        #region
+        private async void btnDownloadWork_Click(object sender, EventArgs e)
+        {
+            string keyword = textBoxKeyword.Text;
+            List<SearchFolderOption> SearchFolders = new List<SearchFolderOption>();
+
+        
+            string downloadFolderSeasonReport = "/2_1전기직무고시점검보고서/2 본부(김희철)/0001 시흥보고서방/001열화상";
+            string downloadFolderAnuualReport = "/2_1전기직무고시점검보고서/2 본부(김희철)/0001 시흥보고서방";
+
+            SearchFolders = new List<SearchFolderOption>
+            {
+                new SearchFolderOption
+                {
+                    Folder = downloadFolderSeasonReport,
+                    Recursive = false
+                },
+                new SearchFolderOption
+                {
+                        Folder = downloadFolderAnuualReport,
+                    Recursive = false
+                }
+            };
+
+            if (string.IsNullOrWhiteSpace(keyword))
+            {
+                AddLog("Error", "검색어를 입력하세요.");
+                return;
+            }
+
+            await TestSynologyAsync(SearchFolders, keyword);
+        }
+        #endregion
+
+
+
+        // 할 일
+        // 제출문 시트의 A20 셀을 2025년 7월 ==> 26년 6월로 변경하는 예시
+        // 제출문 시트 B18 셀 "첨부 별지서식 : 2~8,코로나방전,축전지"
+        // AD17 "2~8,코로나방전,축전지 "
+        // AD18 "7"
+        // AD19 "2접지,6,7"
+
+        // 연계획 시트의 A2 2025년을 2026으로 변경
+        // 측정일 바꾸기
+        // 분기 바꾸기
+
+        // Sheet1 제거 (기본 생성)
+        // 측정자 셀 변경하기
+
+        // 검교정 P1 (현장명) 바꾸기
+        // 의견 시트 별지서식 변경
+        // A5 셀 "  ○ 전기안전관리자 직무고시 점검 : 별지서식 [2,3,4,5,6,7,8,코로나방전,축전지] 점검."
+
+
+        // 갑지 시트의 A11 셀 "2026년 1분기"
+
+
+        // 서버에 유랑진 있는 폴더 가져오기
     }
 
 }

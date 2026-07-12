@@ -64,9 +64,16 @@ namespace WindowsFormsApp1
                 {
                     string cell = AddRow(map.MinTemperatureCell, i * map.RowOffset);
 
-                    ws.Range[cell].Value = result.ScaleMinTemperature;
-
+                    // 환경온도(컬러바 하단)의 최소값을 넣음
                     minTemperature = Math.Min(minTemperature, result.ScaleMinTemperature);
+
+                    // cell 의 바로 위 행의 값이 비어있으면 continue
+                    // 바로 위 셀 주소
+                    string upperCell = AddRow(map.MinTemperatureCell, i * map.RowOffset - 1);
+
+                    // 바로 위 셀이 있으면 입력
+                    if (!string.IsNullOrWhiteSpace(Convert.ToString(ws.Range[upperCell].Value)))
+                        ws.Range[cell].Value = result.ScaleMinTemperature;
                 }
             }
 

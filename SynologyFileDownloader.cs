@@ -1,16 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 
 namespace SynologyIntegration
 {
+    public class SearchFolderOption
+    {
+        public string Folder { get; set; }
+        public bool Recursive { get; set; }
+    }
+
     public class SynologyFileDownloaderConfig
     {
         public string BaseUrl { get; set; }
@@ -19,6 +27,7 @@ namespace SynologyIntegration
 
         // 탐색 시작 폴더 (예: /2_1전기직무고시점검보고서)
         public string SearchFolder { get; set; }
+        public List<SearchFolderOption> SearchFolders { get; set; }
 
         // 파일명에 포함될 검색어
         public string Keyword { get; set; }
@@ -750,12 +759,14 @@ namespace SynologyIntegration
         /// B안: Search API를 쓰지 않고, 지정 폴더를 재귀 탐색하여
         /// 파일명 키워드/확장자 조건에 맞는 파일을 찾는다.
         /// </summary>
-        public async Task<List<SynologyFileItem>> SearchFilesAsync(CancellationToken cancellationToken = default(CancellationToken))
+        /*public async Task<List<SynologyFileItem>> SearchFilesAsync(
+            CancellationToken cancellationToken = default(CancellationToken))
         {
             ThrowIfDisposed();
             EnsureLoggedIn();
 
-            var extSet = new HashSet<string>(_config.GetNormalizedExtensions(), StringComparer.OrdinalIgnoreCase);
+            var extSet = new HashSet<string>(_config.GetNormalizedExtensions(), 
+                StringComparer.OrdinalIgnoreCase);
             var result = new List<SynologyFileItem>();
 
             string rootPath = NormalizeNasPath(_config.SearchFolder);
@@ -777,6 +788,186 @@ namespace SynologyIntegration
                 .ToList();
 
             return files;
+        }*/
+
+        public async Task DownloadPreviousReportsAsync(
+            string localRoot,
+            CancellationToken cancellationToken = default)
+        {
+            ThrowIfDisposed();
+            EnsureLoggedIn();
+
+            var extSet = new HashSet<string>(
+                _config.GetNormalizedExtensions(),
+                StringComparer.OrdinalIgnoreCase);
+
+            foreach (string localFolder in Directory.GetDirectories(localRoot))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                string folderName = Path.GetFileName(localFolder);
+
+                // 260707_당진시네마타워_김영철_반기
+                string[] parts = folderName.Split('_');
+
+                if (parts.Length < 2)
+                    continue;
+
+                if (!DateTime.TryParseExact(
+                        parts[0],
+                        "yyMMdd",
+                        null,
+                        System.Globalization.DateTimeStyles.None,
+                        out DateTime targetDate))
+                    continue;
+
+                string siteName = parts[1];
+
+                var files = new List<SynologyFileItem>();
+
+                //foreach (var searchFolder in _config.SearchFolders)
+                //{
+                //    await ListFolderRecursiveAsync(
+                //        NormalizeNasPath(searchFolder.Folder),
+                //        siteName,
+                //        extSet,
+                //        searchFolder.Recursive,
+                //        files,
+                //        cancellationToken);
+                //}
+                await ListFolderRecursiveAsync(
+                    NormalizeNasPath(_config.SearchFolder),
+                    siteName,
+                    extSet,
+                    true,
+                    files,
+                    cancellationToken);
+
+                DateTime minDate = targetDate.AddMonths(-13);
+
+                var candidates = files
+                    .Select(f => new
+                    {
+                        File = f,
+                        Date = GetFileDate(f.Name)
+                    })
+                    .Where(x => x.Date.HasValue &&
+                                x.Date.Value <= targetDate &&
+                                x.Date.Value >= minDate)
+                    .ToList();
+
+                // 연차
+                var annual = candidates
+                    .Where(x => x.File.Name.Contains("연차"))
+                    .GroupBy(x => Path.GetExtension(x.File.Name))
+                    .Select(g => g.OrderByDescending(x => x.Date).First().File);
+
+                // 분기
+                var quarter = candidates
+                    .Where(x => !x.File.Name.Contains("연차"))
+                    .GroupBy(x => Path.GetExtension(x.File.Name))
+                    .Select(g => g.OrderByDescending(x => x.Date).First().File);
+
+                foreach (var file in annual.Concat(quarter))
+                {
+                    string savePath = Path.Combine(localFolder, file.Name);
+
+                    await DownloadFileAsync(
+                        file.Path,
+                        savePath,
+                        cancellationToken);
+                }
+            }
+        }
+
+        public async Task DownloadFileAsync(
+            string filePath,
+            string savePath,
+            CancellationToken cancellationToken = default)
+        {
+            ThrowIfDisposed();
+            EnsureLoggedIn();
+
+            filePath = NormalizeNasPath(filePath);
+
+            string url =
+                $"{_config.BaseUrl}/webapi/entry.cgi" +
+                $"?api=SYNO.FileStation.Download" +
+                $"&version=2" +
+                $"&method=download" +
+                $"&path={Uri.EscapeDataString(filePath)}" +
+                $"&mode=download" +
+                $"&_sid={Uri.EscapeDataString(_sid)}";
+
+            Directory.CreateDirectory(Path.GetDirectoryName(savePath));
+
+            using (var response = await _httpClient.GetAsync(
+                url,
+                HttpCompletionOption.ResponseHeadersRead,
+                cancellationToken))
+            {
+                response.EnsureSuccessStatusCode();
+
+                using (var input = await response.Content.ReadAsStreamAsync())
+                using (var output = new FileStream(
+                    savePath,
+                    FileMode.Create,
+                    FileAccess.Write,
+                    FileShare.None))
+                {
+                    await input.CopyToAsync(output);
+                }
+            }
+        }
+
+        private DateTime? GetFileDate(string fileName)
+        {
+            Match m = Regex.Match(fileName, @"_(\d{6})\.");
+
+            if (!m.Success)
+                return null;
+
+            if (DateTime.TryParseExact(
+                    m.Groups[1].Value,
+                    "yyMMdd",
+                    null,
+                    System.Globalization.DateTimeStyles.None,
+                    out DateTime dt))
+            {
+                return dt;
+            }
+
+            return null;
+        }
+
+        public async Task<List<SynologyFileItem>> SearchFilesAsync(
+            CancellationToken cancellationToken = default)
+        {
+            ThrowIfDisposed();
+            EnsureLoggedIn();
+
+            var extSet = new HashSet<string>(
+                _config.GetNormalizedExtensions(),
+                StringComparer.OrdinalIgnoreCase);
+
+            var result = new List<SynologyFileItem>();
+
+            foreach (var folder in _config.SearchFolders)
+            {
+                await ListFolderRecursiveAsync(
+                        NormalizeNasPath(folder.Folder),
+                        _config.Keyword,
+                        extSet,
+                        folder.Recursive,
+                        result,
+                        cancellationToken);
+            }
+
+            return result
+                .Where(x => !x.IsDir)
+                .OrderByDescending(x => x.ModifiedTime)
+                .ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
+                .ToList();
         }
 
         public async Task<List<string>> DownloadFilesAsync(
@@ -818,14 +1009,18 @@ namespace SynologyIntegration
         }
 
         private async Task ListFolderRecursiveAsync(
-    string folderPath,
-    string keyword,
-    HashSet<string> extSet,
-    bool recursive,
-    List<SynologyFileItem> result,
-    CancellationToken cancellationToken)
+            string folderPath,
+            string keyword,
+            HashSet<string> extSet,
+            bool recursive,
+            List<SynologyFileItem> result,
+            CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
+
+
+            string currentYear = (DateTime.Now.Year % 100).ToString("00");
+            string previousYear = ((DateTime.Now.Year - 1) % 100).ToString("00");
 
             List<SynologyFileItem> entries = await ListFolderAsync(folderPath, cancellationToken).ConfigureAwait(false);
 
@@ -837,6 +1032,37 @@ namespace SynologyIntegration
                 {
                     if (IsRecycleFolder(entry))
                         continue;
+
+                    Debug.WriteLine(entry.Name);
+
+                    bool isLastFolder = Regex.IsMatch(
+                        entry.Name,
+                        @"^\d{6}_.+");
+
+                    bool isTargetFolder =
+                        Regex.IsMatch(entry.Name,
+                            $"^({previousYear}|{currentYear})\\d{{4}}_.+");
+
+                    // 폴더명이 keyword와 일치하면
+                    if (isTargetFolder && !string.IsNullOrEmpty(keyword) &&
+                        entry.Name.IndexOf(keyword, StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        // 이 폴더의 모든 파일 수집
+                        await ListFolderRecursiveAsync(
+                            entry.Path,
+                            "",
+                            extSet,
+                            true,
+                            result,
+                            cancellationToken);
+
+                        continue;
+                    }
+
+                    if (isLastFolder)
+                    {
+                        return;
+                    }
 
                     if (recursive)
                     {
@@ -961,10 +1187,136 @@ namespace SynologyIntegration
             return result;
         }
 
+        public async Task<List<SynologyFileItem>> SearchFoldersAsync(
+            CancellationToken cancellationToken = default)
+        {
+            ThrowIfDisposed();
+            EnsureLoggedIn();
+
+            var result = new List<SynologyFileItem>();
+
+            foreach (var folder in _config.SearchFolders)
+            {
+                await ListFoldersRecursiveAsync(
+                    NormalizeNasPath(folder.Folder),
+                    _config.Keyword,
+                    folder.Recursive,
+                    result,
+                    cancellationToken);
+            }
+
+            return result
+                .OrderBy(x => x.Path, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+
+        private async Task ListFoldersRecursiveAsync(
+            string folderPath,
+            string keyword,
+            bool recursive,
+            List<SynologyFileItem> result,
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var entries = await ListFolderAsync(folderPath, cancellationToken)
+                .ConfigureAwait(false);
+
+            foreach (var entry in entries)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (!entry.IsDir)
+                    continue;
+
+                if (IsRecycleFolder(entry))
+                    continue;
+
+
+                //if (string.IsNullOrWhiteSpace(keyword) ||
+                //    entry.Name.IndexOf(keyword, StringComparison.OrdinalIgnoreCase) >= 0)
+                if (string.IsNullOrWhiteSpace(keyword) ||
+                    entry.Name.EndsWith(keyword, StringComparison.OrdinalIgnoreCase))
+                {
+                    result.Add(entry);
+                }
+
+                if (recursive)
+                {
+                    await ListFoldersRecursiveAsync(
+                        entry.Path,
+                        keyword,
+                        true,
+                        result,
+                        cancellationToken).ConfigureAwait(false);
+                }
+            }
+        }
+
+        public async Task DownloadFolderAsync(
+            string folderPath,
+            string saveZipPath,
+            CancellationToken cancellationToken = default)
+        {
+            ThrowIfDisposed();
+            EnsureLoggedIn();
+
+            folderPath = NormalizeNasPath(folderPath);
+
+            string url =
+                $"{_config.BaseUrl}/webapi/entry.cgi" +
+                $"?api=SYNO.FileStation.Download" +
+                $"&version=2" +
+                $"&method=download" +
+                $"&path={Uri.EscapeDataString(folderPath)}" +
+                $"&mode=download" +
+                $"&_sid={Uri.EscapeDataString(_sid)}";
+
+            using (var response = await _httpClient.GetAsync(
+                url,
+                HttpCompletionOption.ResponseHeadersRead,
+                cancellationToken))
+            {
+                response.EnsureSuccessStatusCode();
+
+                using (var input = await response.Content.ReadAsStreamAsync())
+                using (var output = new FileStream(
+                    saveZipPath,
+                    FileMode.Create,
+                    FileAccess.Write,
+                    FileShare.None))
+                {
+                    await input.CopyToAsync(output);
+                }
+            }
+        }
+
+        public async Task<int> DownloadFoldersAsync(
+            string saveDirectory,
+            CancellationToken cancellationToken = default)
+        {
+            int downloadCount = 0;
+            var folders = await SearchFoldersAsync(cancellationToken);
+
+            Directory.CreateDirectory(saveDirectory);
+
+            foreach (var folder in folders)
+            {
+                string zipPath = Path.Combine(saveDirectory, folder.Name + ".zip");
+
+                await DownloadFolderAsync(
+                    folder.Path,
+                    zipPath,
+                    cancellationToken);
+                downloadCount++;
+            }
+            return downloadCount;
+        }
+
         public async Task<List<string>> DownloadSelectedFilesAsync(
-    IEnumerable<SynologyFileItem> files,
-    string baseSaveFolder,
-    CancellationToken cancellationToken = default(CancellationToken))
+            IEnumerable<SynologyFileItem> files,
+            string baseSaveFolder,
+            CancellationToken cancellationToken = default(CancellationToken))
         {
             ThrowIfDisposed();
             EnsureLoggedIn();

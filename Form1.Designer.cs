@@ -32,42 +32,37 @@ namespace SmartReport
         private void InitializeComponent()
         {
             this.pnlMain = new System.Windows.Forms.Panel();
+            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+            this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabMain = new System.Windows.Forms.TabControl();
             this.tpFunction = new System.Windows.Forms.TabPage();
+            this.gbReport = new System.Windows.Forms.GroupBox();
+            this.btnQuantityFile = new System.Windows.Forms.Button();
+            this.tbQuantityFile = new System.Windows.Forms.TextBox();
+            this.lbQuantityFile = new System.Windows.Forms.Label();
+            this.btnPageNumber = new System.Windows.Forms.Button();
+            this.btnExportForPdf = new System.Windows.Forms.Button();
+            this.gbConvertValue = new System.Windows.Forms.GroupBox();
+            this.checkBox1 = new System.Windows.Forms.CheckBox();
+            this.checkBoxDate = new System.Windows.Forms.CheckBox();
+            this.checkBoxChecker = new System.Windows.Forms.CheckBox();
             this.gbImage = new System.Windows.Forms.GroupBox();
-            this.btnFeverImageFolder = new System.Windows.Forms.Button();
+            this.checkBoxOcr = new System.Windows.Forms.CheckBox();
+            this.comboBoxSignalGraph = new System.Windows.Forms.ComboBox();
+            this.comboBoxTestGraph = new System.Windows.Forms.ComboBox();
+            this.comboBoxHwaveGraph = new System.Windows.Forms.ComboBox();
+            this.btnGapjiPictureRelocate = new System.Windows.Forms.Button();
+            this.textBoxPictureFolder = new System.Windows.Forms.TextBox();
+            this.textBoxCoronaFolder = new System.Windows.Forms.TextBox();
+            this.textBoxQuntatyFolder = new System.Windows.Forms.TextBox();
+            this.btErrorPageUpdate = new System.Windows.Forms.Button();
             this.textBoxFeverImageFolder = new System.Windows.Forms.TextBox();
-            this.label5 = new System.Windows.Forms.Label();
             this.checkBoxFeverPicture = new System.Windows.Forms.CheckBox();
             this.checkBoxPicture = new System.Windows.Forms.CheckBox();
             this.checkBoxCorona = new System.Windows.Forms.CheckBox();
             this.checkBoxQuantity = new System.Windows.Forms.CheckBox();
             this.btnQuntityFileRun = new System.Windows.Forms.Button();
-            this.btnQuantityFile = new System.Windows.Forms.Button();
-            this.tbQuantityFile = new System.Windows.Forms.TextBox();
-            this.lbQuantityFile = new System.Windows.Forms.Label();
-            this.panel4 = new System.Windows.Forms.Panel();
-            this.tbDefultDirectory = new System.Windows.Forms.TextBox();
-            this.tbGapFeverPicture = new System.Windows.Forms.TextBox();
-            this.label4 = new System.Windows.Forms.Label();
-            this.lblGapFeverPicture = new System.Windows.Forms.Label();
-            this.tbWidthFeverPicture = new System.Windows.Forms.TextBox();
-            this.label3 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
-            this.tbHeightFeverPicture = new System.Windows.Forms.TextBox();
-            this.lblWidthFeverPicture = new System.Windows.Forms.Label();
-            this.lblHeightFeverPicture = new System.Windows.Forms.Label();
-            this.button3 = new System.Windows.Forms.Button();
-            this.textBox1 = new System.Windows.Forms.TextBox();
-            this.label1 = new System.Windows.Forms.Label();
-            this.panel3 = new System.Windows.Forms.Panel();
-            this.btErrorPageUpdate = new System.Windows.Forms.Button();
-            this.cbAutoExportPdf = new System.Windows.Forms.CheckBox();
-            this.btnExportForPdf = new System.Windows.Forms.Button();
-            this.btnFindFileForFunction = new System.Windows.Forms.Button();
-            this.tbFileNameForFunction = new System.Windows.Forms.TextBox();
-            this.lblFileNmaeForFunction = new System.Windows.Forms.Label();
-            this.btnPageNumber = new System.Windows.Forms.Button();
             this.tpGap = new System.Windows.Forms.TabPage();
             this.panel2 = new System.Windows.Forms.Panel();
             this.btnDownload = new System.Windows.Forms.Button();
@@ -75,123 +70,381 @@ namespace SmartReport
             this.lbCompany = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
             this.dgvFiles = new System.Windows.Forms.DataGridView();
-            this.lbName = new System.Windows.Forms.Label();
-            this.cbName = new System.Windows.Forms.ComboBox();
-            this.comboBox1 = new System.Windows.Forms.ComboBox();
-            this.lbFolder = new System.Windows.Forms.Label();
+            this.tapLog = new System.Windows.Forms.TabControl();
+            this.all = new System.Windows.Forms.TabPage();
+            this.richTextBox1 = new System.Windows.Forms.RichTextBox();
+            this.info = new System.Windows.Forms.TabPage();
+            this.tabError = new System.Windows.Forms.TabPage();
+            this.pnlTop = new System.Windows.Forms.Panel();
+            this.checkBoxAnnual = new System.Windows.Forms.CheckBox();
+            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.lbSample = new System.Windows.Forms.Label();
+            this.cbAutoGenerateExcel = new System.Windows.Forms.CheckBox();
+            this.comboBoxSeason = new System.Windows.Forms.ComboBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.dateTimePicker1 = new System.Windows.Forms.DateTimePicker();
+            this.label1 = new System.Windows.Forms.Label();
+            this.tbPerson = new System.Windows.Forms.TextBox();
+            this.panel3 = new System.Windows.Forms.Panel();
             this.btFolder = new System.Windows.Forms.Button();
             this.tbFolder = new System.Windows.Forms.TextBox();
-            this.pnlTop = new System.Windows.Forms.Panel();
-            this.btnGapjiPictureRelocate = new System.Windows.Forms.Button();
-            this.checkBoxPartial = new System.Windows.Forms.CheckBox();
+            this.lbFolder = new System.Windows.Forms.Label();
+            this.cbName = new System.Windows.Forms.ComboBox();
+            this.lbName = new System.Windows.Forms.Label();
+            this.textBoxKeyword = new System.Windows.Forms.TextBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.btnDownloadWork = new System.Windows.Forms.Button();
             this.pnlMain.SuspendLayout();
+            this.statusStrip1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
+            this.splitContainer1.Panel1.SuspendLayout();
+            this.splitContainer1.Panel2.SuspendLayout();
+            this.splitContainer1.SuspendLayout();
             this.tabMain.SuspendLayout();
             this.tpFunction.SuspendLayout();
+            this.gbReport.SuspendLayout();
+            this.gbConvertValue.SuspendLayout();
             this.gbImage.SuspendLayout();
-            this.panel4.SuspendLayout();
-            this.panel3.SuspendLayout();
             this.tpGap.SuspendLayout();
             this.panel2.SuspendLayout();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvFiles)).BeginInit();
+            this.tapLog.SuspendLayout();
+            this.all.SuspendLayout();
             this.pnlTop.SuspendLayout();
+            this.panel3.SuspendLayout();
             this.SuspendLayout();
             // 
             // pnlMain
             // 
-            this.pnlMain.Controls.Add(this.tabMain);
+            this.pnlMain.BackColor = System.Drawing.SystemColors.Control;
+            this.pnlMain.Controls.Add(this.statusStrip1);
+            this.pnlMain.Controls.Add(this.splitContainer1);
+            this.pnlMain.Controls.Add(this.pnlTop);
             this.pnlMain.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pnlMain.Location = new System.Drawing.Point(0, 186);
+            this.pnlMain.Location = new System.Drawing.Point(0, 0);
             this.pnlMain.Margin = new System.Windows.Forms.Padding(4);
             this.pnlMain.Name = "pnlMain";
-            this.pnlMain.Size = new System.Drawing.Size(1540, 730);
+            this.pnlMain.Padding = new System.Windows.Forms.Padding(4);
+            this.pnlMain.Size = new System.Drawing.Size(1160, 925);
             this.pnlMain.TabIndex = 4;
+            // 
+            // statusStrip1
+            // 
+            this.statusStrip1.ImageScalingSize = new System.Drawing.Size(24, 24);
+            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripStatusLabel1});
+            this.statusStrip1.Location = new System.Drawing.Point(4, 895);
+            this.statusStrip1.Name = "statusStrip1";
+            this.statusStrip1.Size = new System.Drawing.Size(1152, 26);
+            this.statusStrip1.TabIndex = 5;
+            this.statusStrip1.Text = "statusStrip1";
+            // 
+            // toolStripStatusLabel1
+            // 
+            this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(152, 20);
+            this.toolStripStatusLabel1.Text = "toolStripStatusLabel1";
+            // 
+            // splitContainer1
+            // 
+            this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.splitContainer1.Location = new System.Drawing.Point(4, 186);
+            this.splitContainer1.Name = "splitContainer1";
+            this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            // 
+            // splitContainer1.Panel1
+            // 
+            this.splitContainer1.Panel1.Controls.Add(this.tabMain);
+            this.splitContainer1.Panel1.Padding = new System.Windows.Forms.Padding(5);
+            // 
+            // splitContainer1.Panel2
+            // 
+            this.splitContainer1.Panel2.Controls.Add(this.tapLog);
+            this.splitContainer1.Panel2.Padding = new System.Windows.Forms.Padding(5);
+            this.splitContainer1.Size = new System.Drawing.Size(1152, 710);
+            this.splitContainer1.SplitterDistance = 444;
+            this.splitContainer1.TabIndex = 4;
             // 
             // tabMain
             // 
             this.tabMain.Controls.Add(this.tpFunction);
             this.tabMain.Controls.Add(this.tpGap);
             this.tabMain.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tabMain.Location = new System.Drawing.Point(0, 0);
+            this.tabMain.Location = new System.Drawing.Point(5, 5);
             this.tabMain.Margin = new System.Windows.Forms.Padding(4);
             this.tabMain.Name = "tabMain";
             this.tabMain.SelectedIndex = 0;
-            this.tabMain.Size = new System.Drawing.Size(1540, 730);
+            this.tabMain.Size = new System.Drawing.Size(1142, 434);
             this.tabMain.TabIndex = 0;
             // 
             // tpFunction
             // 
+            this.tpFunction.Controls.Add(this.gbReport);
+            this.tpFunction.Controls.Add(this.gbConvertValue);
             this.tpFunction.Controls.Add(this.gbImage);
-            this.tpFunction.Controls.Add(this.panel4);
-            this.tpFunction.Controls.Add(this.panel3);
-            this.tpFunction.Location = new System.Drawing.Point(4, 39);
+            this.tpFunction.Location = new System.Drawing.Point(4, 34);
             this.tpFunction.Margin = new System.Windows.Forms.Padding(4);
             this.tpFunction.Name = "tpFunction";
             this.tpFunction.Padding = new System.Windows.Forms.Padding(4);
-            this.tpFunction.Size = new System.Drawing.Size(1532, 687);
+            this.tpFunction.Size = new System.Drawing.Size(1134, 396);
             this.tpFunction.TabIndex = 1;
             this.tpFunction.Text = "기능";
             this.tpFunction.UseVisualStyleBackColor = true;
             // 
+            // gbReport
+            // 
+            this.gbReport.Controls.Add(this.btnQuantityFile);
+            this.gbReport.Controls.Add(this.tbQuantityFile);
+            this.gbReport.Controls.Add(this.lbQuantityFile);
+            this.gbReport.Controls.Add(this.btnPageNumber);
+            this.gbReport.Controls.Add(this.btnExportForPdf);
+            this.gbReport.Location = new System.Drawing.Point(5, 0);
+            this.gbReport.Name = "gbReport";
+            this.gbReport.Size = new System.Drawing.Size(1127, 109);
+            this.gbReport.TabIndex = 26;
+            this.gbReport.TabStop = false;
+            this.gbReport.Text = "보고서";
+            // 
+            // btnQuantityFile
+            // 
+            this.btnQuantityFile.Location = new System.Drawing.Point(985, 30);
+            this.btnQuantityFile.Name = "btnQuantityFile";
+            this.btnQuantityFile.Size = new System.Drawing.Size(139, 69);
+            this.btnQuantityFile.TabIndex = 26;
+            this.btnQuantityFile.Text = "찾기";
+            this.btnQuantityFile.UseVisualStyleBackColor = true;
+            // 
+            // tbQuantityFile
+            // 
+            this.tbQuantityFile.Location = new System.Drawing.Point(154, 30);
+            this.tbQuantityFile.Margin = new System.Windows.Forms.Padding(4);
+            this.tbQuantityFile.Name = "tbQuantityFile";
+            this.tbQuantityFile.Size = new System.Drawing.Size(769, 32);
+            this.tbQuantityFile.TabIndex = 25;
+            // 
+            // lbQuantityFile
+            // 
+            this.lbQuantityFile.AutoSize = true;
+            this.lbQuantityFile.Location = new System.Drawing.Point(10, 33);
+            this.lbQuantityFile.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lbQuantityFile.Name = "lbQuantityFile";
+            this.lbQuantityFile.Size = new System.Drawing.Size(172, 25);
+            this.lbQuantityFile.TabIndex = 23;
+            this.lbQuantityFile.Text = "보고서 파일명    : ";
+            // 
+            // btnPageNumber
+            // 
+            this.btnPageNumber.Location = new System.Drawing.Point(6, 64);
+            this.btnPageNumber.Name = "btnPageNumber";
+            this.btnPageNumber.Size = new System.Drawing.Size(172, 32);
+            this.btnPageNumber.TabIndex = 0;
+            this.btnPageNumber.Text = "페이지번호 업데이트";
+            this.btnPageNumber.UseVisualStyleBackColor = true;
+            this.btnPageNumber.Click += new System.EventHandler(this.btnPageNumber_Click);
+            // 
+            // btnExportForPdf
+            // 
+            this.btnExportForPdf.Location = new System.Drawing.Point(185, 66);
+            this.btnExportForPdf.Name = "btnExportForPdf";
+            this.btnExportForPdf.Size = new System.Drawing.Size(129, 30);
+            this.btnExportForPdf.TabIndex = 20;
+            this.btnExportForPdf.Text = "PDF로 내보내기";
+            this.btnExportForPdf.UseVisualStyleBackColor = true;
+            this.btnExportForPdf.MouseUp += new System.Windows.Forms.MouseEventHandler(this.btnExportForPdf_MouseUp);
+            // 
+            // gbConvertValue
+            // 
+            this.gbConvertValue.Controls.Add(this.checkBox1);
+            this.gbConvertValue.Controls.Add(this.checkBoxDate);
+            this.gbConvertValue.Controls.Add(this.checkBoxChecker);
+            this.gbConvertValue.Location = new System.Drawing.Point(9, 115);
+            this.gbConvertValue.Name = "gbConvertValue";
+            this.gbConvertValue.Size = new System.Drawing.Size(1117, 100);
+            this.gbConvertValue.TabIndex = 25;
+            this.gbConvertValue.TabStop = false;
+            this.gbConvertValue.Text = "셀 값 적용";
+            // 
+            // checkBox1
+            // 
+            this.checkBox1.AutoSize = true;
+            this.checkBox1.Checked = true;
+            this.checkBox1.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBox1.Location = new System.Drawing.Point(154, 32);
+            this.checkBox1.Name = "checkBox1";
+            this.checkBox1.Size = new System.Drawing.Size(252, 29);
+            this.checkBox1.TabIndex = 2;
+            this.checkBox1.Text = "갑지 사진 중앙 정렬 적용";
+            this.checkBox1.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxDate
+            // 
+            this.checkBoxDate.AutoSize = true;
+            this.checkBoxDate.Checked = true;
+            this.checkBoxDate.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxDate.Location = new System.Drawing.Point(17, 62);
+            this.checkBoxDate.Name = "checkBoxDate";
+            this.checkBoxDate.Size = new System.Drawing.Size(136, 29);
+            this.checkBoxDate.TabIndex = 1;
+            this.checkBoxDate.Text = "측정일 적용";
+            this.checkBoxDate.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxChecker
+            // 
+            this.checkBoxChecker.AutoSize = true;
+            this.checkBoxChecker.Checked = true;
+            this.checkBoxChecker.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxChecker.Location = new System.Drawing.Point(17, 32);
+            this.checkBoxChecker.Name = "checkBoxChecker";
+            this.checkBoxChecker.Size = new System.Drawing.Size(136, 29);
+            this.checkBoxChecker.TabIndex = 0;
+            this.checkBoxChecker.Text = "측정자 적용";
+            this.checkBoxChecker.UseVisualStyleBackColor = true;
+            // 
             // gbImage
             // 
-            this.gbImage.Controls.Add(this.checkBoxPartial);
-            this.gbImage.Controls.Add(this.btnFeverImageFolder);
+            this.gbImage.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.gbImage.Controls.Add(this.checkBoxOcr);
+            this.gbImage.Controls.Add(this.comboBoxSignalGraph);
+            this.gbImage.Controls.Add(this.comboBoxTestGraph);
+            this.gbImage.Controls.Add(this.comboBoxHwaveGraph);
+            this.gbImage.Controls.Add(this.btnGapjiPictureRelocate);
+            this.gbImage.Controls.Add(this.textBoxPictureFolder);
+            this.gbImage.Controls.Add(this.textBoxCoronaFolder);
+            this.gbImage.Controls.Add(this.textBoxQuntatyFolder);
+            this.gbImage.Controls.Add(this.btErrorPageUpdate);
             this.gbImage.Controls.Add(this.textBoxFeverImageFolder);
-            this.gbImage.Controls.Add(this.label5);
             this.gbImage.Controls.Add(this.checkBoxFeverPicture);
             this.gbImage.Controls.Add(this.checkBoxPicture);
             this.gbImage.Controls.Add(this.checkBoxCorona);
             this.gbImage.Controls.Add(this.checkBoxQuantity);
             this.gbImage.Controls.Add(this.btnQuntityFileRun);
-            this.gbImage.Controls.Add(this.btnQuantityFile);
-            this.gbImage.Controls.Add(this.tbQuantityFile);
-            this.gbImage.Controls.Add(this.lbQuantityFile);
-            this.gbImage.Location = new System.Drawing.Point(8, 301);
+            this.gbImage.Location = new System.Drawing.Point(5, 218);
             this.gbImage.Name = "gbImage";
-            this.gbImage.Size = new System.Drawing.Size(1398, 211);
+            this.gbImage.Size = new System.Drawing.Size(1126, 180);
             this.gbImage.TabIndex = 24;
             this.gbImage.TabStop = false;
-            this.gbImage.Text = "보고서 이미지 삽입";
+            this.gbImage.Text = "이미지 삽입";
             // 
-            // btnFeverImageFolder
+            // checkBoxOcr
             // 
-            this.btnFeverImageFolder.Location = new System.Drawing.Point(813, 85);
-            this.btnFeverImageFolder.Name = "btnFeverImageFolder";
-            this.btnFeverImageFolder.Size = new System.Drawing.Size(182, 41);
-            this.btnFeverImageFolder.TabIndex = 31;
-            this.btnFeverImageFolder.Text = "찾기";
-            this.btnFeverImageFolder.UseVisualStyleBackColor = true;
+            this.checkBoxOcr.AutoSize = true;
+            this.checkBoxOcr.Checked = true;
+            this.checkBoxOcr.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxOcr.Location = new System.Drawing.Point(551, 27);
+            this.checkBoxOcr.Name = "checkBoxOcr";
+            this.checkBoxOcr.Size = new System.Drawing.Size(226, 29);
+            this.checkBoxOcr.TabIndex = 45;
+            this.checkBoxOcr.Text = "온도 인식값 자동 입력";
+            this.checkBoxOcr.UseVisualStyleBackColor = true;
+            // 
+            // comboBoxSignalGraph
+            // 
+            this.comboBoxSignalGraph.FormattingEnabled = true;
+            this.comboBoxSignalGraph.Items.AddRange(new object[] {
+            "시보.pdf",
+            "시_보.pdf"});
+            this.comboBoxSignalGraph.Location = new System.Drawing.Point(803, 52);
+            this.comboBoxSignalGraph.Name = "comboBoxSignalGraph";
+            this.comboBoxSignalGraph.Size = new System.Drawing.Size(98, 33);
+            this.comboBoxSignalGraph.TabIndex = 44;
+            this.comboBoxSignalGraph.Text = "시보.pdf";
+            // 
+            // comboBoxTestGraph
+            // 
+            this.comboBoxTestGraph.FormattingEnabled = true;
+            this.comboBoxTestGraph.Items.AddRange(new object[] {
+            "시그.pdf",
+            "시_그.pdf"});
+            this.comboBoxTestGraph.Location = new System.Drawing.Point(678, 52);
+            this.comboBoxTestGraph.Name = "comboBoxTestGraph";
+            this.comboBoxTestGraph.Size = new System.Drawing.Size(98, 33);
+            this.comboBoxTestGraph.TabIndex = 43;
+            this.comboBoxTestGraph.Text = "시그.pdf";
+            // 
+            // comboBoxHwaveGraph
+            // 
+            this.comboBoxHwaveGraph.FormattingEnabled = true;
+            this.comboBoxHwaveGraph.Items.AddRange(new object[] {
+            "고그.pdf",
+            "고_그.pdf"});
+            this.comboBoxHwaveGraph.Location = new System.Drawing.Point(551, 52);
+            this.comboBoxHwaveGraph.Name = "comboBoxHwaveGraph";
+            this.comboBoxHwaveGraph.Size = new System.Drawing.Size(98, 33);
+            this.comboBoxHwaveGraph.TabIndex = 42;
+            this.comboBoxHwaveGraph.Text = "고그.pdf";
+            // 
+            // btnGapjiPictureRelocate
+            // 
+            this.btnGapjiPictureRelocate.Location = new System.Drawing.Point(16, 145);
+            this.btnGapjiPictureRelocate.Name = "btnGapjiPictureRelocate";
+            this.btnGapjiPictureRelocate.Size = new System.Drawing.Size(157, 32);
+            this.btnGapjiPictureRelocate.TabIndex = 41;
+            this.btnGapjiPictureRelocate.Text = "갑지 사진 중앙 정렬";
+            this.btnGapjiPictureRelocate.UseVisualStyleBackColor = true;
+            // 
+            // textBoxPictureFolder
+            // 
+            this.textBoxPictureFolder.Location = new System.Drawing.Point(292, 113);
+            this.textBoxPictureFolder.Margin = new System.Windows.Forms.Padding(4);
+            this.textBoxPictureFolder.Name = "textBoxPictureFolder";
+            this.textBoxPictureFolder.Size = new System.Drawing.Size(217, 32);
+            this.textBoxPictureFolder.TabIndex = 40;
+            this.textBoxPictureFolder.Text = "03 점검사진";
+            // 
+            // textBoxCoronaFolder
+            // 
+            this.textBoxCoronaFolder.Location = new System.Drawing.Point(292, 83);
+            this.textBoxCoronaFolder.Margin = new System.Windows.Forms.Padding(4);
+            this.textBoxCoronaFolder.Name = "textBoxCoronaFolder";
+            this.textBoxCoronaFolder.Size = new System.Drawing.Size(217, 32);
+            this.textBoxCoronaFolder.TabIndex = 38;
+            this.textBoxCoronaFolder.Text = "05 영상코로나 또는 부분방전";
+            // 
+            // textBoxQuntatyFolder
+            // 
+            this.textBoxQuntatyFolder.Location = new System.Drawing.Point(292, 53);
+            this.textBoxQuntatyFolder.Margin = new System.Windows.Forms.Padding(4);
+            this.textBoxQuntatyFolder.Name = "textBoxQuntatyFolder";
+            this.textBoxQuntatyFolder.Size = new System.Drawing.Size(217, 32);
+            this.textBoxQuntatyFolder.TabIndex = 34;
+            this.textBoxQuntatyFolder.Text = "02 전원품질";
+            // 
+            // btErrorPageUpdate
+            // 
+            this.btErrorPageUpdate.Enabled = false;
+            this.btErrorPageUpdate.Location = new System.Drawing.Point(185, 146);
+            this.btErrorPageUpdate.Name = "btErrorPageUpdate";
+            this.btErrorPageUpdate.RightToLeft = System.Windows.Forms.RightToLeft.No;
+            this.btErrorPageUpdate.Size = new System.Drawing.Size(222, 30);
+            this.btErrorPageUpdate.TabIndex = 22;
+            this.btErrorPageUpdate.Text = "의견 부적합 페이지 업데이트";
+            this.btErrorPageUpdate.UseVisualStyleBackColor = true;
+            this.btErrorPageUpdate.Click += new System.EventHandler(this.btErrorPageUpdate_Click);
             // 
             // textBoxFeverImageFolder
             // 
-            this.textBoxFeverImageFolder.Location = new System.Drawing.Point(157, 89);
+            this.textBoxFeverImageFolder.Location = new System.Drawing.Point(292, 24);
             this.textBoxFeverImageFolder.Margin = new System.Windows.Forms.Padding(4);
             this.textBoxFeverImageFolder.Name = "textBoxFeverImageFolder";
-            this.textBoxFeverImageFolder.Size = new System.Drawing.Size(649, 37);
+            this.textBoxFeverImageFolder.Size = new System.Drawing.Size(217, 32);
             this.textBoxFeverImageFolder.TabIndex = 30;
             this.textBoxFeverImageFolder.Text = "01 열화상";
-            // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(13, 92);
-            this.label5.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(124, 30);
-            this.label5.TabIndex = 29;
-            this.label5.Text = "폴더명    : ";
             // 
             // checkBoxFeverPicture
             // 
             this.checkBoxFeverPicture.AutoSize = true;
             this.checkBoxFeverPicture.Checked = true;
             this.checkBoxFeverPicture.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxFeverPicture.Location = new System.Drawing.Point(35, 150);
+            this.checkBoxFeverPicture.Location = new System.Drawing.Point(17, 29);
             this.checkBoxFeverPicture.Name = "checkBoxFeverPicture";
-            this.checkBoxFeverPicture.Size = new System.Drawing.Size(105, 34);
+            this.checkBoxFeverPicture.Size = new System.Drawing.Size(141, 29);
             this.checkBoxFeverPicture.TabIndex = 28;
-            this.checkBoxFeverPicture.Text = "열화상";
+            this.checkBoxFeverPicture.Text = "열화상(분기)";
             this.checkBoxFeverPicture.UseVisualStyleBackColor = true;
             // 
             // checkBoxPicture
@@ -199,9 +452,9 @@ namespace SmartReport
             this.checkBoxPicture.AutoSize = true;
             this.checkBoxPicture.Checked = true;
             this.checkBoxPicture.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxPicture.Location = new System.Drawing.Point(339, 152);
+            this.checkBoxPicture.Location = new System.Drawing.Point(18, 117);
             this.checkBoxPicture.Name = "checkBoxPicture";
-            this.checkBoxPicture.Size = new System.Drawing.Size(83, 34);
+            this.checkBoxPicture.Size = new System.Drawing.Size(72, 29);
             this.checkBoxPicture.TabIndex = 26;
             this.checkBoxPicture.Text = "사진";
             this.checkBoxPicture.UseVisualStyleBackColor = true;
@@ -211,11 +464,11 @@ namespace SmartReport
             this.checkBoxCorona.AutoSize = true;
             this.checkBoxCorona.Checked = true;
             this.checkBoxCorona.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxCorona.Location = new System.Drawing.Point(250, 150);
+            this.checkBoxCorona.Location = new System.Drawing.Point(18, 87);
             this.checkBoxCorona.Name = "checkBoxCorona";
-            this.checkBoxCorona.Size = new System.Drawing.Size(83, 34);
+            this.checkBoxCorona.Size = new System.Drawing.Size(91, 29);
             this.checkBoxCorona.TabIndex = 25;
-            this.checkBoxCorona.Text = "영코";
+            this.checkBoxCorona.Text = "코로나";
             this.checkBoxCorona.UseVisualStyleBackColor = true;
             // 
             // checkBoxQuantity
@@ -223,292 +476,33 @@ namespace SmartReport
             this.checkBoxQuantity.AutoSize = true;
             this.checkBoxQuantity.Checked = true;
             this.checkBoxQuantity.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxQuantity.Location = new System.Drawing.Point(143, 150);
+            this.checkBoxQuantity.Location = new System.Drawing.Point(18, 59);
             this.checkBoxQuantity.Name = "checkBoxQuantity";
-            this.checkBoxQuantity.Size = new System.Drawing.Size(83, 34);
+            this.checkBoxQuantity.Size = new System.Drawing.Size(72, 29);
             this.checkBoxQuantity.TabIndex = 24;
             this.checkBoxQuantity.Text = "품질";
             this.checkBoxQuantity.UseVisualStyleBackColor = true;
             // 
             // btnQuntityFileRun
             // 
-            this.btnQuntityFileRun.Location = new System.Drawing.Point(814, 147);
+            this.btnQuntityFileRun.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnQuntityFileRun.Location = new System.Drawing.Point(990, 44);
             this.btnQuntityFileRun.Name = "btnQuntityFileRun";
-            this.btnQuntityFileRun.Size = new System.Drawing.Size(182, 39);
+            this.btnQuntityFileRun.Size = new System.Drawing.Size(134, 116);
             this.btnQuntityFileRun.TabIndex = 23;
             this.btnQuntityFileRun.Text = "실행";
             this.btnQuntityFileRun.UseVisualStyleBackColor = true;
             this.btnQuntityFileRun.Click += new System.EventHandler(this.btnQuntityFileRun_Click);
             // 
-            // btnQuantityFile
-            // 
-            this.btnQuantityFile.Location = new System.Drawing.Point(814, 37);
-            this.btnQuantityFile.Name = "btnQuantityFile";
-            this.btnQuantityFile.Size = new System.Drawing.Size(182, 41);
-            this.btnQuantityFile.TabIndex = 22;
-            this.btnQuantityFile.Text = "찾기";
-            this.btnQuantityFile.UseVisualStyleBackColor = true;
-            this.btnQuantityFile.Click += new System.EventHandler(this.btnQuantityFile_Click);
-            // 
-            // tbQuantityFile
-            // 
-            this.tbQuantityFile.Location = new System.Drawing.Point(158, 41);
-            this.tbQuantityFile.Margin = new System.Windows.Forms.Padding(4);
-            this.tbQuantityFile.Name = "tbQuantityFile";
-            this.tbQuantityFile.Size = new System.Drawing.Size(649, 37);
-            this.tbQuantityFile.TabIndex = 21;
-            // 
-            // lbQuantityFile
-            // 
-            this.lbQuantityFile.AutoSize = true;
-            this.lbQuantityFile.Location = new System.Drawing.Point(14, 44);
-            this.lbQuantityFile.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.lbQuantityFile.Name = "lbQuantityFile";
-            this.lbQuantityFile.Size = new System.Drawing.Size(124, 30);
-            this.lbQuantityFile.TabIndex = 20;
-            this.lbQuantityFile.Text = "파일명    : ";
-            // 
-            // panel4
-            // 
-            this.panel4.Controls.Add(this.tbDefultDirectory);
-            this.panel4.Controls.Add(this.tbGapFeverPicture);
-            this.panel4.Controls.Add(this.label4);
-            this.panel4.Controls.Add(this.lblGapFeverPicture);
-            this.panel4.Controls.Add(this.tbWidthFeverPicture);
-            this.panel4.Controls.Add(this.label3);
-            this.panel4.Controls.Add(this.label2);
-            this.panel4.Controls.Add(this.tbHeightFeverPicture);
-            this.panel4.Controls.Add(this.lblWidthFeverPicture);
-            this.panel4.Controls.Add(this.lblHeightFeverPicture);
-            this.panel4.Controls.Add(this.button3);
-            this.panel4.Controls.Add(this.textBox1);
-            this.panel4.Controls.Add(this.label1);
-            this.panel4.Location = new System.Drawing.Point(8, 149);
-            this.panel4.Name = "panel4";
-            this.panel4.Size = new System.Drawing.Size(1610, 140);
-            this.panel4.TabIndex = 23;
-            // 
-            // tbDefultDirectory
-            // 
-            this.tbDefultDirectory.Location = new System.Drawing.Point(959, 93);
-            this.tbDefultDirectory.Name = "tbDefultDirectory";
-            this.tbDefultDirectory.Size = new System.Drawing.Size(483, 37);
-            this.tbDefultDirectory.TabIndex = 29;
-            this.tbDefultDirectory.Text = "C:\\_D\\work\\한경이엔지\\NAS다운로드";
-            // 
-            // tbGapFeverPicture
-            // 
-            this.tbGapFeverPicture.Location = new System.Drawing.Point(724, 43);
-            this.tbGapFeverPicture.Margin = new System.Windows.Forms.Padding(4);
-            this.tbGapFeverPicture.Name = "tbGapFeverPicture";
-            this.tbGapFeverPicture.Size = new System.Drawing.Size(121, 37);
-            this.tbGapFeverPicture.TabIndex = 28;
-            this.tbGapFeverPicture.Text = "0.2";
-            // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(853, 46);
-            this.label4.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label4.Name = "label4";
-            this.label4.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.label4.Size = new System.Drawing.Size(42, 30);
-            this.label4.TabIndex = 27;
-            this.label4.Text = "cm";
-            // 
-            // lblGapFeverPicture
-            // 
-            this.lblGapFeverPicture.AutoSize = true;
-            this.lblGapFeverPicture.Location = new System.Drawing.Point(627, 45);
-            this.lblGapFeverPicture.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.lblGapFeverPicture.Name = "lblGapFeverPicture";
-            this.lblGapFeverPicture.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.lblGapFeverPicture.Size = new System.Drawing.Size(78, 30);
-            this.lblGapFeverPicture.TabIndex = 26;
-            this.lblGapFeverPicture.Text = "간격 : ";
-            // 
-            // tbWidthFeverPicture
-            // 
-            this.tbWidthFeverPicture.Location = new System.Drawing.Point(398, 38);
-            this.tbWidthFeverPicture.Margin = new System.Windows.Forms.Padding(4);
-            this.tbWidthFeverPicture.Name = "tbWidthFeverPicture";
-            this.tbWidthFeverPicture.Size = new System.Drawing.Size(121, 37);
-            this.tbWidthFeverPicture.TabIndex = 25;
-            this.tbWidthFeverPicture.Text = "8.9";
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(527, 41);
-            this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label3.Name = "label3";
-            this.label3.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.label3.Size = new System.Drawing.Size(42, 30);
-            this.label3.TabIndex = 24;
-            this.label3.Text = "cm";
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(226, 45);
-            this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label2.Name = "label2";
-            this.label2.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.label2.Size = new System.Drawing.Size(42, 30);
-            this.label2.TabIndex = 23;
-            this.label2.Text = "cm";
-            // 
-            // tbHeightFeverPicture
-            // 
-            this.tbHeightFeverPicture.Location = new System.Drawing.Point(97, 38);
-            this.tbHeightFeverPicture.Margin = new System.Windows.Forms.Padding(4);
-            this.tbHeightFeverPicture.Name = "tbHeightFeverPicture";
-            this.tbHeightFeverPicture.Size = new System.Drawing.Size(121, 37);
-            this.tbHeightFeverPicture.TabIndex = 22;
-            this.tbHeightFeverPicture.Text = "7.63";
-            // 
-            // lblWidthFeverPicture
-            // 
-            this.lblWidthFeverPicture.AutoSize = true;
-            this.lblWidthFeverPicture.Location = new System.Drawing.Point(321, 38);
-            this.lblWidthFeverPicture.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.lblWidthFeverPicture.Name = "lblWidthFeverPicture";
-            this.lblWidthFeverPicture.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.lblWidthFeverPicture.Size = new System.Drawing.Size(78, 30);
-            this.lblWidthFeverPicture.TabIndex = 21;
-            this.lblWidthFeverPicture.Text = "너비 : ";
-            // 
-            // lblHeightFeverPicture
-            // 
-            this.lblHeightFeverPicture.AutoSize = true;
-            this.lblHeightFeverPicture.Location = new System.Drawing.Point(14, 38);
-            this.lblHeightFeverPicture.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.lblHeightFeverPicture.Name = "lblHeightFeverPicture";
-            this.lblHeightFeverPicture.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.lblHeightFeverPicture.Size = new System.Drawing.Size(78, 30);
-            this.lblHeightFeverPicture.TabIndex = 20;
-            this.lblHeightFeverPicture.Text = "높이 : ";
-            // 
-            // button3
-            // 
-            this.button3.Location = new System.Drawing.Point(745, 87);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(182, 41);
-            this.button3.TabIndex = 19;
-            this.button3.Text = "찾기";
-            this.button3.UseVisualStyleBackColor = true;
-            this.button3.Click += new System.EventHandler(this.button3_Click);
-            // 
-            // textBox1
-            // 
-            this.textBox1.Location = new System.Drawing.Point(158, 90);
-            this.textBox1.Margin = new System.Windows.Forms.Padding(4);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(580, 37);
-            this.textBox1.TabIndex = 18;
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(14, 93);
-            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(124, 30);
-            this.label1.TabIndex = 17;
-            this.label1.Text = "폴더명    : ";
-            // 
-            // panel3
-            // 
-            this.panel3.Controls.Add(this.btnGapjiPictureRelocate);
-            this.panel3.Controls.Add(this.btErrorPageUpdate);
-            this.panel3.Controls.Add(this.cbAutoExportPdf);
-            this.panel3.Controls.Add(this.btnExportForPdf);
-            this.panel3.Controls.Add(this.btnFindFileForFunction);
-            this.panel3.Controls.Add(this.tbFileNameForFunction);
-            this.panel3.Controls.Add(this.lblFileNmaeForFunction);
-            this.panel3.Controls.Add(this.btnPageNumber);
-            this.panel3.Location = new System.Drawing.Point(8, 7);
-            this.panel3.Name = "panel3";
-            this.panel3.Size = new System.Drawing.Size(1610, 136);
-            this.panel3.TabIndex = 0;
-            // 
-            // btErrorPageUpdate
-            // 
-            this.btErrorPageUpdate.Location = new System.Drawing.Point(295, 84);
-            this.btErrorPageUpdate.Name = "btErrorPageUpdate";
-            this.btErrorPageUpdate.Size = new System.Drawing.Size(199, 30);
-            this.btErrorPageUpdate.TabIndex = 22;
-            this.btErrorPageUpdate.Text = "의견 부적합 페이지 업데이트";
-            this.btErrorPageUpdate.UseVisualStyleBackColor = true;
-            this.btErrorPageUpdate.Click += new System.EventHandler(this.btErrorPageUpdate_Click);
-            // 
-            // cbAutoExportPdf
-            // 
-            this.cbAutoExportPdf.AutoSize = true;
-            this.cbAutoExportPdf.Location = new System.Drawing.Point(1053, 20);
-            this.cbAutoExportPdf.Name = "cbAutoExportPdf";
-            this.cbAutoExportPdf.Size = new System.Drawing.Size(471, 34);
-            this.cbAutoExportPdf.TabIndex = 21;
-            this.cbAutoExportPdf.Text = "자동으로 페이지 번호 매기고 PDF 내보내기";
-            this.cbAutoExportPdf.UseVisualStyleBackColor = true;
-            // 
-            // btnExportForPdf
-            // 
-            this.btnExportForPdf.Location = new System.Drawing.Point(509, 84);
-            this.btnExportForPdf.Name = "btnExportForPdf";
-            this.btnExportForPdf.Size = new System.Drawing.Size(270, 30);
-            this.btnExportForPdf.TabIndex = 20;
-            this.btnExportForPdf.Text = "PDF로 내보내기";
-            this.btnExportForPdf.UseVisualStyleBackColor = true;
-            this.btnExportForPdf.MouseUp += new System.Windows.Forms.MouseEventHandler(this.btnExportForPdf_MouseUp);
-            // 
-            // btnFindFileForFunction
-            // 
-            this.btnFindFileForFunction.Location = new System.Drawing.Point(814, 16);
-            this.btnFindFileForFunction.Name = "btnFindFileForFunction";
-            this.btnFindFileForFunction.Size = new System.Drawing.Size(182, 41);
-            this.btnFindFileForFunction.TabIndex = 19;
-            this.btnFindFileForFunction.Text = "찾기";
-            this.btnFindFileForFunction.UseVisualStyleBackColor = true;
-            this.btnFindFileForFunction.Click += new System.EventHandler(this.btnFindFileForFunction_Click);
-            // 
-            // tbFileNameForFunction
-            // 
-            this.tbFileNameForFunction.Location = new System.Drawing.Point(158, 20);
-            this.tbFileNameForFunction.Margin = new System.Windows.Forms.Padding(4);
-            this.tbFileNameForFunction.Name = "tbFileNameForFunction";
-            this.tbFileNameForFunction.Size = new System.Drawing.Size(649, 37);
-            this.tbFileNameForFunction.TabIndex = 18;
-            // 
-            // lblFileNmaeForFunction
-            // 
-            this.lblFileNmaeForFunction.AutoSize = true;
-            this.lblFileNmaeForFunction.Location = new System.Drawing.Point(14, 23);
-            this.lblFileNmaeForFunction.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.lblFileNmaeForFunction.Name = "lblFileNmaeForFunction";
-            this.lblFileNmaeForFunction.Size = new System.Drawing.Size(124, 30);
-            this.lblFileNmaeForFunction.TabIndex = 17;
-            this.lblFileNmaeForFunction.Text = "파일명    : ";
-            // 
-            // btnPageNumber
-            // 
-            this.btnPageNumber.Location = new System.Drawing.Point(19, 84);
-            this.btnPageNumber.Name = "btnPageNumber";
-            this.btnPageNumber.Size = new System.Drawing.Size(270, 30);
-            this.btnPageNumber.TabIndex = 0;
-            this.btnPageNumber.Text = "페이지번호 업데이트";
-            this.btnPageNumber.UseVisualStyleBackColor = true;
-            this.btnPageNumber.Click += new System.EventHandler(this.btnPageNumber_Click);
-            // 
             // tpGap
             // 
             this.tpGap.Controls.Add(this.panel2);
             this.tpGap.Controls.Add(this.panel1);
-            this.tpGap.Location = new System.Drawing.Point(4, 39);
+            this.tpGap.Location = new System.Drawing.Point(4, 34);
             this.tpGap.Margin = new System.Windows.Forms.Padding(4);
             this.tpGap.Name = "tpGap";
             this.tpGap.Padding = new System.Windows.Forms.Padding(4);
-            this.tpGap.Size = new System.Drawing.Size(1532, 687);
+            this.tpGap.Size = new System.Drawing.Size(1134, 396);
             this.tpGap.TabIndex = 0;
             this.tpGap.Text = "파일다운로드";
             this.tpGap.UseVisualStyleBackColor = true;
@@ -521,7 +515,7 @@ namespace SmartReport
             this.panel2.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel2.Location = new System.Drawing.Point(4, 4);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(1524, 44);
+            this.panel2.Size = new System.Drawing.Size(1126, 44);
             this.panel2.TabIndex = 17;
             this.panel2.Paint += new System.Windows.Forms.PaintEventHandler(this.panel2_Paint);
             // 
@@ -541,7 +535,7 @@ namespace SmartReport
             this.tbCompany.Location = new System.Drawing.Point(162, 15);
             this.tbCompany.Margin = new System.Windows.Forms.Padding(4);
             this.tbCompany.Name = "tbCompany";
-            this.tbCompany.Size = new System.Drawing.Size(649, 37);
+            this.tbCompany.Size = new System.Drawing.Size(649, 32);
             this.tbCompany.TabIndex = 16;
             this.tbCompany.Enter += new System.EventHandler(this.tbCompany_Enter);
             this.tbCompany.KeyDown += new System.Windows.Forms.KeyEventHandler(this.tbCompany_KeyDown);
@@ -552,7 +546,7 @@ namespace SmartReport
             this.lbCompany.Location = new System.Drawing.Point(18, 18);
             this.lbCompany.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbCompany.Name = "lbCompany";
-            this.lbCompany.Size = new System.Drawing.Size(124, 30);
+            this.lbCompany.Size = new System.Drawing.Size(108, 25);
             this.lbCompany.TabIndex = 15;
             this.lbCompany.Text = "업체명    : ";
             // 
@@ -562,7 +556,7 @@ namespace SmartReport
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(4, 4);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(1524, 679);
+            this.panel1.Size = new System.Drawing.Size(1126, 388);
             this.panel1.TabIndex = 16;
             // 
             // dgvFiles
@@ -576,52 +570,199 @@ namespace SmartReport
             this.dgvFiles.TabIndex = 15;
             this.dgvFiles.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellContentClick);
             // 
-            // lbName
+            // tapLog
             // 
-            this.lbName.AutoSize = true;
-            this.lbName.Location = new System.Drawing.Point(18, 22);
-            this.lbName.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.lbName.Name = "lbName";
-            this.lbName.Size = new System.Drawing.Size(132, 30);
-            this.lbName.TabIndex = 5;
-            this.lbName.Text = "측정자     : ";
+            this.tapLog.Controls.Add(this.all);
+            this.tapLog.Controls.Add(this.info);
+            this.tapLog.Controls.Add(this.tabError);
+            this.tapLog.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tapLog.Location = new System.Drawing.Point(5, 5);
+            this.tapLog.Name = "tapLog";
+            this.tapLog.SelectedIndex = 0;
+            this.tapLog.Size = new System.Drawing.Size(1142, 252);
+            this.tapLog.TabIndex = 0;
             // 
-            // cbName
+            // all
             // 
-            this.cbName.FormattingEnabled = true;
-            this.cbName.Location = new System.Drawing.Point(164, 14);
-            this.cbName.Margin = new System.Windows.Forms.Padding(4);
-            this.cbName.Name = "cbName";
-            this.cbName.Size = new System.Drawing.Size(306, 38);
-            this.cbName.TabIndex = 6;
-            this.cbName.Text = "김희철 이사";
+            this.all.Controls.Add(this.richTextBox1);
+            this.all.Location = new System.Drawing.Point(4, 34);
+            this.all.Name = "all";
+            this.all.Padding = new System.Windows.Forms.Padding(5);
+            this.all.Size = new System.Drawing.Size(1134, 214);
+            this.all.TabIndex = 0;
+            this.all.Text = "All log";
+            this.all.UseVisualStyleBackColor = true;
             // 
-            // comboBox1
+            // richTextBox1
             // 
-            this.comboBox1.FormattingEnabled = true;
-            this.comboBox1.Location = new System.Drawing.Point(506, 14);
-            this.comboBox1.Margin = new System.Windows.Forms.Padding(4);
-            this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(306, 38);
-            this.comboBox1.TabIndex = 7;
-            this.comboBox1.Text = "김희철 이사";
+            this.richTextBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.richTextBox1.DetectUrls = false;
+            this.richTextBox1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.richTextBox1.Location = new System.Drawing.Point(5, 5);
+            this.richTextBox1.Name = "richTextBox1";
+            this.richTextBox1.ReadOnly = true;
+            this.richTextBox1.Size = new System.Drawing.Size(1124, 204);
+            this.richTextBox1.TabIndex = 1;
+            this.richTextBox1.TabStop = false;
+            this.richTextBox1.Text = "";
+            this.richTextBox1.WordWrap = false;
             // 
-            // lbFolder
+            // info
             // 
-            this.lbFolder.AutoSize = true;
-            this.lbFolder.Location = new System.Drawing.Point(19, 73);
-            this.lbFolder.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.lbFolder.Name = "lbFolder";
-            this.lbFolder.Size = new System.Drawing.Size(130, 30);
-            this.lbFolder.TabIndex = 8;
-            this.lbFolder.Text = "폴더 위치 : ";
+            this.info.Location = new System.Drawing.Point(4, 25);
+            this.info.Name = "info";
+            this.info.Padding = new System.Windows.Forms.Padding(3);
+            this.info.Size = new System.Drawing.Size(1134, 223);
+            this.info.TabIndex = 1;
+            this.info.Text = "Info";
+            this.info.UseVisualStyleBackColor = true;
+            // 
+            // tabError
+            // 
+            this.tabError.Location = new System.Drawing.Point(4, 25);
+            this.tabError.Name = "tabError";
+            this.tabError.Padding = new System.Windows.Forms.Padding(5);
+            this.tabError.Size = new System.Drawing.Size(1134, 223);
+            this.tabError.TabIndex = 2;
+            this.tabError.Text = "Error";
+            this.tabError.UseVisualStyleBackColor = true;
+            // 
+            // pnlTop
+            // 
+            this.pnlTop.Controls.Add(this.btnDownloadWork);
+            this.pnlTop.Controls.Add(this.textBoxKeyword);
+            this.pnlTop.Controls.Add(this.label3);
+            this.pnlTop.Controls.Add(this.checkBoxAnnual);
+            this.pnlTop.Controls.Add(this.textBox1);
+            this.pnlTop.Controls.Add(this.lbSample);
+            this.pnlTop.Controls.Add(this.cbAutoGenerateExcel);
+            this.pnlTop.Controls.Add(this.comboBoxSeason);
+            this.pnlTop.Controls.Add(this.label2);
+            this.pnlTop.Controls.Add(this.dateTimePicker1);
+            this.pnlTop.Controls.Add(this.label1);
+            this.pnlTop.Controls.Add(this.tbPerson);
+            this.pnlTop.Controls.Add(this.panel3);
+            this.pnlTop.Controls.Add(this.tbFolder);
+            this.pnlTop.Controls.Add(this.lbFolder);
+            this.pnlTop.Controls.Add(this.cbName);
+            this.pnlTop.Controls.Add(this.lbName);
+            this.pnlTop.Dock = System.Windows.Forms.DockStyle.Top;
+            this.pnlTop.Location = new System.Drawing.Point(4, 4);
+            this.pnlTop.Margin = new System.Windows.Forms.Padding(4);
+            this.pnlTop.Name = "pnlTop";
+            this.pnlTop.Padding = new System.Windows.Forms.Padding(3);
+            this.pnlTop.Size = new System.Drawing.Size(1152, 175);
+            this.pnlTop.TabIndex = 3;
+            // 
+            // checkBoxAnnual
+            // 
+            this.checkBoxAnnual.AutoSize = true;
+            this.checkBoxAnnual.Location = new System.Drawing.Point(488, 85);
+            this.checkBoxAnnual.Name = "checkBoxAnnual";
+            this.checkBoxAnnual.Size = new System.Drawing.Size(117, 29);
+            this.checkBoxAnnual.TabIndex = 3;
+            this.checkBoxAnnual.Text = "연차 여부";
+            this.checkBoxAnnual.UseVisualStyleBackColor = true;
+            // 
+            // textBox1
+            // 
+            this.textBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.textBox1.Location = new System.Drawing.Point(120, 124);
+            this.textBox1.Margin = new System.Windows.Forms.Padding(4);
+            this.textBox1.Name = "textBox1";
+            this.textBox1.Size = new System.Drawing.Size(838, 32);
+            this.textBox1.TabIndex = 48;
+            this.textBox1.Text = "D:\\work\\한경이엔지\\0_org\\한경이엔지2본부_26년연차보고서(샘플)_rang.xlsx";
+            // 
+            // lbSample
+            // 
+            this.lbSample.AutoSize = true;
+            this.lbSample.Location = new System.Drawing.Point(22, 125);
+            this.lbSample.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lbSample.Name = "lbSample";
+            this.lbSample.Size = new System.Drawing.Size(113, 25);
+            this.lbSample.TabIndex = 47;
+            this.lbSample.Text = "샘플 위치 : ";
+            // 
+            // cbAutoGenerateExcel
+            // 
+            this.cbAutoGenerateExcel.AutoSize = true;
+            this.cbAutoGenerateExcel.Checked = true;
+            this.cbAutoGenerateExcel.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbAutoGenerateExcel.Location = new System.Drawing.Point(809, 85);
+            this.cbAutoGenerateExcel.Name = "cbAutoGenerateExcel";
+            this.cbAutoGenerateExcel.Size = new System.Drawing.Size(162, 29);
+            this.cbAutoGenerateExcel.TabIndex = 46;
+            this.cbAutoGenerateExcel.Text = "파일 자동 생성";
+            this.cbAutoGenerateExcel.UseVisualStyleBackColor = true;
+            // 
+            // comboBoxSeason
+            // 
+            this.comboBoxSeason.FormattingEnabled = true;
+            this.comboBoxSeason.Items.AddRange(new object[] {
+            "1",
+            "2",
+            "3",
+            "4"});
+            this.comboBoxSeason.Location = new System.Drawing.Point(384, 82);
+            this.comboBoxSeason.Name = "comboBoxSeason";
+            this.comboBoxSeason.Size = new System.Drawing.Size(53, 33);
+            this.comboBoxSeason.TabIndex = 45;
+            this.comboBoxSeason.Text = "1";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(435, 87);
+            this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(50, 25);
+            this.label2.TabIndex = 15;
+            this.label2.Text = "분기";
+            // 
+            // dateTimePicker1
+            // 
+            this.dateTimePicker1.Location = new System.Drawing.Point(120, 82);
+            this.dateTimePicker1.Name = "dateTimePicker1";
+            this.dateTimePicker1.Size = new System.Drawing.Size(253, 32);
+            this.dateTimePicker1.TabIndex = 14;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(22, 87);
+            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(115, 25);
+            this.label1.TabIndex = 13;
+            this.label1.Text = "측정일     : ";
+            // 
+            // tbPerson
+            // 
+            this.tbPerson.Location = new System.Drawing.Point(120, 44);
+            this.tbPerson.Name = "tbPerson";
+            this.tbPerson.Size = new System.Drawing.Size(317, 32);
+            this.tbPerson.TabIndex = 12;
+            this.tbPerson.Text = "김희철 이사 외 1명";
+            // 
+            // panel3
+            // 
+            this.panel3.Anchor = System.Windows.Forms.AnchorStyles.Right;
+            this.panel3.Controls.Add(this.btFolder);
+            this.panel3.Location = new System.Drawing.Point(972, 6);
+            this.panel3.Name = "panel3";
+            this.panel3.Padding = new System.Windows.Forms.Padding(3);
+            this.panel3.Size = new System.Drawing.Size(172, 38);
+            this.panel3.TabIndex = 11;
             // 
             // btFolder
             // 
-            this.btFolder.Location = new System.Drawing.Point(845, 4);
+            this.btFolder.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.btFolder.Location = new System.Drawing.Point(3, 3);
             this.btFolder.Margin = new System.Windows.Forms.Padding(4);
             this.btFolder.Name = "btFolder";
-            this.btFolder.Size = new System.Drawing.Size(134, 97);
+            this.btFolder.Size = new System.Drawing.Size(166, 32);
             this.btFolder.TabIndex = 10;
             this.btFolder.Text = "폴더 선택";
             this.btFolder.UseVisualStyleBackColor = true;
@@ -629,77 +770,117 @@ namespace SmartReport
             // 
             // tbFolder
             // 
-            this.tbFolder.Location = new System.Drawing.Point(163, 64);
+            this.tbFolder.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbFolder.Location = new System.Drawing.Point(120, 8);
             this.tbFolder.Margin = new System.Windows.Forms.Padding(4);
             this.tbFolder.Name = "tbFolder";
-            this.tbFolder.Size = new System.Drawing.Size(649, 37);
+            this.tbFolder.Size = new System.Drawing.Size(838, 32);
             this.tbFolder.TabIndex = 9;
             // 
-            // pnlTop
+            // lbFolder
             // 
-            this.pnlTop.Controls.Add(this.tbFolder);
-            this.pnlTop.Controls.Add(this.btFolder);
-            this.pnlTop.Controls.Add(this.lbFolder);
-            this.pnlTop.Controls.Add(this.comboBox1);
-            this.pnlTop.Controls.Add(this.cbName);
-            this.pnlTop.Controls.Add(this.lbName);
-            this.pnlTop.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pnlTop.Location = new System.Drawing.Point(0, 0);
-            this.pnlTop.Margin = new System.Windows.Forms.Padding(4);
-            this.pnlTop.Name = "pnlTop";
-            this.pnlTop.Size = new System.Drawing.Size(1540, 186);
-            this.pnlTop.TabIndex = 3;
+            this.lbFolder.AutoSize = true;
+            this.lbFolder.Location = new System.Drawing.Point(22, 11);
+            this.lbFolder.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lbFolder.Name = "lbFolder";
+            this.lbFolder.Size = new System.Drawing.Size(113, 25);
+            this.lbFolder.TabIndex = 8;
+            this.lbFolder.Text = "폴더 위치 : ";
             // 
-            // btnGapjiPictureRelocate
+            // cbName
             // 
-            this.btnGapjiPictureRelocate.Location = new System.Drawing.Point(813, 84);
-            this.btnGapjiPictureRelocate.Name = "btnGapjiPictureRelocate";
-            this.btnGapjiPictureRelocate.Size = new System.Drawing.Size(247, 32);
-            this.btnGapjiPictureRelocate.TabIndex = 23;
-            this.btnGapjiPictureRelocate.Text = "갑지 사진 중앙 정렬";
-            this.btnGapjiPictureRelocate.UseVisualStyleBackColor = true;
-            this.btnGapjiPictureRelocate.Click += new System.EventHandler(this.btnGapjiPictureRelocate_Click);
+            this.cbName.FormattingEnabled = true;
+            this.cbName.Items.AddRange(new object[] {
+            "김희철이사",
+            "김영철과장",
+            "심재현과장",
+            "김희용대리",
+            "서원진대리",
+            "문동민대리"});
+            this.cbName.Location = new System.Drawing.Point(1438, 4);
+            this.cbName.Margin = new System.Windows.Forms.Padding(4);
+            this.cbName.Name = "cbName";
+            this.cbName.Size = new System.Drawing.Size(306, 33);
+            this.cbName.TabIndex = 6;
+            this.cbName.Text = "김희철 이사";
+            this.cbName.Visible = false;
             // 
-            // checkBoxPartial
+            // lbName
             // 
-            this.checkBoxPartial.AutoSize = true;
-            this.checkBoxPartial.Checked = true;
-            this.checkBoxPartial.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxPartial.Location = new System.Drawing.Point(436, 152);
-            this.checkBoxPartial.Name = "checkBoxPartial";
-            this.checkBoxPartial.Size = new System.Drawing.Size(164, 34);
-            this.checkBoxPartial.TabIndex = 32;
-            this.checkBoxPartial.Text = "PD 부분방전";
-            this.checkBoxPartial.UseVisualStyleBackColor = true;
+            this.lbName.AutoSize = true;
+            this.lbName.Location = new System.Drawing.Point(22, 49);
+            this.lbName.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lbName.Name = "lbName";
+            this.lbName.Size = new System.Drawing.Size(115, 25);
+            this.lbName.TabIndex = 5;
+            this.lbName.Text = "측정자     : ";
+            // 
+            // textBoxKeyword
+            // 
+            this.textBoxKeyword.Location = new System.Drawing.Point(785, 47);
+            this.textBoxKeyword.Name = "textBoxKeyword";
+            this.textBoxKeyword.Size = new System.Drawing.Size(167, 32);
+            this.textBoxKeyword.TabIndex = 50;
+            this.textBoxKeyword.Text = "유랑진";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(612, 49);
+            this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(177, 25);
+            this.label3.TabIndex = 49;
+            this.label3.Text = "서버 폴더 키워드 : ";
+            // 
+            // btnDownloadWork
+            // 
+            this.btnDownloadWork.Location = new System.Drawing.Point(972, 50);
+            this.btnDownloadWork.Name = "btnDownloadWork";
+            this.btnDownloadWork.Size = new System.Drawing.Size(169, 32);
+            this.btnDownloadWork.TabIndex = 51;
+            this.btnDownloadWork.Text = "내 폴더 다운로드";
+            this.btnDownloadWork.UseVisualStyleBackColor = true;
+            this.btnDownloadWork.Click += new System.EventHandler(this.btnDownloadWork_Click);
             // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 30F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1540, 916);
+            this.ClientSize = new System.Drawing.Size(1160, 925);
             this.Controls.Add(this.pnlMain);
-            this.Controls.Add(this.pnlTop);
             this.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "Form1";
             this.Text = "한경이엔지 보고서";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.pnlMain.ResumeLayout(false);
+            this.pnlMain.PerformLayout();
+            this.statusStrip1.ResumeLayout(false);
+            this.statusStrip1.PerformLayout();
+            this.splitContainer1.Panel1.ResumeLayout(false);
+            this.splitContainer1.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
+            this.splitContainer1.ResumeLayout(false);
             this.tabMain.ResumeLayout(false);
             this.tpFunction.ResumeLayout(false);
+            this.gbReport.ResumeLayout(false);
+            this.gbReport.PerformLayout();
+            this.gbConvertValue.ResumeLayout(false);
+            this.gbConvertValue.PerformLayout();
             this.gbImage.ResumeLayout(false);
             this.gbImage.PerformLayout();
-            this.panel4.ResumeLayout(false);
-            this.panel4.PerformLayout();
-            this.panel3.ResumeLayout(false);
-            this.panel3.PerformLayout();
             this.tpGap.ResumeLayout(false);
             this.panel2.ResumeLayout(false);
             this.panel2.PerformLayout();
             this.panel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgvFiles)).EndInit();
+            this.tapLog.ResumeLayout(false);
+            this.all.ResumeLayout(false);
             this.pnlTop.ResumeLayout(false);
             this.pnlTop.PerformLayout();
+            this.panel3.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -713,7 +894,6 @@ namespace SmartReport
         private DataGridView dgvFiles;
         private Label lbName;
         private ComboBox cbName;
-        private ComboBox comboBox1;
         private Label lbFolder;
         private Button btFolder;
         private TextBox tbFolder;
@@ -722,42 +902,53 @@ namespace SmartReport
         private TextBox tbCompany;
         private Label lbCompany;
         private Button btnDownload;
-        private Panel panel3;
         private Button btnPageNumber;
-        private Button btnFindFileForFunction;
-        private TextBox tbFileNameForFunction;
-        private Label lblFileNmaeForFunction;
-        private CheckBox cbAutoExportPdf;
         private Button btnExportForPdf;
         private Button btErrorPageUpdate;
-        private Panel panel4;
-        private Button button3;
-        private TextBox textBox1;
-        private Label label1;
-        private Label lblHeightFeverPicture;
-        private TextBox tbGapFeverPicture;
-        private Label label4;
-        private Label lblGapFeverPicture;
-        private TextBox tbWidthFeverPicture;
-        private Label label3;
-        private Label label2;
-        private TextBox tbHeightFeverPicture;
-        private Label lblWidthFeverPicture;
-        private TextBox tbDefultDirectory;
         private GroupBox gbImage;
         private Button btnQuntityFileRun;
         private CheckBox checkBoxQuantity;
         private CheckBox checkBoxCorona;
         private CheckBox checkBoxPicture;
         private CheckBox checkBoxFeverPicture;
-        private Button btnFeverImageFolder;
         private TextBox textBoxFeverImageFolder;
-        private Label label5;
+        private SplitContainer splitContainer1;
+        private TabControl tapLog;
+        private TabPage all;
+        private TabPage info;
+        private Panel panel3;
+        private TextBox tbPerson;
+        private TabPage tabError;
+        private TextBox textBoxQuntatyFolder;
+        private TextBox textBoxPictureFolder;
+        private TextBox textBoxCoronaFolder;
+        private Button btnGapjiPictureRelocate;
+        private ComboBox comboBoxSignalGraph;
+        private ComboBox comboBoxTestGraph;
+        private ComboBox comboBoxHwaveGraph;
+        private StatusStrip statusStrip1;
+        private ToolStripStatusLabel toolStripStatusLabel1;
+        private RichTextBox richTextBox1;
+        private DateTimePicker dateTimePicker1;
+        private Label label1;
+        private GroupBox gbConvertValue;
+        private CheckBox checkBox1;
+        private CheckBox checkBoxDate;
+        private CheckBox checkBoxChecker;
+        private ComboBox comboBoxSeason;
+        private Label label2;
+        private GroupBox gbReport;
         private Button btnQuantityFile;
         private TextBox tbQuantityFile;
         private Label lbQuantityFile;
-        private Button btnGapjiPictureRelocate;
-        private CheckBox checkBoxPartial;
+        private CheckBox checkBoxOcr;
+        private TextBox textBox1;
+        private Label lbSample;
+        private CheckBox cbAutoGenerateExcel;
+        private CheckBox checkBoxAnnual;
+        private TextBox textBoxKeyword;
+        private Label label3;
+        private Button btnDownloadWork;
     }
 }
 
