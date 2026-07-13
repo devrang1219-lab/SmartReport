@@ -76,6 +76,9 @@ namespace SmartReport
             this.info = new System.Windows.Forms.TabPage();
             this.tabError = new System.Windows.Forms.TabPage();
             this.pnlTop = new System.Windows.Forms.Panel();
+            this.btnDownloadWork = new System.Windows.Forms.Button();
+            this.textBoxKeyword = new System.Windows.Forms.TextBox();
+            this.label3 = new System.Windows.Forms.Label();
             this.checkBoxAnnual = new System.Windows.Forms.CheckBox();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.lbSample = new System.Windows.Forms.Label();
@@ -91,9 +94,6 @@ namespace SmartReport
             this.lbFolder = new System.Windows.Forms.Label();
             this.cbName = new System.Windows.Forms.ComboBox();
             this.lbName = new System.Windows.Forms.Label();
-            this.textBoxKeyword = new System.Windows.Forms.TextBox();
-            this.label3 = new System.Windows.Forms.Label();
-            this.btnDownloadWork = new System.Windows.Forms.Button();
             this.pnlMain.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -134,16 +134,16 @@ namespace SmartReport
             this.statusStrip1.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusLabel1});
-            this.statusStrip1.Location = new System.Drawing.Point(4, 895);
+            this.statusStrip1.Location = new System.Drawing.Point(4, 889);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(1152, 26);
+            this.statusStrip1.Size = new System.Drawing.Size(1152, 32);
             this.statusStrip1.TabIndex = 5;
             this.statusStrip1.Text = "statusStrip1";
             // 
             // toolStripStatusLabel1
             // 
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(152, 20);
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(183, 25);
             this.toolStripStatusLabel1.Text = "toolStripStatusLabel1";
             // 
             // splitContainer1
@@ -185,11 +185,11 @@ namespace SmartReport
             this.tpFunction.Controls.Add(this.gbReport);
             this.tpFunction.Controls.Add(this.gbConvertValue);
             this.tpFunction.Controls.Add(this.gbImage);
-            this.tpFunction.Location = new System.Drawing.Point(4, 34);
+            this.tpFunction.Location = new System.Drawing.Point(4, 39);
             this.tpFunction.Margin = new System.Windows.Forms.Padding(4);
             this.tpFunction.Name = "tpFunction";
             this.tpFunction.Padding = new System.Windows.Forms.Padding(4);
-            this.tpFunction.Size = new System.Drawing.Size(1134, 396);
+            this.tpFunction.Size = new System.Drawing.Size(1134, 391);
             this.tpFunction.TabIndex = 1;
             this.tpFunction.Text = "기능";
             this.tpFunction.UseVisualStyleBackColor = true;
@@ -216,13 +216,14 @@ namespace SmartReport
             this.btnQuantityFile.TabIndex = 26;
             this.btnQuantityFile.Text = "찾기";
             this.btnQuantityFile.UseVisualStyleBackColor = true;
+            this.btnQuantityFile.Click += new System.EventHandler(this.btnQuantityFile_Click);
             // 
             // tbQuantityFile
             // 
             this.tbQuantityFile.Location = new System.Drawing.Point(154, 30);
             this.tbQuantityFile.Margin = new System.Windows.Forms.Padding(4);
             this.tbQuantityFile.Name = "tbQuantityFile";
-            this.tbQuantityFile.Size = new System.Drawing.Size(769, 32);
+            this.tbQuantityFile.Size = new System.Drawing.Size(769, 37);
             this.tbQuantityFile.TabIndex = 25;
             // 
             // lbQuantityFile
@@ -231,7 +232,7 @@ namespace SmartReport
             this.lbQuantityFile.Location = new System.Drawing.Point(10, 33);
             this.lbQuantityFile.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbQuantityFile.Name = "lbQuantityFile";
-            this.lbQuantityFile.Size = new System.Drawing.Size(172, 25);
+            this.lbQuantityFile.Size = new System.Drawing.Size(198, 30);
             this.lbQuantityFile.TabIndex = 23;
             this.lbQuantityFile.Text = "보고서 파일명    : ";
             // 
@@ -274,7 +275,7 @@ namespace SmartReport
             this.checkBox1.CheckState = System.Windows.Forms.CheckState.Checked;
             this.checkBox1.Location = new System.Drawing.Point(154, 32);
             this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(252, 29);
+            this.checkBox1.Size = new System.Drawing.Size(291, 34);
             this.checkBox1.TabIndex = 2;
             this.checkBox1.Text = "갑지 사진 중앙 정렬 적용";
             this.checkBox1.UseVisualStyleBackColor = true;
@@ -286,7 +287,7 @@ namespace SmartReport
             this.checkBoxDate.CheckState = System.Windows.Forms.CheckState.Checked;
             this.checkBoxDate.Location = new System.Drawing.Point(17, 62);
             this.checkBoxDate.Name = "checkBoxDate";
-            this.checkBoxDate.Size = new System.Drawing.Size(136, 29);
+            this.checkBoxDate.Size = new System.Drawing.Size(157, 34);
             this.checkBoxDate.TabIndex = 1;
             this.checkBoxDate.Text = "측정일 적용";
             this.checkBoxDate.UseVisualStyleBackColor = true;
@@ -298,7 +299,7 @@ namespace SmartReport
             this.checkBoxChecker.CheckState = System.Windows.Forms.CheckState.Checked;
             this.checkBoxChecker.Location = new System.Drawing.Point(17, 32);
             this.checkBoxChecker.Name = "checkBoxChecker";
-            this.checkBoxChecker.Size = new System.Drawing.Size(136, 29);
+            this.checkBoxChecker.Size = new System.Drawing.Size(157, 34);
             this.checkBoxChecker.TabIndex = 0;
             this.checkBoxChecker.Text = "측정자 적용";
             this.checkBoxChecker.UseVisualStyleBackColor = true;
@@ -325,7 +326,7 @@ namespace SmartReport
             this.gbImage.Controls.Add(this.btnQuntityFileRun);
             this.gbImage.Location = new System.Drawing.Point(5, 218);
             this.gbImage.Name = "gbImage";
-            this.gbImage.Size = new System.Drawing.Size(1126, 180);
+            this.gbImage.Size = new System.Drawing.Size(1126, 203);
             this.gbImage.TabIndex = 24;
             this.gbImage.TabStop = false;
             this.gbImage.Text = "이미지 삽입";
@@ -337,7 +338,7 @@ namespace SmartReport
             this.checkBoxOcr.CheckState = System.Windows.Forms.CheckState.Checked;
             this.checkBoxOcr.Location = new System.Drawing.Point(551, 27);
             this.checkBoxOcr.Name = "checkBoxOcr";
-            this.checkBoxOcr.Size = new System.Drawing.Size(226, 29);
+            this.checkBoxOcr.Size = new System.Drawing.Size(261, 34);
             this.checkBoxOcr.TabIndex = 45;
             this.checkBoxOcr.Text = "온도 인식값 자동 입력";
             this.checkBoxOcr.UseVisualStyleBackColor = true;
@@ -350,7 +351,7 @@ namespace SmartReport
             "시_보.pdf"});
             this.comboBoxSignalGraph.Location = new System.Drawing.Point(803, 52);
             this.comboBoxSignalGraph.Name = "comboBoxSignalGraph";
-            this.comboBoxSignalGraph.Size = new System.Drawing.Size(98, 33);
+            this.comboBoxSignalGraph.Size = new System.Drawing.Size(98, 38);
             this.comboBoxSignalGraph.TabIndex = 44;
             this.comboBoxSignalGraph.Text = "시보.pdf";
             // 
@@ -362,7 +363,7 @@ namespace SmartReport
             "시_그.pdf"});
             this.comboBoxTestGraph.Location = new System.Drawing.Point(678, 52);
             this.comboBoxTestGraph.Name = "comboBoxTestGraph";
-            this.comboBoxTestGraph.Size = new System.Drawing.Size(98, 33);
+            this.comboBoxTestGraph.Size = new System.Drawing.Size(98, 38);
             this.comboBoxTestGraph.TabIndex = 43;
             this.comboBoxTestGraph.Text = "시그.pdf";
             // 
@@ -374,7 +375,7 @@ namespace SmartReport
             "고_그.pdf"});
             this.comboBoxHwaveGraph.Location = new System.Drawing.Point(551, 52);
             this.comboBoxHwaveGraph.Name = "comboBoxHwaveGraph";
-            this.comboBoxHwaveGraph.Size = new System.Drawing.Size(98, 33);
+            this.comboBoxHwaveGraph.Size = new System.Drawing.Size(98, 38);
             this.comboBoxHwaveGraph.TabIndex = 42;
             this.comboBoxHwaveGraph.Text = "고그.pdf";
             // 
@@ -386,13 +387,14 @@ namespace SmartReport
             this.btnGapjiPictureRelocate.TabIndex = 41;
             this.btnGapjiPictureRelocate.Text = "갑지 사진 중앙 정렬";
             this.btnGapjiPictureRelocate.UseVisualStyleBackColor = true;
+            this.btnGapjiPictureRelocate.Click += new System.EventHandler(this.btnGapjiPictureRelocate_Click);
             // 
             // textBoxPictureFolder
             // 
             this.textBoxPictureFolder.Location = new System.Drawing.Point(292, 113);
             this.textBoxPictureFolder.Margin = new System.Windows.Forms.Padding(4);
             this.textBoxPictureFolder.Name = "textBoxPictureFolder";
-            this.textBoxPictureFolder.Size = new System.Drawing.Size(217, 32);
+            this.textBoxPictureFolder.Size = new System.Drawing.Size(217, 37);
             this.textBoxPictureFolder.TabIndex = 40;
             this.textBoxPictureFolder.Text = "03 점검사진";
             // 
@@ -401,7 +403,7 @@ namespace SmartReport
             this.textBoxCoronaFolder.Location = new System.Drawing.Point(292, 83);
             this.textBoxCoronaFolder.Margin = new System.Windows.Forms.Padding(4);
             this.textBoxCoronaFolder.Name = "textBoxCoronaFolder";
-            this.textBoxCoronaFolder.Size = new System.Drawing.Size(217, 32);
+            this.textBoxCoronaFolder.Size = new System.Drawing.Size(217, 37);
             this.textBoxCoronaFolder.TabIndex = 38;
             this.textBoxCoronaFolder.Text = "05 영상코로나 또는 부분방전";
             // 
@@ -410,7 +412,7 @@ namespace SmartReport
             this.textBoxQuntatyFolder.Location = new System.Drawing.Point(292, 53);
             this.textBoxQuntatyFolder.Margin = new System.Windows.Forms.Padding(4);
             this.textBoxQuntatyFolder.Name = "textBoxQuntatyFolder";
-            this.textBoxQuntatyFolder.Size = new System.Drawing.Size(217, 32);
+            this.textBoxQuntatyFolder.Size = new System.Drawing.Size(217, 37);
             this.textBoxQuntatyFolder.TabIndex = 34;
             this.textBoxQuntatyFolder.Text = "02 전원품질";
             // 
@@ -431,7 +433,7 @@ namespace SmartReport
             this.textBoxFeverImageFolder.Location = new System.Drawing.Point(292, 24);
             this.textBoxFeverImageFolder.Margin = new System.Windows.Forms.Padding(4);
             this.textBoxFeverImageFolder.Name = "textBoxFeverImageFolder";
-            this.textBoxFeverImageFolder.Size = new System.Drawing.Size(217, 32);
+            this.textBoxFeverImageFolder.Size = new System.Drawing.Size(217, 37);
             this.textBoxFeverImageFolder.TabIndex = 30;
             this.textBoxFeverImageFolder.Text = "01 열화상";
             // 
@@ -442,7 +444,7 @@ namespace SmartReport
             this.checkBoxFeverPicture.CheckState = System.Windows.Forms.CheckState.Checked;
             this.checkBoxFeverPicture.Location = new System.Drawing.Point(17, 29);
             this.checkBoxFeverPicture.Name = "checkBoxFeverPicture";
-            this.checkBoxFeverPicture.Size = new System.Drawing.Size(141, 29);
+            this.checkBoxFeverPicture.Size = new System.Drawing.Size(163, 34);
             this.checkBoxFeverPicture.TabIndex = 28;
             this.checkBoxFeverPicture.Text = "열화상(분기)";
             this.checkBoxFeverPicture.UseVisualStyleBackColor = true;
@@ -454,7 +456,7 @@ namespace SmartReport
             this.checkBoxPicture.CheckState = System.Windows.Forms.CheckState.Checked;
             this.checkBoxPicture.Location = new System.Drawing.Point(18, 117);
             this.checkBoxPicture.Name = "checkBoxPicture";
-            this.checkBoxPicture.Size = new System.Drawing.Size(72, 29);
+            this.checkBoxPicture.Size = new System.Drawing.Size(83, 34);
             this.checkBoxPicture.TabIndex = 26;
             this.checkBoxPicture.Text = "사진";
             this.checkBoxPicture.UseVisualStyleBackColor = true;
@@ -466,7 +468,7 @@ namespace SmartReport
             this.checkBoxCorona.CheckState = System.Windows.Forms.CheckState.Checked;
             this.checkBoxCorona.Location = new System.Drawing.Point(18, 87);
             this.checkBoxCorona.Name = "checkBoxCorona";
-            this.checkBoxCorona.Size = new System.Drawing.Size(91, 29);
+            this.checkBoxCorona.Size = new System.Drawing.Size(105, 34);
             this.checkBoxCorona.TabIndex = 25;
             this.checkBoxCorona.Text = "코로나";
             this.checkBoxCorona.UseVisualStyleBackColor = true;
@@ -478,7 +480,7 @@ namespace SmartReport
             this.checkBoxQuantity.CheckState = System.Windows.Forms.CheckState.Checked;
             this.checkBoxQuantity.Location = new System.Drawing.Point(18, 59);
             this.checkBoxQuantity.Name = "checkBoxQuantity";
-            this.checkBoxQuantity.Size = new System.Drawing.Size(72, 29);
+            this.checkBoxQuantity.Size = new System.Drawing.Size(83, 34);
             this.checkBoxQuantity.TabIndex = 24;
             this.checkBoxQuantity.Text = "품질";
             this.checkBoxQuantity.UseVisualStyleBackColor = true;
@@ -486,7 +488,7 @@ namespace SmartReport
             // btnQuntityFileRun
             // 
             this.btnQuntityFileRun.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnQuntityFileRun.Location = new System.Drawing.Point(990, 44);
+            this.btnQuntityFileRun.Location = new System.Drawing.Point(990, 67);
             this.btnQuntityFileRun.Name = "btnQuntityFileRun";
             this.btnQuntityFileRun.Size = new System.Drawing.Size(134, 116);
             this.btnQuntityFileRun.TabIndex = 23;
@@ -498,11 +500,11 @@ namespace SmartReport
             // 
             this.tpGap.Controls.Add(this.panel2);
             this.tpGap.Controls.Add(this.panel1);
-            this.tpGap.Location = new System.Drawing.Point(4, 34);
+            this.tpGap.Location = new System.Drawing.Point(4, 25);
             this.tpGap.Margin = new System.Windows.Forms.Padding(4);
             this.tpGap.Name = "tpGap";
             this.tpGap.Padding = new System.Windows.Forms.Padding(4);
-            this.tpGap.Size = new System.Drawing.Size(1134, 396);
+            this.tpGap.Size = new System.Drawing.Size(1134, 405);
             this.tpGap.TabIndex = 0;
             this.tpGap.Text = "파일다운로드";
             this.tpGap.UseVisualStyleBackColor = true;
@@ -535,7 +537,7 @@ namespace SmartReport
             this.tbCompany.Location = new System.Drawing.Point(162, 15);
             this.tbCompany.Margin = new System.Windows.Forms.Padding(4);
             this.tbCompany.Name = "tbCompany";
-            this.tbCompany.Size = new System.Drawing.Size(649, 32);
+            this.tbCompany.Size = new System.Drawing.Size(649, 37);
             this.tbCompany.TabIndex = 16;
             this.tbCompany.Enter += new System.EventHandler(this.tbCompany_Enter);
             this.tbCompany.KeyDown += new System.Windows.Forms.KeyEventHandler(this.tbCompany_KeyDown);
@@ -546,7 +548,7 @@ namespace SmartReport
             this.lbCompany.Location = new System.Drawing.Point(18, 18);
             this.lbCompany.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbCompany.Name = "lbCompany";
-            this.lbCompany.Size = new System.Drawing.Size(108, 25);
+            this.lbCompany.Size = new System.Drawing.Size(124, 30);
             this.lbCompany.TabIndex = 15;
             this.lbCompany.Text = "업체명    : ";
             // 
@@ -556,7 +558,7 @@ namespace SmartReport
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(4, 4);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(1126, 388);
+            this.panel1.Size = new System.Drawing.Size(1126, 397);
             this.panel1.TabIndex = 16;
             // 
             // dgvFiles
@@ -585,10 +587,10 @@ namespace SmartReport
             // all
             // 
             this.all.Controls.Add(this.richTextBox1);
-            this.all.Location = new System.Drawing.Point(4, 34);
+            this.all.Location = new System.Drawing.Point(4, 39);
             this.all.Name = "all";
             this.all.Padding = new System.Windows.Forms.Padding(5);
-            this.all.Size = new System.Drawing.Size(1134, 214);
+            this.all.Size = new System.Drawing.Size(1134, 209);
             this.all.TabIndex = 0;
             this.all.Text = "All log";
             this.all.UseVisualStyleBackColor = true;
@@ -601,7 +603,7 @@ namespace SmartReport
             this.richTextBox1.Location = new System.Drawing.Point(5, 5);
             this.richTextBox1.Name = "richTextBox1";
             this.richTextBox1.ReadOnly = true;
-            this.richTextBox1.Size = new System.Drawing.Size(1124, 204);
+            this.richTextBox1.Size = new System.Drawing.Size(1124, 199);
             this.richTextBox1.TabIndex = 1;
             this.richTextBox1.TabStop = false;
             this.richTextBox1.Text = "";
@@ -654,12 +656,40 @@ namespace SmartReport
             this.pnlTop.Size = new System.Drawing.Size(1152, 175);
             this.pnlTop.TabIndex = 3;
             // 
+            // btnDownloadWork
+            // 
+            this.btnDownloadWork.Location = new System.Drawing.Point(972, 50);
+            this.btnDownloadWork.Name = "btnDownloadWork";
+            this.btnDownloadWork.Size = new System.Drawing.Size(169, 32);
+            this.btnDownloadWork.TabIndex = 51;
+            this.btnDownloadWork.Text = "내 폴더 다운로드";
+            this.btnDownloadWork.UseVisualStyleBackColor = true;
+            this.btnDownloadWork.Click += new System.EventHandler(this.btnDownloadWork_Click);
+            // 
+            // textBoxKeyword
+            // 
+            this.textBoxKeyword.Location = new System.Drawing.Point(785, 47);
+            this.textBoxKeyword.Name = "textBoxKeyword";
+            this.textBoxKeyword.Size = new System.Drawing.Size(167, 37);
+            this.textBoxKeyword.TabIndex = 50;
+            this.textBoxKeyword.Text = "유랑진";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(612, 49);
+            this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(204, 30);
+            this.label3.TabIndex = 49;
+            this.label3.Text = "서버 폴더 키워드 : ";
+            // 
             // checkBoxAnnual
             // 
             this.checkBoxAnnual.AutoSize = true;
             this.checkBoxAnnual.Location = new System.Drawing.Point(488, 85);
             this.checkBoxAnnual.Name = "checkBoxAnnual";
-            this.checkBoxAnnual.Size = new System.Drawing.Size(117, 29);
+            this.checkBoxAnnual.Size = new System.Drawing.Size(135, 34);
             this.checkBoxAnnual.TabIndex = 3;
             this.checkBoxAnnual.Text = "연차 여부";
             this.checkBoxAnnual.UseVisualStyleBackColor = true;
@@ -671,7 +701,7 @@ namespace SmartReport
             this.textBox1.Location = new System.Drawing.Point(120, 124);
             this.textBox1.Margin = new System.Windows.Forms.Padding(4);
             this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(838, 32);
+            this.textBox1.Size = new System.Drawing.Size(838, 37);
             this.textBox1.TabIndex = 48;
             this.textBox1.Text = "D:\\work\\한경이엔지\\0_org\\한경이엔지2본부_26년연차보고서(샘플)_rang.xlsx";
             // 
@@ -681,7 +711,7 @@ namespace SmartReport
             this.lbSample.Location = new System.Drawing.Point(22, 125);
             this.lbSample.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbSample.Name = "lbSample";
-            this.lbSample.Size = new System.Drawing.Size(113, 25);
+            this.lbSample.Size = new System.Drawing.Size(130, 30);
             this.lbSample.TabIndex = 47;
             this.lbSample.Text = "샘플 위치 : ";
             // 
@@ -692,7 +722,7 @@ namespace SmartReport
             this.cbAutoGenerateExcel.CheckState = System.Windows.Forms.CheckState.Checked;
             this.cbAutoGenerateExcel.Location = new System.Drawing.Point(809, 85);
             this.cbAutoGenerateExcel.Name = "cbAutoGenerateExcel";
-            this.cbAutoGenerateExcel.Size = new System.Drawing.Size(162, 29);
+            this.cbAutoGenerateExcel.Size = new System.Drawing.Size(187, 34);
             this.cbAutoGenerateExcel.TabIndex = 46;
             this.cbAutoGenerateExcel.Text = "파일 자동 생성";
             this.cbAutoGenerateExcel.UseVisualStyleBackColor = true;
@@ -707,7 +737,7 @@ namespace SmartReport
             "4"});
             this.comboBoxSeason.Location = new System.Drawing.Point(384, 82);
             this.comboBoxSeason.Name = "comboBoxSeason";
-            this.comboBoxSeason.Size = new System.Drawing.Size(53, 33);
+            this.comboBoxSeason.Size = new System.Drawing.Size(53, 38);
             this.comboBoxSeason.TabIndex = 45;
             this.comboBoxSeason.Text = "1";
             // 
@@ -717,7 +747,7 @@ namespace SmartReport
             this.label2.Location = new System.Drawing.Point(435, 87);
             this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(50, 25);
+            this.label2.Size = new System.Drawing.Size(57, 30);
             this.label2.TabIndex = 15;
             this.label2.Text = "분기";
             // 
@@ -725,7 +755,7 @@ namespace SmartReport
             // 
             this.dateTimePicker1.Location = new System.Drawing.Point(120, 82);
             this.dateTimePicker1.Name = "dateTimePicker1";
-            this.dateTimePicker1.Size = new System.Drawing.Size(253, 32);
+            this.dateTimePicker1.Size = new System.Drawing.Size(253, 37);
             this.dateTimePicker1.TabIndex = 14;
             // 
             // label1
@@ -734,7 +764,7 @@ namespace SmartReport
             this.label1.Location = new System.Drawing.Point(22, 87);
             this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(115, 25);
+            this.label1.Size = new System.Drawing.Size(132, 30);
             this.label1.TabIndex = 13;
             this.label1.Text = "측정일     : ";
             // 
@@ -742,7 +772,7 @@ namespace SmartReport
             // 
             this.tbPerson.Location = new System.Drawing.Point(120, 44);
             this.tbPerson.Name = "tbPerson";
-            this.tbPerson.Size = new System.Drawing.Size(317, 32);
+            this.tbPerson.Size = new System.Drawing.Size(317, 37);
             this.tbPerson.TabIndex = 12;
             this.tbPerson.Text = "김희철 이사 외 1명";
             // 
@@ -775,7 +805,7 @@ namespace SmartReport
             this.tbFolder.Location = new System.Drawing.Point(120, 8);
             this.tbFolder.Margin = new System.Windows.Forms.Padding(4);
             this.tbFolder.Name = "tbFolder";
-            this.tbFolder.Size = new System.Drawing.Size(838, 32);
+            this.tbFolder.Size = new System.Drawing.Size(838, 37);
             this.tbFolder.TabIndex = 9;
             // 
             // lbFolder
@@ -784,7 +814,7 @@ namespace SmartReport
             this.lbFolder.Location = new System.Drawing.Point(22, 11);
             this.lbFolder.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbFolder.Name = "lbFolder";
-            this.lbFolder.Size = new System.Drawing.Size(113, 25);
+            this.lbFolder.Size = new System.Drawing.Size(130, 30);
             this.lbFolder.TabIndex = 8;
             this.lbFolder.Text = "폴더 위치 : ";
             // 
@@ -801,7 +831,7 @@ namespace SmartReport
             this.cbName.Location = new System.Drawing.Point(1438, 4);
             this.cbName.Margin = new System.Windows.Forms.Padding(4);
             this.cbName.Name = "cbName";
-            this.cbName.Size = new System.Drawing.Size(306, 33);
+            this.cbName.Size = new System.Drawing.Size(306, 38);
             this.cbName.TabIndex = 6;
             this.cbName.Text = "김희철 이사";
             this.cbName.Visible = false;
@@ -812,41 +842,13 @@ namespace SmartReport
             this.lbName.Location = new System.Drawing.Point(22, 49);
             this.lbName.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbName.Name = "lbName";
-            this.lbName.Size = new System.Drawing.Size(115, 25);
+            this.lbName.Size = new System.Drawing.Size(132, 30);
             this.lbName.TabIndex = 5;
             this.lbName.Text = "측정자     : ";
             // 
-            // textBoxKeyword
-            // 
-            this.textBoxKeyword.Location = new System.Drawing.Point(785, 47);
-            this.textBoxKeyword.Name = "textBoxKeyword";
-            this.textBoxKeyword.Size = new System.Drawing.Size(167, 32);
-            this.textBoxKeyword.TabIndex = 50;
-            this.textBoxKeyword.Text = "유랑진";
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(612, 49);
-            this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(177, 25);
-            this.label3.TabIndex = 49;
-            this.label3.Text = "서버 폴더 키워드 : ";
-            // 
-            // btnDownloadWork
-            // 
-            this.btnDownloadWork.Location = new System.Drawing.Point(972, 50);
-            this.btnDownloadWork.Name = "btnDownloadWork";
-            this.btnDownloadWork.Size = new System.Drawing.Size(169, 32);
-            this.btnDownloadWork.TabIndex = 51;
-            this.btnDownloadWork.Text = "내 폴더 다운로드";
-            this.btnDownloadWork.UseVisualStyleBackColor = true;
-            this.btnDownloadWork.Click += new System.EventHandler(this.btnDownloadWork_Click);
-            // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 25F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 30F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1160, 925);
             this.Controls.Add(this.pnlMain);

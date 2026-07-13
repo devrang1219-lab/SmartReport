@@ -1624,6 +1624,11 @@ namespace SmartReport
                         }
 
                         currentStartPage += pages;
+
+                        if (sh.Name == "마")
+                        {
+                            break;
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -2905,8 +2910,8 @@ namespace SmartReport
                             string fromCell = $"{fromCols[i]}{startRow}";
                             string toCell = $"{toCols[i]}{endRow}";
 
-                            float gapRight = (i % 2 == 0) ? 2.4f : 2.8f;
-                            float gapLeft = (i % 2 == 0) ? 4.1f : 3.6f;
+                            float gapRight = (i % 2 == 0) ? 2.3f : 2.9f;
+                            float gapLeft = (i % 2 == 0) ? 4.2f : 3.6f;
 
                             float gapBottom = 2.8f;
                             float gapTop = 4.8f;
@@ -2950,38 +2955,42 @@ namespace SmartReport
                         }
                     }
 
-                    using (var reader = new FlirOcrReader())
+                    if (checkBoxOcr.Checked)
                     {
-                        OcrExcelMap map = new OcrExcelMap
+
+                        using (var reader = new FlirOcrReader())
                         {
-                            ValueCells = new[]
+                            OcrExcelMap map = new OcrExcelMap
                             {
-                                        "H49",
-                                        "P49",
-                                        "W49",
-                                        "H52",
-                                        "P52",
-                                        "W52"
-                                    },
-                            MinTemperatureCell = "AD6",
-                            RowOffset = 56
-                        };
+                                ValueCells = new[]
+                                {
+                                            "H49",
+                                            "P49",
+                                            "W49",
+                                            "H52",
+                                            "P52",
+                                            "W52"
+                                        },
+                                MinTemperatureCell = "AD6",
+                                RowOffset = 56
+                            };
 
-                        string[] evenFiles = files
-                            .Where((file, index) => index % 2 == 0)
-                            .ToArray();
+                            string[] evenFiles = files
+                                .Where((file, index) => index % 2 == 0)
+                                .ToArray();
 
-                        OcrDataToExcel.ProcessAll(
-                            sourceWs,
-                            evenFiles,
-                            reader,
-                            map);
+                            OcrDataToExcel.ProcessAll(
+                                sourceWs,
+                                evenFiles,
+                                reader,
+                                map);
 
-                        OcrDataToExcel.ProcessAll(
-                            ws,
-                            evenFiles,
-                            reader,
-                            map);
+                            OcrDataToExcel.ProcessAll(
+                                ws,
+                                evenFiles,
+                                reader,
+                                map);
+                        }
                     }
 
                     wb.Save();
@@ -3462,7 +3471,7 @@ namespace SmartReport
                 },
                 new SearchFolderOption
                 {
-                        Folder = downloadFolderAnuualReport,
+                    Folder = downloadFolderAnuualReport,
                     Recursive = false
                 }
             };
@@ -3491,7 +3500,109 @@ namespace SmartReport
         // 분기 바꾸기
 
         // Sheet1 제거 (기본 생성)
-        // 측정자 셀 변경하기
+        #region [측정자 셀 변경]
+        private void UpdateInspectorCell(Excel.Workbook wb, string inspectorName)
+        {
+            // 기존 단일 셀 호출을 유지하도록 wrapper로 구현
+            var list = new List<KeyValuePair<string, string>>()
+            {
+                // sheetName이 null 또는 빈 문자열이면 ActiveSheet를 의미합니다.
+                new KeyValuePair<string,string>("절연", "P1"),
+                new KeyValuePair<string,string>("저압", "H1"),
+                new KeyValuePair<string,string>("예비", "L1"),
+                new KeyValuePair<string,string>("분기", "R1")
+            };
+
+            UpdateInspectorCells(wb, inspectorName, list);
+        }
+
+        // 시트 이름과 셀 주소 리스트로 여러 시트의 동일한 셀을 한 번에 업데이트합니다.
+        // sheetCellList: (sheetName, cellAddress) 쌍의 열거. sheetName이 null/빈 문자열이면 ActiveSheet를 사용합니다.
+        private void UpdateInspectorCells(Excel.Workbook wb, string inspectorName, IEnumerable<KeyValuePair<string,string>> sheetCellList)
+        {
+            if (!checkBoxChecker.Checked) return;
+            if (string.IsNullOrEmpty(inspectorName))
+            {
+                MessageBox.Show("측정자 이름이 null입니다. 측정자 이름을 입력하세요.",
+                    "오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            if (wb == null) return;
+
+            var pairs = sheetCellList.ToList();
+
+            // 절연 시트가 있으면 참조용 시트 이름과 셀 주소를 가져온다
+            Excel.Worksheet insWs = null;
+            string insSheetName = null;
+            string insCellAddr = null;
+            bool isJeolyeonSheet = false;
+
+            foreach (var pair in pairs)
+            {
+                string sheetName = pair.Key;
+                string cellAddress = pair.Value;
+
+                Excel.Worksheet ws = null;
+                try
+                {
+                    if (string.IsNullOrEmpty(sheetName))
+                    {
+                        // ActiveSheet 사용
+                        ws = (Excel.Worksheet)wb.ActiveSheet;
+                    }
+                    else
+                    {
+                        // 시트가 존재하면 가져오고, 없으면 건너뜀
+                        try
+                        {
+                            ws = GetWorksheetByName(wb, sheetName);
+                        }
+                        catch
+                        {
+                            // 시트 없음
+                            ws = null;
+                        }
+                    }
+
+                    if (ws == null) continue;
+
+                    if (ws.Name == "절연") isJeolyeonSheet = true;
+
+                    if (!string.IsNullOrEmpty(cellAddress))
+                    {
+                        try
+                        {
+                            // 절연 시트가 존재하고 현재 타겟이 저압 또는 예비이면 절연 시트의 셀을 참조하는 수식으로 설정
+                            if (isJeolyeonSheet && ws.Name != "절연")
+                            {
+                                string formula = "='" + "절연" + "'!" + "P1";
+                                ws.Range[cellAddress].Formula = formula;
+                            }
+                            else
+                            {
+                                ws.Range[cellAddress].Value = inspectorName;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine($"UpdateInspectorCells: failed to set {sheetName ?? "(Active)"}!{cellAddress}: {ex.Message}");
+                        }
+                    }
+                }
+                finally
+                {
+                    if (ws != null) try { Marshal.ReleaseComObject(ws); } catch { }
+                }
+            }
+        }
+        #endregion
+
+        // 검교정 P1 (현장명) 바꾸기
+        // 의견 시트 별지서식 변경
+        // A5 셀 "  ○ 전기안전관리자 직무고시 점검 : 별지서식 [2,3,4,5,6,7,8,코로나방전,축전지] 점검."
+
+
+        // 갑지 시트의 A11 셀 "2026년 1분기"
 
         // 검교정 P1 (현장명) 바꾸기
         // 의견 시트 별지서식 변경
