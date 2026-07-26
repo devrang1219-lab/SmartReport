@@ -80,6 +80,8 @@ namespace WindowsFormsApp1
             if (minTemperature != double.MaxValue)
             {
                 ws.Range[map.MinTemperatureCell].Value = Math.Ceiling(minTemperature);
+                //'옥내(사용온도 2℃)
+                ws.Range["T6"].Value = @"'옥내(사용온도 " + Math.Ceiling(minTemperature) + "℃)";
             }
         }
 

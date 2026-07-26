@@ -701,6 +701,10 @@ namespace SynologyIntegration
             get { return _sid; }
         }
 
+        // 외부에서 HttpClient와 SID를 직접 사용해야 하는 경우를 위해 읽기 전용으로 노출합니다.
+        public HttpClient HttpClient => _httpClient;
+        public string Sid => _sid;
+
         public async Task LoginAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
             ThrowIfDisposed();
@@ -716,6 +720,8 @@ namespace SynologyIntegration
                 "&format=sid";
 
             string json = await GetStringAsync(url, cancellationToken).ConfigureAwait(false);
+
+            Debug.WriteLine($"login response : {json}");
 
             var response = Deserialize<SynoLoginResponse>(json);
 
@@ -1194,6 +1200,8 @@ namespace SynologyIntegration
             EnsureLoggedIn();
 
             var result = new List<SynologyFileItem>();
+
+            Debug.WriteLine($"SearchFoldersAsync sid = [{_sid}]");
 
             foreach (var folder in _config.SearchFolders)
             {

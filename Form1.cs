@@ -1,5 +1,4 @@
-﻿using PdfiumViewer;
-using SynologyIntegration;
+﻿using SynologyIntegration;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -10,11 +9,11 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WindowsFormsApp1;
 using WindowsFormsApp1.Comm;
-using static SynologyIntegration.SynologyFileDownloaderConfig;
 using Action = System.Action;
 using Excel = Microsoft.Office.Interop.Excel;
 using Office = Microsoft.Office.Core;
@@ -24,6 +23,8 @@ namespace SmartReport
     public partial class Form1 : Form
     {
         private SoborLog soborLog = null;
+        private Report report = null;
+        private SynologyFileUploader _uploader = null;
         public Form1()
         {
             InitializeComponent();
@@ -179,30 +180,32 @@ namespace SmartReport
 
         private void btFolder_Click(object sender, EventArgs e)
         {
-            using (var dlg = new OpenFileDialog())
+            // 폴더 선택 대화상자로 변경
+            using (var dlg = new FolderBrowserDialog())
             {
-                dlg.Title = "엑셀 파일을 선택하세요";
-                dlg.Filter = "Excel 파일 (*.xlsx;*.xls;*.xlsm)|*.xlsx;*.xls;*.xlsm|모든 파일 (*.*)|*.*";
-                dlg.CheckFileExists = true;
-                dlg.CheckPathExists = true;
-                dlg.Multiselect = false;
+                dlg.Description = "보고서가 있는 폴더를 선택하세요";
 
-                // 기본 위치 설정 (폴더가 존재하면 InitialDirectory로 설정)
+                // 기본 위치 설정
                 var defaultPath = @"C:\_D\work\한경이엔지\2_report";
                 if (Directory.Exists(defaultPath))
                 {
-                    dlg.InitialDirectory = defaultPath;
+                    dlg.SelectedPath = defaultPath;
                 }
 
                 var result = dlg.ShowDialog();
-                if (result == DialogResult.OK)
+                if (result == DialogResult.OK || result == DialogResult.Yes)
                 {
-                    tbFolder.Text = dlg.FileName;
+                    tbFolder.Text = dlg.SelectedPath;
+
+                    //260703_동탄시범월드반도아파트_연차_유량진
+                    //260703_당진시네마타워_김희철_분기_유량진
+
+                    // 폴더명에 연차가 있으면 새 엑셀 파일 생성
+                    // 연차가 없으면 
 
                     try
                     {
-                        //var newPath = CreateNewExcelFromTemplate(dlg.FileName);
-                        var newPath = creatfileTemp(tbFolder.Text);
+                        var newPath = createNewReportFile(tbFolder.Text);
                         AddLog("Info", $"새 엑셀 파일을 생성했습니다:\r\n{newPath}");
                         MessageBox.Show($"새 엑셀 파일을 생성했습니다:\r\n{newPath}", "완료", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
@@ -260,17 +263,49 @@ namespace SmartReport
             }
         }
 
+        private void FindAnuualReportFile(string folderPath, out string annualReportFile)
+        {
+            annualReportFile = null;
+            try
+            {
+                var exts = new[] { ".xls", ".xlsx", ".xlsm", ".xlsb" };
+                var files = Directory.GetFiles(folderPath)
+                    .Where(f => exts.Contains(Path.GetExtension(f), StringComparer.OrdinalIgnoreCase))
+                    .ToList();
+                foreach (var f in files)
+                {
+                    if (Path.GetFileName(f).IndexOf("연차", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        annualReportFile = f;
+                        return;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                AddLog("ERROR", $"연차 보고서 파일 검색 중 오류: {ex.Message}");
+            }
+        }
 
-        private string creatfileTemp(string originalFilePath)
+
+        private string createNewReportFile(string originalFilePath)
         {
             var dir = Path.GetDirectoryName(originalFilePath) ?? throw new InvalidOperationException("디렉터리 정보를 가져올 수 없습니다.");
             var originalName = Path.GetFileNameWithoutExtension(originalFilePath);
             var ext = Path.GetExtension(originalFilePath);
 
+            
             var folderName = new DirectoryInfo(dir).Name;
             var folderParts = folderName.Split('_');
             if (folderParts.Length < 1)
                 throw new InvalidOperationException("폴더명이 예상 형식이 아닙니다. '_'로 구분된 첫번째 부분에 날짜가 있어야 합니다.");
+
+            var xlsReportFile = "";
+            var reportPath = Path.Combine(originalFilePath, "04 보고서");
+            FindAnuualReportFile(reportPath, out xlsReportFile);
+
+            if (string.IsNullOrEmpty(xlsReportFile) || !File.Exists(xlsReportFile))
+                throw new InvalidOperationException("연차 보고서 파일을 찾을 수 없습니다. 폴더 내에 '연차'가 포함된 엑셀 파일이 있어야 합니다.");
 
             var folderDate = folderParts[0];
             string year;
@@ -335,8 +370,10 @@ namespace SmartReport
             // 템플릿 파일 찾기
             string templateFileName = "한경이엔지2본부_26년연차보고서(샘플).xlsx";
             string templatePath = FindTemplatePath(templateFileName);
+            templatePath = textBox1.Text;
 
-            var conditionalSheets = new[] { "갑지", "제출문", "의견", "연계획", "검교정" };
+            //var conditionalSheets = new[] { "제출문", "의견", "연계획", "검교정" };
+            var conditionalSheets = new[] { "제출문", "의견", "연계획", "검교정" };
             var alwaysCopySheets = new[] { "전기설비", "장비", "부록", "마" };
 
             Excel.Application xlApp = null;
@@ -358,30 +395,27 @@ namespace SmartReport
                 var origSheetNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 try
                 {
-                    if (File.Exists(originalFilePath))
+                    wbOrig = xlApp.Workbooks.Open(xlsReportFile, ReadOnly: true);
+                    foreach (Microsoft.Office.Interop.Excel.Worksheet sh in wbOrig.Worksheets)
                     {
-                        wbOrig = xlApp.Workbooks.Open(originalFilePath, ReadOnly: true);
-                        foreach (Microsoft.Office.Interop.Excel.Worksheet sh in wbOrig.Worksheets)
-                        {
-                            try { origSheetNames.Add(sh.Name); } catch { }
-                            finally { if (sh != null) System.Runtime.InteropServices.Marshal.ReleaseComObject(sh); }
-                        }
+                        try { origSheetNames.Add(sh.Name); } catch { }
+                        finally { if (sh != null) System.Runtime.InteropServices.Marshal.ReleaseComObject(sh); }
                     }
                 }
                 finally
                 {
-                    if (wbOrig != null)
-                    {
-                        wbOrig.Close(false);
-                        System.Runtime.InteropServices.Marshal.ReleaseComObject(wbOrig);
-                        wbOrig = null;
-                    }
+                    //if (wbOrig != null)
+                    //{
+                    //    wbOrig.Close(false);
+                    //    System.Runtime.InteropServices.Marshal.ReleaseComObject(wbOrig);
+                    //    wbOrig = null;
+                    //}
                 }
 
                 // 새 통합문서 생성: 원본 복사 대신 연차 파일과 템플릿의 조합으로 새 파일을 만든다.
                 wbNew = xlApp.Workbooks.Add();
 
-                Excel.Workbook wbYear = null;
+                Excel.Workbook wbYear = wbOrig;
                 try
                 {
                     // 연차 파일 찾기
@@ -400,25 +434,27 @@ namespace SmartReport
                         try { DumpWorkbookSheetInfo(wbYear, "wbYear (opened)"); } catch { }
                     }
 
+                    //wbYear = 
+
                     // 1) 연차 문서를 임시 복사해 외부 링크 제거 및 불필요 시트 삭제 후 사용
                     string tempYearPath = null;
-                    if (wbYear != null)
+                    if (wbOrig != null)
                     {
                         try
                         {
                             // temp 파일 생성
-                            var tempExt = Path.GetExtension(yearFile);
+                            var tempExt = Path.GetExtension(xlsReportFile);
                             tempYearPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + tempExt);
-                            try { File.Copy(yearFile, tempYearPath, true); } catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Failed to copy yearFile to temp: {ex.Message}"); tempYearPath = null; }
+                            try { File.Copy(xlsReportFile, tempYearPath, true); } catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Failed to copy xlsReportFile to temp: {ex.Message}"); tempYearPath = null; }
 
                             if (!string.IsNullOrEmpty(tempYearPath) && File.Exists(tempYearPath))
                             {
                                 try
                                 {
                                     // 닫고 원본 대신 임시 파일을 열기
-                                    try { wbYear.Close(false); } catch { }
-                                    try { Marshal.ReleaseComObject(wbYear); } catch { }
-                                    wbYear = null;
+                                    try { wbOrig.Close(false); } catch { }
+                                    try { Marshal.ReleaseComObject(wbOrig); } catch { }
+                                    wbOrig = null;
                                 }
                                 catch { }
 
@@ -751,6 +787,550 @@ namespace SmartReport
                                                     if (added != null) try { Marshal.ReleaseComObject(added); } catch { }
                                                 }
                                             }
+                                    }
+                                }
+                                catch { }
+                                finally { if (src != null) try { Marshal.ReleaseComObject(src); } catch { } }
+                            }
+
+                            if (copied.Count > 0)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"Copied pattern '{pattern}': {string.Join(",", copied)}");
+                            }
+                            else
+                            {
+                                System.Diagnostics.Debug.WriteLine($"No sheets copied for pattern '{pattern}'");
+                            }
+                        }
+                        catch { }
+                    }
+
+                    try { if (equipmentSheet != null) Marshal.ReleaseComObject(equipmentSheet); } catch { }
+
+                    // 불필요한 기본 시트 제거 (이름이 Sheet로 시작하는 경우)
+                    try
+                    {
+                        var defaults = wbNew.Worksheets.Cast<Excel.Worksheet>().Where(s => s.Name.StartsWith("Sheet", StringComparison.OrdinalIgnoreCase)).ToList();
+                        foreach (var s in defaults)
+                        {
+                            try { s.Delete(); } catch { }
+                            try { Marshal.ReleaseComObject(s); } catch { }
+                        }
+                    }
+                    catch { }
+
+                    // 텍스트 치환
+                    if (!string.IsNullOrEmpty(site))
+                    {
+                        ReplaceTextInWorkbook(wbNew, "금천구청", site);
+                    }
+
+                    // 저장
+                    try { wbNew.SaveAs(candidate, Excel.XlFileFormat.xlOpenXMLWorkbook); }
+                    catch
+                    {
+                        // SaveAs 실패하면 일반 Save 시도
+                        try { wbNew.Save(); }
+                        catch { }
+                    }
+                    finally
+                    {
+                        try { wbNew.Close(false); } catch { }
+                        try { wbTemplate.Close(false); } catch { }
+                    }
+
+                    return candidate;
+                }
+                finally
+                {
+                    if (wbYear != null)
+                    {
+                        try { wbYear.Close(false); } catch { }
+                        try { Marshal.ReleaseComObject(wbYear); } catch { }
+                    }
+                }
+            }
+            finally
+            {
+                if (wbNew != null) System.Runtime.InteropServices.Marshal.ReleaseComObject(wbNew);
+                if (wbTemplate != null) System.Runtime.InteropServices.Marshal.ReleaseComObject(wbTemplate);
+                if (xlApp != null)
+                {
+                    xlApp.Quit();
+                    System.Runtime.InteropServices.Marshal.ReleaseComObject(xlApp);
+                }
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+            }
+        }
+
+        bool copyFile(string filePath, string newFilePath)
+        {
+            try
+            {
+                var tempExt = Path.GetExtension(filePath);
+                newFilePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + tempExt);
+                try { File.Copy(filePath, newFilePath, true); } 
+                catch (Exception ex) { 
+                    System.Diagnostics.Debug.WriteLine($"Failed to copy xlsReportFile to temp: {ex.Message}"); 
+                    newFilePath = null;
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to open workbook '{filePath}': {ex.Message}");
+                //throw;
+                return false;
+            }
+            return true;
+        }
+
+        private string createNewReportFileUsingOrgFile(string originalFilePath)
+        {
+            var dir = Path.GetDirectoryName(originalFilePath) ?? throw new InvalidOperationException("디렉터리 정보를 가져올 수 없습니다.");
+            var originalName = Path.GetFileNameWithoutExtension(originalFilePath);
+            var ext = Path.GetExtension(originalFilePath);
+
+
+            var folderName = new DirectoryInfo(dir).Name;
+            var folderParts = folderName.Split('_');
+            if (folderParts.Length < 1)
+                throw new InvalidOperationException("폴더명이 예상 형식이 아닙니다. '_'로 구분된 첫번째 부분에 날짜가 있어야 합니다.");
+
+            var xlsReportFile = "";
+            var reportPath = Path.Combine(originalFilePath, "04 보고서");
+            FindAnuualReportFile(reportPath, out xlsReportFile);
+
+            if (string.IsNullOrEmpty(xlsReportFile) || !File.Exists(xlsReportFile))
+                throw new InvalidOperationException("연차 보고서 파일을 찾을 수 없습니다. 폴더 내에 '연차'가 포함된 엑셀 파일이 있어야 합니다.");
+
+            var folderDate = folderParts[0];
+            string year;
+            string month = "";
+            string day = "";
+            string formattedDate = folderDate;
+
+            if (System.Text.RegularExpressions.Regex.IsMatch(folderDate, "^\\d{6}$"))
+            {
+                var yy = folderDate.Substring(0, 2);
+                year = yy;
+                month = folderDate.Substring(2, 2);
+                day = folderDate.Substring(4, 2);
+                formattedDate = year + month + day;
+            }
+            else if (System.Text.RegularExpressions.Regex.IsMatch(folderDate, "^\\d{8}$"))
+            {
+                year = folderDate.Substring(0, 4);
+                month = folderDate.Substring(4, 2);
+                day = folderDate.Substring(6, 2);
+                formattedDate = year + month + day;
+            }
+            else
+            {
+                var m = System.Text.RegularExpressions.Regex.Match(folderDate, "^(\\d{4})");
+                if (m.Success)
+                    year = m.Groups[1].Value;
+                else
+                {
+                    m = System.Text.RegularExpressions.Regex.Match(folderDate, "^(\\d{2})");
+                    year = m.Success ? m.Groups[1].Value : folderDate;
+                }
+            }
+
+            var fileParts = originalName.Split('_');
+            string site = null;
+
+            if (folderParts.Length >= 2 && fileParts.Length >= 1)
+            {
+                site = folderParts[1];
+                foreach (var c in Path.GetInvalidFileNameChars())
+                    site = site.Replace(c, '_');
+                fileParts[0] = site;
+            }
+
+            if (fileParts.Length >= 2)
+                fileParts[1] = System.Text.RegularExpressions.Regex.Replace(fileParts[1], "\\d{2,4}년", year + "년");
+            if (fileParts.Length >= 3)
+                fileParts[2] = folderDate;
+
+            var newBase = string.Join("_", fileParts);
+            var newPath = Path.Combine(dir, newBase + ext);
+
+            var idx = 1;
+            var candidate = newPath;
+            while (File.Exists(candidate))
+            {
+                candidate = Path.Combine(dir, newBase + $"_{idx}" + ext);
+                idx++;
+            }
+
+            // 템플릿 파일 찾기
+            string templateFileName = "한경이엔지2본부_26년연차보고서(샘플).xlsx";
+            string templatePath = FindTemplatePath(templateFileName);
+            templatePath = textBox1.Text;
+
+            //var conditionalSheets = new[] { "제출문", "의견", "연계획", "검교정" };
+            var conditionalSheets = new[] { "제출문", "의견", "연계획", "검교정" };
+            var alwaysCopySheets = new[] { "전기설비", "장비", "부록", "마" };
+
+            Excel.Application xlApp = null;
+            Excel.Workbook wbTemplate = null;
+            Excel.Workbook wbNew = null;
+
+            try
+            {
+                xlApp = new Excel.Application
+                {
+                    Visible = false,
+                    DisplayAlerts = false
+                };
+
+                wbTemplate = xlApp.Workbooks.Open(templatePath, ReadOnly: false);
+
+                // 원본 파일을 열어 어떤 시트가 있는지 확인
+                HashSet<string> sheetNames = GetWorkbookSheetNames(wbTemplate);
+
+                // 새 통합문서 생성: 원본 복사 대신 연차 파일과 템플릿의 조합으로 새 파일을 만든다.
+                wbNew = xlApp.Workbooks.Add();
+
+                Excel.Workbook wbYear = null;
+                try
+                {
+                    // 연차 파일 찾기
+                    string yearFile = null;
+                    try
+                    {
+                        var exts = new[] { ".xls", ".xlsx", ".xlsm", ".xlsb" };
+                        yearFile = Directory.GetFiles(dir)
+                            .Where(f => exts.Contains(Path.GetExtension(f), StringComparer.OrdinalIgnoreCase))
+                            .FirstOrDefault(f => Path.GetFileName(f).IndexOf("연차", StringComparison.OrdinalIgnoreCase) >= 0);
+                    }
+                    catch { }
+                    if (!string.IsNullOrEmpty(yearFile) && File.Exists(yearFile))
+                    {
+                        wbYear = xlApp.Workbooks.Open(yearFile, ReadOnly: true);
+                        try { DumpWorkbookSheetInfo(wbYear, "wbYear (opened)"); } catch { }
+                    }
+
+
+                    // 1) 연차 문서를 임시 복사해 외부 링크 제거 및 불필요 시트 삭제 후 사용
+                    //string tempYearPath = null;
+                    //copyFile(xlsReportFile, Path.Combine(originalFilePath, ));
+                        
+
+                    if (wbYear != null)
+                    {
+                        // 외부 링크 끊기(있으면)
+                        try
+                        {
+                            object linksObj = null;
+                            try { linksObj = wbYear.LinkSources(Excel.XlLinkType.xlLinkTypeExcelLinks); } catch { linksObj = null; }
+                            if (linksObj is System.Array linksArr)
+                            {
+                                foreach (var l in linksArr)
+                                {
+                                    try { wbYear.BreakLink(l.ToString(), Excel.XlLinkType.xlLinkTypeExcelLinks); } catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"BreakLink failed: {ex.Message}"); }
+                                }
+                            }
+                        }
+                        catch { }
+
+                        // 연결 삭제
+                        try
+                        {
+                            dynamic conns = null;
+                            try { conns = wbYear.Connections; } catch { conns = null; }
+                            if (conns != null)
+                            {
+                                try
+                                {
+                                    int cc = conns.Count;
+                                    for (int ci = cc; ci >= 1; ci--)
+                                    {
+                                        try { conns.Item(ci).Delete(); } catch { }
+                                    }
+                                }
+                                catch { }
+                            }
+                        }
+                        catch { }
+
+                        // 불필요 시트 삭제: 연차에서 필요한 패턴(갑지, 제출문, 저압*, 예비*, 분기*)만 남김
+                        try
+                        {
+                            var keepPatterns = new[] { "갑지", "제출문", "저압", "예비", "분기" };
+                            var names = new List<string>();
+                            try
+                            {
+                                int yc = wbYear.Worksheets.Count;
+                                for (int yi = 1; yi <= yc; yi++)
+                                {
+                                    Excel.Worksheet tsh = null;
+                                    try { tsh = (Excel.Worksheet)wbYear.Worksheets[yi]; names.Add(tsh.Name); }
+                                    catch { }
+                                    finally { if (tsh != null) try { Marshal.ReleaseComObject(tsh); } catch { } }
+                                }
+                            }
+                            catch { }
+
+                            foreach (var nm in names)
+                            {
+                                try
+                                {
+                                    bool keep = keepPatterns.Any(p => nm.IndexOf(p, StringComparison.OrdinalIgnoreCase) >= 0);
+                                    if (!keep)
+                                    {
+                                        Excel.Worksheet del = null;
+                                        try { del = (Excel.Worksheet)wbYear.Worksheets[nm]; del.Delete(); }
+                                        catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Failed to delete sheet '{nm}': {ex.Message}"); }
+                                        finally { if (del != null) try { Marshal.ReleaseComObject(del); } catch { } }
+                                    }
+                                }
+                                catch { }
+                            }
+                        }
+                        catch { }
+
+                        var exactNames = new[] { "갑지", "제출문", "의견" };
+                        Excel.Worksheet firstSheet = null;
+                        try { firstSheet = (Excel.Worksheet)wbNew.Worksheets[1]; } catch { }
+                        if (firstSheet != null)
+                        {
+                            for (int i = exactNames.Length - 1; i >= 0; i--)
+                            {
+                                var name = exactNames[i];
+                                try
+                                {
+                                    foreach (Excel.Worksheet src in wbYear.Worksheets)
+                                    {
+                                        try
+                                        {
+                                            if (string.Equals(src.Name, name, StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                try { src.Copy(Before: firstSheet); }
+                                                catch { }
+                                            }
+                                        }
+                                        catch { }
+                                        finally { try { Marshal.ReleaseComObject(src); } catch { } }
+                                    }
+                                }
+                                catch { }
+                            }
+
+                            try { Marshal.ReleaseComObject(firstSheet); } catch { }
+                        }
+                    }
+
+                    // 2) 템플릿의 필요한 시트 복사 (전기설비, 장비, 검교정, 부록, 마)
+                    var templateNames = new[] { "전기설비", "장비", "검교정", "부록", "마" };
+                    Excel.Worksheet last = null;
+                    try { last = (Excel.Worksheet)wbNew.Worksheets[wbNew.Worksheets.Count]; } catch { }
+                    foreach (var sheetName in templateNames)
+                    {
+                        Excel.Worksheet src = null;
+                        try
+                        {
+                            try { src = wbTemplate.Worksheets[sheetName] as Excel.Worksheet; } catch { src = null; }
+                            if (src != null)
+                            {
+                                try
+                                {
+                                    if (last != null)
+                                    {
+                                        src.Copy(After: last);
+                                        // 업데이트 last
+                                        try { System.Runtime.InteropServices.Marshal.ReleaseComObject(last); } catch { }
+                                        try { last = (Excel.Worksheet)wbNew.Worksheets[wbNew.Worksheets.Count]; } catch { last = null; }
+                                    }
+                                    else
+                                    {
+                                        src.Copy(After: wbNew.Worksheets[wbNew.Worksheets.Count]);
+                                        try { last = (Excel.Worksheet)wbNew.Worksheets[wbNew.Worksheets.Count]; } catch { last = null; }
+                                    }
+                                }
+                                catch { }
+                            }
+                            else
+                            {
+                                // 템플릿에 없으면 빈 시트 추가
+                                Excel.Worksheet added = null;
+                                try { added = (Excel.Worksheet)wbNew.Worksheets.Add(After: wbNew.Worksheets[wbNew.Worksheets.Count]); added.Name = sheetName; }
+                                catch { }
+                                finally { if (added != null) { try { if (last != null) System.Runtime.InteropServices.Marshal.ReleaseComObject(last); } catch { } last = added; } }
+                            }
+                        }
+                        catch { }
+                        finally { if (src != null) try { Marshal.ReleaseComObject(src); } catch { } }
+                    }
+
+                    // 3) 장비 시트 뒤에 연차의 패턴 시트(저압*, 예비*, *분기*) 복사
+                    Excel.Worksheet equipmentSheet = ((IEnumerable<Excel.Worksheet>)wbNew.Worksheets.Cast<Excel.Worksheet>())
+                        .FirstOrDefault(w => string.Equals(w.Name, "장비", StringComparison.OrdinalIgnoreCase));
+                    Excel.Worksheet insertAfter = equipmentSheet ?? (Excel.Worksheet)wbNew.Worksheets[wbNew.Worksheets.Count];
+
+                    var patterns = new[] { "예비", "분기" };
+                    foreach (var pattern in patterns)
+                    {
+                        try
+                        {
+                            // 기존에 동일 패턴 시트가 있으면 삭제
+                            var toDelete = wbNew.Worksheets.Cast<Excel.Worksheet>()
+                                .Where(w => w.Name.IndexOf(pattern, StringComparison.OrdinalIgnoreCase) >= 0)
+                                .ToList();
+                            foreach (var d in toDelete)
+                            {
+                                try { d.Delete(); } catch { }
+                                try { Marshal.ReleaseComObject(d); } catch { }
+                            }
+                        }
+                        catch { }
+
+                        if (wbYear == null) continue;
+
+                        try
+                        {
+                            var copied = new List<string>();
+                            int cnt = wbYear.Worksheets.Count;
+                            for (int si = 1; si <= cnt; si++)
+                            {
+                                Excel.Worksheet src = null;
+                                try
+                                {
+                                    src = (Excel.Worksheet)wbYear.Worksheets[si];
+                                    if (src == null) continue;
+
+                                    if (src.Name.IndexOf(pattern, StringComparison.OrdinalIgnoreCase) >= 0)
+                                    {
+                                        try
+                                        {
+                                            src.Copy(After: insertAfter);
+                                            int newIndex = insertAfter.Index + 1;
+                                            Excel.Worksheet newSh = null;
+                                            try
+                                            {
+                                                newSh = (Excel.Worksheet)wbNew.Worksheets[newIndex];
+                                                insertAfter = newSh;
+                                            }
+                                            catch { }
+                                            finally { if (newSh != null) Marshal.ReleaseComObject(newSh); }
+
+                                            copied.Add(src.Name);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            string sheetName = null;
+                                            try { sheetName = src?.Name; } catch { sheetName = "(unknown)"; }
+                                            System.Diagnostics.Debug.WriteLine($"Copy failed for sheet '{sheetName}': {ex.Message}");
+
+                                            // 만약 RCW 분리 오류라면 wbYear를 다시 열어서 시도
+                                            bool reopened = false;
+                                            try
+                                            {
+                                                if (ex is System.Runtime.InteropServices.InvalidComObjectException)
+                                                {
+                                                    try
+                                                    {
+                                                        if (wbYear != null)
+                                                        {
+                                                            try { wbYear.Close(false); } catch { }
+                                                            try { Marshal.ReleaseComObject(wbYear); } catch { }
+                                                            wbYear = null;
+                                                        }
+                                                    }
+                                                    catch { }
+
+                                                    try
+                                                    {
+                                                        if (!string.IsNullOrEmpty(yearFile) && File.Exists(yearFile))
+                                                        {
+                                                            wbYear = xlApp.Workbooks.Open(yearFile, ReadOnly: true);
+                                                            reopened = true;
+                                                        }
+                                                    }
+                                                    catch (Exception rex)
+                                                    {
+                                                        System.Diagnostics.Debug.WriteLine($"Failed to reopen year workbook: {rex.Message}");
+                                                    }
+                                                }
+                                            }
+                                            catch { }
+
+                                            // 폴백 로직: 새 시트 추가하고 UsedRange 복사
+                                            Excel.Worksheet added = null;
+                                            Excel.Range srcUsed = null;
+                                            try
+                                            {
+                                                // 재취득: 동일 이름의 시트를 wbYear에서 찾아 src로 재할당
+                                                if (reopened && wbYear != null)
+                                                {
+                                                    try
+                                                    {
+                                                        // 시트 이름이 있으면 찾아서 할당
+                                                        for (int jj = 1; jj <= wbYear.Worksheets.Count; jj++)
+                                                        {
+                                                            try
+                                                            {
+                                                                var tmp = (Excel.Worksheet)wbYear.Worksheets[jj];
+                                                                try
+                                                                {
+                                                                    if (!string.IsNullOrEmpty(sheetName) && tmp.Name == sheetName)
+                                                                    {
+                                                                        // 교체
+                                                                        try { if (src != null) Marshal.ReleaseComObject(src); } catch { }
+                                                                        src = tmp;
+                                                                        break;
+                                                                    }
+                                                                }
+                                                                catch { try { Marshal.ReleaseComObject(tmp); } catch { } }
+                                                            }
+                                                            catch { }
+                                                        }
+                                                    }
+                                                    catch { }
+                                                }
+
+                                                added = (Excel.Worksheet)wbNew.Worksheets.Add(After: insertAfter);
+                                                try { if (!string.IsNullOrEmpty(sheetName)) added.Name = sheetName; } catch { }
+
+                                                try { srcUsed = src?.UsedRange; } catch { srcUsed = null; }
+                                                if (srcUsed != null)
+                                                {
+                                                    try
+                                                    {
+                                                        int rows = srcUsed.Rows.Count;
+                                                        int cols = srcUsed.Columns.Count;
+                                                        Excel.Range destStart = added.Range["A1"];
+                                                        try { destStart.Resize[rows, cols].Value = srcUsed.Value; } catch { }
+                                                        try { destStart.Resize[rows, cols].NumberFormat = srcUsed.NumberFormat; } catch { }
+                                                        try
+                                                        {
+                                                            for (int c = 1; c <= cols; c++)
+                                                            {
+                                                                try { added.Columns[c].ColumnWidth = src.Columns[c].ColumnWidth; } catch { }
+                                                            }
+                                                        }
+                                                        catch { }
+                                                    }
+                                                    catch { }
+                                                }
+
+                                                try { insertAfter = added; } catch { }
+                                                copied.Add((sheetName ?? "(unknown)") + "(fallback)");
+                                            }
+                                            catch (Exception ex2)
+                                            {
+                                                System.Diagnostics.Debug.WriteLine($"Fallback copy failed for sheet '{sheetName}': {ex2.Message}");
+                                            }
+                                            finally
+                                            {
+                                                if (srcUsed != null) try { Marshal.ReleaseComObject(srcUsed); } catch { }
+                                                if (added != null) try { Marshal.ReleaseComObject(added); } catch { }
+                                            }
+                                        }
                                     }
                                 }
                                 catch { }
@@ -1358,15 +1938,26 @@ namespace SmartReport
         {
             Cursor = Cursors.WaitCursor;
 
-            if (folders == null || folders.Count == 0)
-                folders = new System.Collections.Generic.List<SearchFolderOption>
+            if (folders == null || folders.Count == 0) { }
+                string downloadFolderSeasonReport = "/2_1전기직무고시점검보고서/2 본부(김희철)/0001 시흥보고서방/001열화상";
+                string downloadFolderAnuualReport = "/2_1전기직무고시점검보고서/2 본부(김희철)/0001 시흥보고서방";
+
+
+            folders = new System.Collections.Generic.List<SearchFolderOption>
+            {
+                new SearchFolderOption
                 {
-                    new SearchFolderOption
-                    {
-                        Folder = "/2_1전기직무고시점검보고서/2 본부(김희철)/0001 시흥보고서방/001열화상",
-                        Recursive = false
-                    }
-                };
+                    Folder = downloadFolderSeasonReport,
+                    Recursive = false
+                },
+                new SearchFolderOption
+                {
+                    Folder = downloadFolderAnuualReport,
+                    Recursive = false
+                }
+            };
+
+
 
             if (string.IsNullOrEmpty(keyword)) keyword = "유랑진";
 
@@ -1395,6 +1986,11 @@ namespace SmartReport
                 _downloader = new SynologyFileDownloader(config);
 
                 await _downloader.LoginAsync();
+
+                _uploader = new SynologyFileUploader(
+    config,
+    _downloader.HttpClient,
+    _downloader.Sid);
 
                 //_files = await _downloader.SearchFilesAsync();
                 //_fileBindingSource.DataSource = _files;
@@ -1482,6 +2078,76 @@ namespace SmartReport
             });
         }
         #endregion
+
+        // newWb의 첫 번째 시트를 wb의 '분기'라는 이름을 포함한 시트 앞에 삽입 (복사만)
+        private void InsertFirstSheetFromNewWbBeforeBranch(Excel.Workbook wb, Excel.Workbook newWb)
+        {
+            if (wb == null || newWb == null) return;
+
+            Excel.Worksheet src = null;
+            try
+            {
+                if (newWb.Worksheets.Count < 1) return;
+
+                src = (Excel.Worksheet)newWb.Worksheets[1];
+
+                int targetIndex = -1;
+                int wc = 0;
+                try { wc = wb.Worksheets.Count; } catch { }
+
+                for (int i = 1; i <= wc; i++)
+                {
+                    Excel.Worksheet sh = null;
+                    try
+                    {
+                        sh = (Excel.Worksheet)wb.Worksheets[i];
+                        string name = null;
+                        try { name = sh.Name; } catch { }
+                        if (!string.IsNullOrEmpty(name) && name.Contains("분기"))
+                        {
+                            targetIndex = i;
+                            break;
+                        }
+                    }
+                    finally
+                    {
+                        if (sh != null) try { Marshal.ReleaseComObject(sh); } catch { }
+                    }
+                }
+
+                if (targetIndex != -1)
+                {
+                    Excel.Worksheet target = null;
+                    try
+                    {
+                        target = (Excel.Worksheet)wb.Worksheets[targetIndex];
+                        src.Copy(Before: target);
+                    }
+                    finally
+                    {
+                        if (target != null) try { Marshal.ReleaseComObject(target); } catch { }
+                    }
+                }
+                else
+                {
+                    // 분기 시트를 찾지 못하면 마지막에 복사
+                    src.Copy(After: wb.Worksheets[wb.Worksheets.Count]);
+                }
+            }
+            catch (Exception ex)
+            {
+                AddLog("Error", $"시트 삽입 중 오류: {ex.Message}");
+            }
+            finally
+            {
+                if (src != null) 
+                    try {
+                        wb.Save();
+                        Marshal.ReleaseComObject(src); 
+                    } 
+                    catch { }
+            }
+        }
 
 
         private void Form1_Load(object sender, EventArgs e)
@@ -2221,8 +2887,6 @@ namespace SmartReport
 
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
             }
         }
 
@@ -2305,7 +2969,8 @@ namespace SmartReport
 
 
                 // 품질
-                ProcQuantitySheet(xlApp, wb, baseFolder, textBoxQuntatyFolder.Text, comboBoxHwaveGraph.Text, comboBoxTestGraph.Text, comboBoxSignalGraph.Text);
+                ProcQuantitySheet(xlApp, wb, baseFolder, textBoxQuntatyFolder.Text, comboBoxTestReport.Text,
+                     comboBoxTimeGraph.Text, comboBoxHwaveGraph.Text);
 
 
                 // 코로나
@@ -2411,7 +3076,7 @@ namespace SmartReport
 
                 int imageIndex = 0;
 
-                for (int page = 0; page < 3; page++)
+                for (int page = 0; ; page++)
                 {
                     int pageOffset = page * 42;
 
@@ -2492,8 +3157,8 @@ namespace SmartReport
 
                 SetPrintArea(xlsPath);
 
-
                 ExportExcelToPdf(xlsPath);
+
                 // xls를 pdf로 변환한 파일을 찾음
                 string pdfPath = Directory.GetFiles(tmpFolder, "*.pdf").FirstOrDefault();
 
@@ -2528,11 +3193,6 @@ namespace SmartReport
             }
             catch (Exception ex)
             {
-                try
-                {
-                    if (ws != null) Marshal.ReleaseComObject(ws);
-                }
-                catch { }
                 AddLog("Error", $"PD 부분방전 이미지 삽입 실패: {ex.Message}");
             }
             finally
@@ -2571,7 +3231,7 @@ namespace SmartReport
                     throw new Exception("영코 시트를 찾을 수 없습니다.");
                 }
 
-                RemovePictures(ws);
+                RemovePictures(ws, 1);
                 using (ImageInserter inserter = new ImageInserter(ws, pdfPath))
                 {
                     ImageInsertOptions option = new ImageInsertOptions
@@ -2616,7 +3276,8 @@ namespace SmartReport
         #endregion
 
         #region [품질 시트 처리]
-        private void ProcQuantitySheet(Excel.Application xlApp, Excel.Workbook wb, string baseFolder, string quantityFolder, string testReport, string testGraph, string HighGraph)
+        private void ProcQuantitySheet(Excel.Application xlApp, Excel.Workbook wb, string baseFolder, string quantityFolder, 
+            string testReport, string timeGraph, string HighGraph)
         {
             Excel.Worksheet ws = null;
             string pdfPath = null;
@@ -2654,13 +3315,13 @@ namespace SmartReport
                             CropRight = 210,
                             CropBottom = 1000,
                             GapTop = 0,
-                            GapBottom = 5.0f
+                            GapBottom = 10.0f
                         });
 
                     //wb.Save();
                 }
-                pdfPath = Path.Combine(baseFolder, quantityFolder, "E.pdf");
 
+                pdfPath = Path.Combine(baseFolder, quantityFolder, "E.pdf");
                 using (ImageInserter inserter = new ImageInserter(ws, pdfPath))
                 {
 
@@ -2735,7 +3396,7 @@ namespace SmartReport
                 }
 
 
-                pdfPath = Path.Combine(baseFolder, quantityFolder, testGraph);
+                pdfPath = Path.Combine(baseFolder, quantityFolder, timeGraph);
 
                 using (ImageInserter inserter = new ImageInserter(ws, pdfPath))
                 {
@@ -2744,13 +3405,14 @@ namespace SmartReport
                     {
                         CropLeft = 175,
                         CropTop = 195,
-                        CropRight = 1300,
-                        CropBottom = 150
+                        CropRight = 1310,
+                        CropBottom = 150,
+                        GapLeft = 5
                     };
 
                     // 1페이지
-                    //inserter.InsertFit("A228", "R259", option);
-                    inserter.Insert("A228", 1.0);
+                    inserter.InsertFit("A228", "R259", option);
+                    //inserter.Insert("A228", 1.0);
 
                     //wb.Save();
                 }
@@ -2765,12 +3427,13 @@ namespace SmartReport
                         CropLeft = 175,
                         CropTop = 195,
                         CropRight = 1100,
-                        CropBottom = 150
+                        CropBottom = 150,
+                        GapLeft = 5
                     };
 
                     // 1페이지
-                    //inserter.InsertFit("A260", "R292", option);
-                    inserter.Insert("A228", 1.0);
+                    inserter.InsertFit("A260", "R292", option);
+                    //inserter.Insert("A262", 1.0);
 
                     // wb.Save();
                 }
@@ -2836,6 +3499,8 @@ namespace SmartReport
         private void ProcFeverPicture(Excel.Application xlApp, Excel.Workbook wb, string baseFolder, string pictureFolder)
         {
 
+            if (!checkBoxFeverPicture.Checked) { return; }
+
             // 새 통합문서 생성
             Excel.Workbook newWb = null;
             Excel.Worksheet sourceWs = null;
@@ -2843,127 +3508,124 @@ namespace SmartReport
 
             try
             {
+                sourceWs = GetWorksheetByName(wb, "분기");
 
-                if (checkBoxFeverPicture.Checked)
+                if (sourceWs == null)
                 {
-                    sourceWs = GetWorksheetByName(wb, "분기");
+                    throw new Exception("분기 시트를 찾을 수 없습니다.");
+                }
 
-                    if (sourceWs == null)
+                // 새 통합문서 생성
+                newWb = xlApp.Workbooks.Add();
+
+                try
+                {
+                    // 기본 시트 삭제
+                    while (newWb.Worksheets.Count > 1)
                     {
-                        throw new Exception("분기 시트를 찾을 수 없습니다.");
+                        ((Excel.Worksheet)newWb.Worksheets[2]).Delete();
                     }
 
-                    // 새 통합문서 생성
-                    newWb = xlApp.Workbooks.Add();
+                    // 분기 시트 복사
+                    sourceWs.Copy(Before: newWb.Worksheets[1]);
 
-                    try
+                    // 기본 Sheet1 삭제
+                    ((Excel.Worksheet)newWb.Worksheets[newWb.Worksheets.Count]).Delete();
+
+                    // 복사된 시트
+                    ws = (Excel.Worksheet)newWb.Worksheets[1];
+
+                    string tempFile = Path.Combine(baseFolder, "images.xlsx");
+                    newWb.SaveAs(tempFile);
+                }
+                catch { }
+
+
+                RemovePictures(ws);
+                RemovePictures(sourceWs);
+
+
+                string[] files = Directory.GetFiles(baseFolder + "\\" + pictureFolder, "*.jpg")
+                .OrderBy(f =>
+                {
+                    return int.TryParse(Path.GetFileNameWithoutExtension(f), out int n)
+                        ? n
+                        : int.MaxValue;
+                })
+                .ToArray();
+
+                int imageIndex = 0;
+
+                for (int page = 0; imageIndex < files.Length; page++)
+                {
+                    int startRow = 27 + (page * 56);
+                    int endRow = 43 + (page * 56);
+
+                    string[] fromCols = { "A", "R" };
+                    string[] toCols = { "Q", "AC" };   // 실제 병합 끝 열에 맞게 수정
+
+                    for (int i = 0; i < fromCols.Length; i++)
                     {
-                        // 기본 시트 삭제
-                        while (newWb.Worksheets.Count > 1)
+                        if (imageIndex >= files.Length)
+                            break;
+
+                        string fromCell = $"{fromCols[i]}{startRow}";
+                        string toCell = $"{toCols[i]}{endRow}";
+
+                        float gapRight = (i % 2 == 0) ? 2.3f : 2.9f;
+                        float gapLeft = (i % 2 == 0) ? 4.2f : 3.6f;
+
+                        float gapBottom = 2.8f;
+                        float gapTop = 4.8f;
+
+                        using (var inserter = new ImageInserter(ws, files[imageIndex]))
                         {
-                            ((Excel.Worksheet)newWb.Worksheets[2]).Delete();
-                        }
-
-                        // 분기 시트 복사
-                        sourceWs.Copy(Before: newWb.Worksheets[1]);
-
-                        // 기본 Sheet1 삭제
-                        ((Excel.Worksheet)newWb.Worksheets[newWb.Worksheets.Count]).Delete();
-
-                        // 복사된 시트
-                        ws = (Excel.Worksheet)newWb.Worksheets[1];
-
-                        string tempFile = Path.Combine(baseFolder, "images.xlsx");
-                        newWb.SaveAs(tempFile);
-                    }
-                    catch { }
-
-
-                    RemovePictures(ws);
-                    RemovePictures(sourceWs);
-
-
-                    string[] files = Directory.GetFiles(baseFolder + "\\" + pictureFolder, "*.jpg")
-                    .OrderBy(f =>
-                    {
-                        return int.TryParse(Path.GetFileNameWithoutExtension(f), out int n)
-                            ? n
-                            : int.MaxValue;
-                    })
-                    .ToArray();
-
-                    int imageIndex = 0;
-
-                    for (int page = 0; imageIndex < files.Length; page++)
-                    {
-                        int startRow = 27 + (page * 56);
-                        int endRow = 43 + (page * 56);
-
-                        string[] fromCols = { "A", "R" };
-                        string[] toCols = { "Q", "AC" };   // 실제 병합 끝 열에 맞게 수정
-
-                        for (int i = 0; i < fromCols.Length; i++)
-                        {
-                            if (imageIndex >= files.Length)
-                                break;
-
-                            string fromCell = $"{fromCols[i]}{startRow}";
-                            string toCell = $"{toCols[i]}{endRow}";
-
-                            float gapRight = (i % 2 == 0) ? 2.3f : 2.9f;
-                            float gapLeft = (i % 2 == 0) ? 4.2f : 3.6f;
-
-                            float gapBottom = 2.8f;
-                            float gapTop = 4.8f;
-
-                            using (var inserter = new ImageInserter(ws, files[imageIndex]))
-                            {
-                                inserter.InsertFit(
-                                    fromCell,
-                                    toCell,
-                                    new ImageInsertOptions
-                                    {
-                                        KeepAspectRatio = false,
-                                        //GapRight = 2.7f,
-                                        GapRight = gapRight,
-                                        //GapBottom = 2.6f,
-                                        GapBottom = gapBottom,
-                                        //GapLeft = 4.0f,
-                                        GapLeft = gapLeft,
-                                        GapTop = gapTop
-                                    });
-                            }
-
-                            using (var inserter = new ImageInserter(sourceWs, files[imageIndex]))
-                            {
-                                inserter.InsertFit(
-                                    fromCell,
-                                    toCell,
-                                    new ImageInsertOptions
-                                    {
-                                        KeepAspectRatio = false,
-                                        //GapRight = 2.7f,
-                                        GapRight = gapRight,
-                                        GapBottom = gapBottom,
-                                        //GapLeft = 4.0f,
-                                        GapLeft = gapLeft,
-                                        GapTop = gapTop
-                                    });
-                            }
-
-                            imageIndex++;
-                        }
-                    }
-
-                    if (checkBoxOcr.Checked)
-                    {
-
-                        using (var reader = new FlirOcrReader())
-                        {
-                            OcrExcelMap map = new OcrExcelMap
-                            {
-                                ValueCells = new[]
+                            inserter.InsertFit(
+                                fromCell,
+                                toCell,
+                                new ImageInsertOptions
                                 {
+                                    KeepAspectRatio = false,
+                                    //GapRight = 2.7f,
+                                    GapRight = gapRight,
+                                    //GapBottom = 2.6f,
+                                    GapBottom = gapBottom,
+                                    //GapLeft = 4.0f,
+                                    GapLeft = gapLeft,
+                                    GapTop = gapTop
+                                });
+                        }
+
+                        using (var inserter = new ImageInserter(sourceWs, files[imageIndex]))
+                        {
+                            inserter.InsertFit(
+                                fromCell,
+                                toCell,
+                                new ImageInsertOptions
+                                {
+                                    KeepAspectRatio = false,
+                                    //GapRight = 2.7f,
+                                    GapRight = gapRight,
+                                    GapBottom = gapBottom,
+                                    //GapLeft = 4.0f,
+                                    GapLeft = gapLeft,
+                                    GapTop = gapTop
+                                });
+                        }
+
+                        imageIndex++;
+                    }
+                }
+
+                if (checkBoxOcr.Checked)
+                {
+
+                    using (var reader = new FlirOcrReader())
+                    {
+                        OcrExcelMap map = new OcrExcelMap
+                        {
+                            ValueCells = new[]
+                            {
                                             "H49",
                                             "P49",
                                             "W49",
@@ -2971,32 +3633,33 @@ namespace SmartReport
                                             "P52",
                                             "W52"
                                         },
-                                MinTemperatureCell = "AD6",
-                                RowOffset = 56
-                            };
+                            MinTemperatureCell = "AD6",
+                            RowOffset = 56
+                        };
 
-                            string[] evenFiles = files
-                                .Where((file, index) => index % 2 == 0)
-                                .ToArray();
+                        string[] evenFiles = files
+                            .Where((file, index) => index % 2 == 0)
+                            .ToArray();
 
-                            OcrDataToExcel.ProcessAll(
-                                sourceWs,
-                                evenFiles,
-                                reader,
-                                map);
+                        OcrDataToExcel.ProcessAll(
+                            sourceWs,
+                            evenFiles,
+                            reader,
+                            map);
 
-                            OcrDataToExcel.ProcessAll(
-                                ws,
-                                evenFiles,
-                                reader,
-                                map);
-                        }
+                        OcrDataToExcel.ProcessAll(
+                            ws,
+                            evenFiles,
+                            reader,
+                            map);
                     }
-
-                    wb.Save();
-                    newWb.Save();
-
                 }
+
+                wb.Save();
+                newWb.Save();
+
+                // newWb의 첫번째 시트를 wb의 '분기'라는 이름을 포함한 시트 앞에 복사해서 넣음 (복사만, newWb에 남김)
+                InsertFirstSheetFromNewWbBeforeBranch(wb, newWb);
             }
 
             catch (Exception ex)
@@ -3014,7 +3677,12 @@ namespace SmartReport
                     {
                         newWb.Close(false);
                         Marshal.ReleaseComObject(newWb);
-                    }   
+                    }
+                    if (wb != null)
+                    {
+                        wb.Close(false);
+                        Marshal.ReleaseComObject(wb);
+                    }
                 }
                 catch { }
             }
@@ -3119,6 +3787,20 @@ namespace SmartReport
                 if (ws == null)
                 {
                     AddLog("Error", "갑지 시트를 찾을 수 없습니다.");
+                }
+
+                //int quarterCount = GetQuarterCount(filePath);
+
+                Match match = Regex.Match(filePath, @"(\d{2})년(\d)분기");
+
+                if (match.Success)
+                {
+
+                    string title =
+                    $"{2000 + int.Parse(match.Groups[1].Value)}년 {match.Groups[2].Value}분기" +
+                    (filePath.Contains("연차") ? " 연차" : "");
+
+                    ws.Cells[11, 1].Value = title;
                 }
 
 
@@ -3260,26 +3942,26 @@ namespace SmartReport
                 ws.PageSetup.CenterVertically = true;     // 상하 가운데
 
                 // 인쇄 영역 설정
-                //ws.PageSetup.PrintArea = "$A$1:$K$300";
+                ws.PageSetup.PrintArea = "$A$1:$K$300";
 
-                //// 기존 수동 페이지 나누기 삭제
-                //for (int i = ws.HPageBreaks.Count; i >= 1; i--)
-                //{
-                //    Excel.HPageBreak pb = (Excel.HPageBreak)ws.HPageBreaks[i];
+                // 기존 수동 페이지 나누기 삭제
+                for (int i = ws.HPageBreaks.Count; i >= 1; i--)
+                {
+                    Excel.HPageBreak pb = (Excel.HPageBreak)ws.HPageBreaks[i];
 
-                //    if (pb.Type == Excel.XlPageBreak.xlPageBreakManual)
-                //    {
-                //        pb.Delete();
-                //    }
+                    if (pb.Type == Excel.XlPageBreak.xlPageBreakManual)
+                    {
+                        pb.Delete();
+                    }
 
-                //    Marshal.ReleaseComObject(pb);
-                //}
+                    Marshal.ReleaseComObject(pb);
+                }
 
-                //// 50행마다 페이지 나누기 추가
-                //for (int row = 51; row <= 251; row += 50)
-                //{
-                //    ws.HPageBreaks.Add((Excel.Range)ws.Cells[row, 1]);
-                //}
+                // 50행마다 페이지 나누기 추가
+                for (int row = 51; row <= 251; row += 50)
+                {
+                    ws.HPageBreaks.Add((Excel.Range)ws.Cells[row, 1]);
+                }
 
                 wb.Save();
             }
@@ -3378,7 +4060,7 @@ namespace SmartReport
             }
         }
 
-        private void AddLog(string level, string message)
+        public void AddLog(string level, string message)
         {
             Color color = Color.Black;
 
@@ -3452,7 +4134,7 @@ namespace SmartReport
         }
         #endregion
 
-        #region
+        #region [서버에서 자동으로 파일 다운로드하기]
         private async void btnDownloadWork_Click(object sender, EventArgs e)
         {
             string keyword = textBoxKeyword.Text;
@@ -3497,7 +4179,90 @@ namespace SmartReport
 
         // 연계획 시트의 A2 2025년을 2026으로 변경
         // 측정일 바꾸기
+        #region [측정일 바꾸기]
+        #endregion
+
         // 분기 바꾸기
+        // 연계획 시트의 D24부터 열을 하나씩 올라가며 해당월까지 "●" 이 문자의 개수가 분기 수
+        #region [분기 바꾸기]
+        // 연계획 시트의 D24부터 해당 월 컬럼까지 "●" 개수 = 분기 수
+
+        private int GetMonthFromFileName(string filePath)
+        {
+            string fileName = Path.GetFileNameWithoutExtension(filePath);
+
+            Match m = Regex.Match(fileName, @"_(\d{6})$");
+
+            if (!m.Success)
+                throw new Exception("파일명에서 날짜를 찾을 수 없습니다.");
+
+            string yymmdd = m.Groups[1].Value;
+
+            return int.Parse(yymmdd.Substring(2, 2)); // MM
+        }
+
+        int GetQuarterCount(string filePath)
+        {
+            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+            {
+                MessageBox.Show("페이지 번호를 매길 엑셀 파일을 먼저 선택하세요.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return 0;
+            }
+
+            int targetMonth = GetMonthFromFileName(filePath);
+
+            Cursor = Cursors.WaitCursor;
+            Excel.Application xlApp = null;
+            Excel.Workbook wb = null;
+            Excel.Worksheet ws = null;
+
+            try
+            {
+                xlApp = new Excel.Application { Visible = false, DisplayAlerts = false };
+                // Open for write because we modify PageSetup
+                wb = xlApp.Workbooks.Open(filePath, ReadOnly: false);
+
+                ws = GetWorksheetByName(wb, "연계획");
+
+                int count = 0;
+
+                // D열 = 4, 1월이라고 가정
+                for (int month = 1; month <= targetMonth; month++)
+                {
+                    int col = 3 + month; // D=4
+
+                    var value = ws.Cells[24, col].Text.Trim();
+
+                    if (value == "●")
+                        count++;
+                }
+
+                return count;
+            }
+            catch (Exception ex)
+            {
+                AddLog("Error", $"분기 수 계산 중 오류 발생: {ex.Message}");
+                return 0;
+            }
+            finally
+            {
+                if (ws != null) Marshal.ReleaseComObject(ws);
+                if (wb != null)
+                {
+                    wb.Close(false);
+                    Marshal.ReleaseComObject(wb);
+                }
+                if (xlApp != null)
+                {
+                    xlApp.Quit();
+                    Marshal.ReleaseComObject(xlApp);
+                }
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                Cursor = Cursors.Default;
+            }
+        }
+        #endregion
 
         // Sheet1 제거 (기본 생성)
         #region [측정자 셀 변경]
@@ -3507,13 +4272,33 @@ namespace SmartReport
             var list = new List<KeyValuePair<string, string>>()
             {
                 // sheetName이 null 또는 빈 문자열이면 ActiveSheet를 의미합니다.
-                new KeyValuePair<string,string>("절연", "P1"),
-                new KeyValuePair<string,string>("저압", "H1"),
-                new KeyValuePair<string,string>("예비", "L1"),
-                new KeyValuePair<string,string>("분기", "R1")
+                new KeyValuePair<string,string>("절연", "A4"),
+                new KeyValuePair<string,string>("저압", "A3"),
+                new KeyValuePair<string,string>("예비", "A3"),
+                new KeyValuePair<string,string>("분기", "A3")
             };
 
             UpdateInspectorCells(wb, inspectorName, list);
+            UpdateMachine(wb);
+        }
+
+        private void UpdateMachine(Excel.Workbook wb)
+        {
+            if (wb == null) return;
+
+            foreach (Excel.Worksheet ws in wb.Worksheets)
+            {
+                Excel.Range found = ws.Cells.Find(
+                    What: "▣ 측정장비",
+                    LookAt: Excel.XlLookAt.xlPart,
+                    LookIn: Excel.XlFindLookIn.xlValues);
+
+                if (found != null && found.Column == 1)
+                {
+                    string text = found.Value2?.ToString() ?? "";
+                    found.Value2 = " " + text.TrimStart();
+                }
+            }
         }
 
         // 시트 이름과 셀 주소 리스트로 여러 시트의 동일한 셀을 한 번에 업데이트합니다.
@@ -3532,9 +4317,6 @@ namespace SmartReport
             var pairs = sheetCellList.ToList();
 
             // 절연 시트가 있으면 참조용 시트 이름과 셀 주소를 가져온다
-            Excel.Worksheet insWs = null;
-            string insSheetName = null;
-            string insCellAddr = null;
             bool isJeolyeonSheet = false;
 
             foreach (var pair in pairs)
@@ -3575,7 +4357,7 @@ namespace SmartReport
                             // 절연 시트가 존재하고 현재 타겟이 저압 또는 예비이면 절연 시트의 셀을 참조하는 수식으로 설정
                             if (isJeolyeonSheet && ws.Name != "절연")
                             {
-                                string formula = "='" + "절연" + "'!" + "P1";
+                                string formula = "='" + "절연" + "'!" + "A4";
                                 ws.Range[cellAddress].Formula = formula;
                             }
                             else
@@ -3595,6 +4377,104 @@ namespace SmartReport
                 }
             }
         }
+
+        private void tbQuantityFile_TextChanged(object sender, EventArgs e)
+        {
+            string filePath = tbQuantityFile.Text?.Trim();
+
+            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+            {
+                return;
+            }
+
+            //세정물류센터_26년3분기연차보고서_260711.xlsx
+
+            // Report.ParseReport 호출하여 Report 인스턴스 생성
+            try
+            {
+                this.report = Report.ParseReport(filePath, soborLog);
+            }
+            catch (Exception ex)
+            {
+                AddLog("Error", $"보고서 파싱 중 오류: {ex.Message}");
+            }
+
+
+        }
+
+        #region [보고서 이미지 셀 안에 정렬]
+        private void btnSnapImage_Click(object sender, EventArgs e)
+        {
+            if (report == null)
+            {
+                AddLog("Error", "보고서 정보가 없습니다. 엑셀 파일을 먼저 선택하세요.");
+                return;
+            }
+            if (string.IsNullOrEmpty(textBoxSheetForSnapImage.Text))
+            {
+                AddLog("Error", "이미지 셀에 정렬할 시트 이름을 입력하세요.");
+                return;
+            }
+
+            Cursor = Cursors.WaitCursor;
+            float gapLeft = 1.5f, gapRight = 1.5f, gapTop = 0f, gapBottom = 0.5f;
+            float.TryParse(textBoxImageAlignLeftGap.Text.Trim(), out gapLeft);
+            float.TryParse(textBoxImageAlignTopGap.Text.Trim(), out gapTop);
+            float.TryParse(textBoxImageAlignRightGap.Text.Trim(), out gapRight);
+            float.TryParse(textBoxImageAlignBottomGap.Text.Trim(), out gapBottom);
+            report.CopySheetToXlsxAndProcess(textBoxSheetForSnapImage.Text, gapLeft, gapTop, gapRight, gapBottom);
+            Cursor = Cursors.Default;
+        }
+        #endregion
+
+        private void btnChangeInspector_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(tbInspector.Text.Trim()))
+            {
+                AddLog("Error", "담당자 이름을 입력하세요.");
+                return;
+            }
+
+            Cursor = Cursors.WaitCursor;
+            var filePath = tbQuantityFile.Text?.Trim();
+            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+            {
+                MessageBox.Show("측정자를 입력할 엑셀 파일을 먼저 선택하세요.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            Cursor = Cursors.WaitCursor;
+            Excel.Application xlApp = null;
+            Excel.Workbook wb = null;
+
+            try
+            {
+                xlApp = new Excel.Application { Visible = false, DisplayAlerts = false };
+                // Open for write because we modify PageSetup
+                wb = xlApp.Workbooks.Open(filePath, ReadOnly: false);
+                UpdateInspectorCell(wb, " ▣ 측정자 : ㈜한경이엔지 - " + tbInspector.Text.Trim());
+
+                wb.Save();
+            } catch (Exception ex) {
+                AddLog("Error", $"측정자 변경 중 오류: {ex.Message}");
+            }
+            finally
+            {
+                if (wb != null)
+                {
+                    wb.Close(false);
+                    Marshal.ReleaseComObject(wb);
+                }
+                if (xlApp != null)
+                {
+                    xlApp.Quit();
+                    Marshal.ReleaseComObject(xlApp);
+                }
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                Cursor = Cursors.Default;
+            }
+        }
         #endregion
 
         // 검교정 P1 (현장명) 바꾸기
@@ -3602,6 +4482,7 @@ namespace SmartReport
         // A5 셀 "  ○ 전기안전관리자 직무고시 점검 : 별지서식 [2,3,4,5,6,7,8,코로나방전,축전지] 점검."
 
 
+
         // 갑지 시트의 A11 셀 "2026년 1분기"
 
         // 검교정 P1 (현장명) 바꾸기
@@ -3609,10 +4490,172 @@ namespace SmartReport
         // A5 셀 "  ○ 전기안전관리자 직무고시 점검 : 별지서식 [2,3,4,5,6,7,8,코로나방전,축전지] 점검."
 
 
-        // 갑지 시트의 A11 셀 "2026년 1분기"
-
-
         // 서버에 유랑진 있는 폴더 가져오기
+
+        #region [보고서 업로드]
+        // 서버에 보고서 파일 업로드하기
+        // 현재 조건은 해당 폴더에서 오늘 날짜의 보고서 xls와 pdf를 올림
+
+        private async Task UploadReportsToSynoAsync()
+        {
+            string downloadFolderSeasonReport = "/2_1전기직무고시점검보고서/2 본부(김희철)/0001 시흥보고서방/001열화상";
+            string downloadFolderAnuualReport = "/2_1전기직무고시점검보고서/2 본부(김희철)/0001 시흥보고서방";
+
+            // 구성: DSM 접속 정보
+            var config = new SynologyFileDownloaderConfig
+            {
+                BaseUrl = "http://hk2ng.synology.me:5000",
+                Username = "유량진",
+                Password = "HKeng717241",
+                // 검색 시작 폴더 (상위 루트). 필요시 변경하세요.
+
+                SearchFolders = new List<SearchFolderOption>
+                {
+                    new SearchFolderOption
+                    {
+                        Folder = downloadFolderSeasonReport,
+                        Recursive = false
+                    },
+                    new SearchFolderOption
+                    {
+                        Folder = downloadFolderAnuualReport,
+                        Recursive = false
+                    }
+                }
+            };
+
+            string localRoot = @"D:\work\Report\now";
+
+            using (var downloader = new SynologyIntegration.SynologyFileDownloader(config))
+            {
+                await downloader.LoginAsync();
+                Debug.WriteLine($"login sid = {downloader.Sid}");
+                using (var uploader = new SynologyFileUploader(
+                        config,
+                        downloader.HttpClient,
+                        downloader.Sid))
+                {
+                    //await uploader.LoginAsync();
+
+                    // 원격 폴더 목록 조회
+                    var remoteFolders = await downloader.SearchFoldersAsync();
+
+                    foreach (string localFolder in Directory.GetDirectories(localRoot))
+                    {
+                        string folderName = Path.GetFileName(localFolder);
+                        AddLog("INFO", "처리 폴더: " + folderName);
+                        folderName = folderName.Trim();
+
+                        bool ok = await uploader.CreateFolderAsync(folderName, "test_upload");
+
+                        Debug.WriteLine($"CreateFolder={ok}");
+
+                        // 원격에서 동일한 이름의 폴더 찾기
+                        var match = remoteFolders.FirstOrDefault(f => string.Equals(f.Name, folderName, StringComparison.OrdinalIgnoreCase));
+                        if (match == null)
+                        {
+                            match = remoteFolders.FirstOrDefault(f =>
+                                    f.Name.Trim().StartsWith(folderName, StringComparison.OrdinalIgnoreCase));
+                            // 대체 매칭: 포함 또는 끝부분
+                        }
+
+
+                        if (match == null)
+                        {
+                            AddLog("WARN", $"원격에서 폴더를 찾지 못함: {folderName} (스킵)");
+                            continue;
+                        }
+
+                        string remoteBase = match.Path; // 예: /.../folderName
+
+                        bool isAnnual = folderName.IndexOf("연차", StringComparison.OrdinalIgnoreCase) >= 0;
+
+                        if (isAnnual)
+                        {
+                            string reportSub = Path.Combine(localFolder, "04 보고서");
+                            if (!Directory.Exists(reportSub))
+                            {
+                                AddLog("WARN", $"연차 폴더지만 '04 보고서'를 찾을 수 없음: {reportSub} (스킵)");
+                                continue;
+                            }
+
+                            // 원격에 '04 보고서' 폴더 생성(없으면)
+                            string remoteReportPath = remoteBase.TrimEnd('/') + "/04 보고서";
+                            try
+                            {
+                                await uploader.CreateFolderAsync(remoteBase, "04 보고서");
+                            }
+                            catch { }
+
+                            var files = Directory.GetFiles(reportSub);
+                            foreach (var f in files)
+                            {
+                                try
+                                {
+                                    AddLog("INFO", $"업로드: {f} -> {remoteReportPath}");
+                                    await uploader.UploadFileAsync(f, remoteReportPath);
+                                    AddLog("INFO", $"업로드 성공: {Path.GetFileName(f)}");
+                                }
+                                catch (Exception ex)
+                                {
+                                    AddLog("ERROR", $"업로드 실패: {f} -> {remoteReportPath} : {ex.Message}");
+                                }
+                            }
+                        }
+                        else
+                        {
+                            var files = Directory.GetFiles(localFolder)
+                                .Where(p => p.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase) || p.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase));
+
+                            foreach (var f in files)
+                            {
+                                string nameNoExt = Path.GetFileNameWithoutExtension(f);
+                                if (nameNoExt.Length < 7) continue;
+
+                                string last6 = nameNoExt.Substring(nameNoExt.Length - 6);
+                                if (!System.Text.RegularExpressions.Regex.IsMatch(last6, "^\\d{6}$"))
+                                    continue;
+
+                                if (!DateTime.TryParseExact(last6, "yyMMdd", null, System.Globalization.DateTimeStyles.None, out DateTime dt))
+                                    continue;
+
+                                if (dt.Year != DateTime.Now.Year)
+                                    continue; // 올해 파일만 업로드
+
+                                try
+                                {
+                                    AddLog("INFO", $"업로드: {f} -> {remoteBase}");
+                                    await uploader.UploadFileAsync(f, remoteBase);
+                                    AddLog("INFO", $"업로드 성공: {Path.GetFileName(f)}");
+                                }
+                                catch (Exception ex)
+                                {
+                                    AddLog("ERROR", $"업로드 실패: {f} -> {remoteBase} : {ex.Message}");
+                                }
+                            }
+                        }
+                    }
+
+                    try { await downloader.LogoutAsync(); } catch { }
+                }
+            }
+        }
+
+        private async void btnUploadReport_Click(object sender, EventArgs e)
+        {
+            // DSM을 통해 업로드 실행
+            try
+            {
+                Cursor = Cursors.WaitCursor;
+                await UploadReportsToSynoAsync();
+                MessageBox.Show("업로드 작업 완료");
+            }
+            finally
+            {
+                Cursor = Cursors.Default;
+            }
+        }
+        #endregion
     }
 
 }
