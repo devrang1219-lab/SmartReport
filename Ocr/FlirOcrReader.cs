@@ -53,6 +53,7 @@ namespace WindowsFormsApp1
 
                     Directory.CreateDirectory(dir);
 
+
                     left.Save(Path.Combine(dir,
                         Path.GetFileNameWithoutExtension(imageFile) + "_left.png"),
                         System.Drawing.Imaging.ImageFormat.Png);
@@ -205,18 +206,40 @@ namespace WindowsFormsApp1
         {
             // 왼쪽 상단에 있는 네모 블럭을 찾아서 그 높이를 기준으로 크롭
 #if OPENCV
+            //try
+            //{
+            //    Rectangle detected = DetectTopLeftBlock(bmp);
+            //    if (detected.Width > 0 && detected.Height > 0)
+            //    {
+            //        return bmp.Clone(detected, bmp.PixelFormat);
+            //    }
+            //}
+            //catch
+            //{
+            //    // 실패하면 기존 동작으로 폴백
+            //}
+
             try
             {
-                Rectangle detected = DetectTopLeftBlock(bmp);
+                Mat src = BitmapConverter.ToMat(bmp);
+                OpenCvSharp.Rect detected = GetDynamicOverlayRoi(src);
                 if (detected.Width > 0 && detected.Height > 0)
                 {
-                    return bmp.Clone(detected, bmp.PixelFormat);
+                    Rectangle rect = new Rectangle(detected.Left, detected.Top,  detected.Width, detected.Height);
+
+                    Mat overlayCrop = new Mat(src, detected);
+
+                    Cv2.Rectangle(BitmapConverter.ToMat(bmp), detected, Scalar.Black, -1);
+
+                    return bmp.Clone(rect, bmp.PixelFormat);
                 }
             }
             catch
             {
                 // 실패하면 기존 동작으로 폴백
             }
+
+            
 #endif
 
             Rectangle r = new Rectangle(
@@ -229,6 +252,61 @@ namespace WindowsFormsApp1
         }
 
 #if OPENCV
+        public static OpenCvSharp.Rect GetDynamicOverlayRoi(Mat srcImage)
+        {
+            // 1. 좌상단 영역(전체 이미지의 상단 50%, 좌측 50%)으로 탐색 범위 제한
+            int searchWidth = srcImage.Width / 2;
+            int searchHeight = srcImage.Height / 2;
+            OpenCvSharp.Rect searchRoi = new OpenCvSharp.Rect(0, 0, searchWidth, searchHeight);
+
+            Mat topLeftCrop = new Mat(srcImage, searchRoi);
+            Mat gray = new Mat();
+            Mat thresh = new Mat();
+
+            // 2. 그레이스케일 변환 및 흰색 텍스트 이진화 (임계값: 220~240)
+            Cv2.CvtColor(topLeftCrop, gray, ColorConversionCodes.BGR2GRAY);
+            Cv2.Threshold(gray, thresh, 230, 255, ThresholdTypes.Binary);
+
+            // 3. 윤곽선(Contour) 추출
+            Cv2.FindContours(thresh, out OpenCvSharp.Point[][] contours, out HierarchyIndex[] hierarchy,
+                             RetrievalModes.External, ContourApproximationModes.ApproxSimple);
+
+            if (contours.Length == 0)
+                return new OpenCvSharp.Rect(0, 0, 0, 0);
+
+            int minX = int.MaxValue, minY = int.MaxValue;
+            int maxX = int.MinValue, maxY = int.MinValue;
+            bool foundText = false;
+
+            // 4. 모든 텍스트 글자의 좌표 범위를 병합하여 전체 텍스트 영역 계산
+            foreach (var contour in contours)
+            {
+                // 작은 노이즈 점 제외 (면적 기준)
+                double area = Cv2.ContourArea(contour);
+                if (area < 6) continue;
+
+                OpenCvSharp.Rect rect = Cv2.BoundingRect(contour);
+
+                minX = Math.Min(minX, rect.X);
+                minY = Math.Min(minY, rect.Y);
+                maxX = Math.Max(maxX, rect.X + rect.Width);
+                maxY = Math.Max(maxY, rect.Y + rect.Height);
+                foundText = true;
+            }
+
+            if (!foundText)
+                return new OpenCvSharp.Rect(0, 0, 0, 0);
+
+            // 5. 검출된 텍스트 외곽에 패딩(Margin)을 추가하여 반투명 박스까지 포함
+            int padding = 8;
+            int x = Math.Max(0, minX - padding);
+            int y = Math.Max(0, minY - padding);
+            int width = Math.Min(srcImage.Width - x, (maxX - minX) + (padding * 2));
+            int height = Math.Min(srcImage.Height - y, (maxY - minY) + (padding * 2));
+
+            return new OpenCvSharp.Rect(x, y, width, height);
+        }
+
         // OpenCvSharp를 사용하여 왼쪽 상단의 가장 큰 사각 블럭(네모)를 검출
         private Rectangle DetectTopLeftBlock(Bitmap bmp)
         {

@@ -1,4 +1,5 @@
-﻿using SynologyIntegration;
+﻿using Microsoft.Office.Interop.Excel;
+using SynologyIntegration;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -17,6 +18,7 @@ using WindowsFormsApp1.Comm;
 using Action = System.Action;
 using Excel = Microsoft.Office.Interop.Excel;
 using Office = Microsoft.Office.Core;
+using System.Drawing.Imaging;
 
 namespace SmartReport
 {
@@ -2965,19 +2967,31 @@ namespace SmartReport
                 string pdfPath = Path.Combine(baseFolder, "02 전원품질", "K.pdf");
 
                 // 열화상
-                ProcFeverPicture(xlApp, wb, baseFolder, textBoxFeverImageFolder.Text);
+                if (checkBoxFeverPicture.Checked)
+                {
 
+                    ProcFeverPicture(xlApp, wb, baseFolder, textBoxFeverImageFolder.Text);
+                }
 
                 // 품질
-                ProcQuantitySheet(xlApp, wb, baseFolder, textBoxQuntatyFolder.Text, comboBoxTestReport.Text,
-                     comboBoxTimeGraph.Text, comboBoxHwaveGraph.Text);
+                if (checkBoxQuantity.Checked)
+                {
+                    ProcQuantitySheet(xlApp, wb, baseFolder, textBoxQuntatyFolder.Text, comboBoxTestReport.Text,
+                         comboBoxTimeGraph.Text, comboBoxHwaveGraph.Text);
+                }
 
 
                 // 코로나
-                ProcCoronaSheet(xlApp, wb, baseFolder, textBoxCoronaFolder.Text);
+                if (checkBoxCorona.Checked)
+                {
+                    ProcCoronaSheet(xlApp, wb, baseFolder, textBoxCoronaFolder.Text);
+                }
 
                 // 점검사진
-                ProcCheckPicture(xlApp, wb, baseFolder, textBoxPictureFolder.Text);
+                if (checkBoxPicture.Checked)
+                {
+                    ProcCheckPicture(xlApp, wb, baseFolder, textBoxPictureFolder.Text);
+                }
             }
             catch (Exception ex)
             {
@@ -3028,8 +3042,6 @@ namespace SmartReport
 
         private void ProcCoronaSheet(Excel.Application xlApp, Excel.Workbook wb, string baseFolder, string text)
         {
-            if (!checkBoxCorona.Checked) return;
-
             string tmpFolder = Path.Combine(baseFolder, text);
 
             string xlsPath = Directory.GetFiles(tmpFolder, "*.xls").FirstOrDefault();
@@ -3049,7 +3061,6 @@ namespace SmartReport
         #region [점검사진 시트 처리]
         private void ProcCheckPicture(Excel.Application xlApp, Excel.Workbook wb, string baseFolder, object text)
         {
-            if (!checkBoxPicture.Checked) return;
 
             Excel.Worksheet ws = null;
 
@@ -3076,9 +3087,9 @@ namespace SmartReport
 
                 int imageIndex = 0;
 
-                for (int page = 0; ; page++)
+                for (int page = 0; imageIndex < files.Length; page++)
                 {
-                    int pageOffset = page * 42;
+                    int pageOffset = page * 39;
 
                     for (int row = 0; row < 2; row++)
                     {
@@ -3092,11 +3103,13 @@ namespace SmartReport
                             string fromCol = (col == 0) ? "A" : "O";
                             string toCol = (col == 0) ? "M" : "AA";
 
-                            int startRow = 8 + pageOffset + rowOffset;
-                            int endRow = 21 + pageOffset + rowOffset;
+                            int startRow = 5 + pageOffset + rowOffset;
+                            int endRow = 18 + pageOffset + rowOffset;
 
                             string cellFrom = $"{fromCol}{startRow}";
                             string cellTo = $"{toCol}{endRow}";
+
+                            //여기
 
                             using (var inserter = new ImageInserter(ws, files[imageIndex]))
                             {
@@ -3152,6 +3165,7 @@ namespace SmartReport
                 {
                     throw new Exception("PD부분방전 시트를 찾을 수 없습니다.");
                 }
+                
                 RemovePictures(ws, 1);
 
 
@@ -3171,10 +3185,12 @@ namespace SmartReport
                 {
                     ImageInsertOptions option = new ImageInsertOptions
                     {
-                        CropLeft = 260,
+                        CropLeft = 265,
                         CropTop = 350,
                         CropRight = 260,
-                        CropBottom = 300
+                        CropBottom = 300,
+                        GapRight = 5,
+                        GapLeft = 3
                     };
 
                     for (int i = 0; i < inserter.ImageCount; i++)
@@ -3210,8 +3226,6 @@ namespace SmartReport
 
         private void ProcVideoCoronaSheet(Excel.Application xlApp, Excel.Workbook wb, string baseFolder, object text)
         {
-            if (!checkBoxCorona.Checked) return;
-
             Excel.Worksheet ws = null;
 
             try
@@ -3231,7 +3245,9 @@ namespace SmartReport
                     throw new Exception("영코 시트를 찾을 수 없습니다.");
                 }
 
-                RemovePictures(ws, 1);
+                Excel.Range rng = ws.Range["A1:I1"];
+                RemovePicturesInRange(ws, rng, false);
+
                 using (ImageInserter inserter = new ImageInserter(ws, pdfPath))
                 {
                     ImageInsertOptions option = new ImageInsertOptions
@@ -3257,6 +3273,7 @@ namespace SmartReport
                             );
                     }
 
+                    ws.PageSetup.LeftMargin = xlApp.CentimetersToPoints(2.06);
                     wb.Save();
                 }
             }
@@ -3281,10 +3298,10 @@ namespace SmartReport
         {
             Excel.Worksheet ws = null;
             string pdfPath = null;
-            if (checkBoxQuantity.Checked == false) return;
 
             try
             {
+                AddLog("Info", $"품질 시트 처리 시작");
                 ws = GetWorksheetByName(wb, "품질");
 
                 if (ws == null)
@@ -3301,6 +3318,7 @@ namespace SmartReport
 
                     //wb.Save();
                 }
+                AddLog("Info", $"K.pdf 처리 완료");
 
                 pdfPath = Path.Combine(baseFolder, quantityFolder, testReport);
                 using (ImageInserter inserter = new ImageInserter(ws, pdfPath))
@@ -3320,6 +3338,8 @@ namespace SmartReport
 
                     //wb.Save();
                 }
+
+                AddLog("Info", $"시험보고서 삽입 완료");
 
                 pdfPath = Path.Combine(baseFolder, quantityFolder, "E.pdf");
                 using (ImageInserter inserter = new ImageInserter(ws, pdfPath))
@@ -3396,6 +3416,9 @@ namespace SmartReport
                 }
 
 
+                AddLog("Info", $"E.pdf 처리 완료");
+
+
                 pdfPath = Path.Combine(baseFolder, quantityFolder, timeGraph);
 
                 using (ImageInserter inserter = new ImageInserter(ws, pdfPath))
@@ -3417,6 +3440,8 @@ namespace SmartReport
                     //wb.Save();
                 }
 
+                AddLog("Info", $"시계열그래프 처리 완료");
+
                 pdfPath = Path.Combine(baseFolder, quantityFolder, HighGraph);
 
                 using (ImageInserter inserter = new ImageInserter(ws, pdfPath))
@@ -3437,6 +3462,8 @@ namespace SmartReport
 
                     // wb.Save();
                 }
+
+                AddLog("Info", $"고조파그래프 처리 완료");
 
                 string[] files = Directory.GetFiles(baseFolder + $"\\{quantityFolder}", "*.bmp")
                     .OrderBy(f =>
@@ -3477,6 +3504,9 @@ namespace SmartReport
                             });
                     }
                 }
+
+                AddLog("Info", $"캡처이미지 처리 완료");
+
                 wb.Save();
             }
 
@@ -3488,9 +3518,18 @@ namespace SmartReport
             {
                 try
                 {
+                    AddLog("Info", $"분기 이미지 삽입 완료");
                     if (ws != null) Marshal.ReleaseComObject(ws);
+                    //if (wb != null)
+                    //{
+                    //    wb.Close(false);
+                    //    Marshal.ReleaseComObject(wb);
+                    //}
                 }
-                catch { }
+                catch
+                {
+                    AddLog("Error", $"분기 파일 정리 실패");
+                }
             }
         }
 
@@ -3498,9 +3537,6 @@ namespace SmartReport
 
         private void ProcFeverPicture(Excel.Application xlApp, Excel.Workbook wb, string baseFolder, string pictureFolder)
         {
-
-            if (!checkBoxFeverPicture.Checked) { return; }
-
             // 새 통합문서 생성
             Excel.Workbook newWb = null;
             Excel.Worksheet sourceWs = null;
@@ -3671,6 +3707,7 @@ namespace SmartReport
             {
                 try
                 {
+                    AddLog("Info", $"분기 이미지 삽입 완료");
                     if (ws != null) Marshal.ReleaseComObject(ws);
                     if (sourceWs != null) Marshal.ReleaseComObject(sourceWs);   
                     if (newWb != null)
@@ -3678,13 +3715,15 @@ namespace SmartReport
                         newWb.Close(false);
                         Marshal.ReleaseComObject(newWb);
                     }
-                    if (wb != null)
-                    {
-                        wb.Close(false);
-                        Marshal.ReleaseComObject(wb);
-                    }
+                    //if (wb != null)
+                    //{
+                    //    wb.Close(false);
+                    //    Marshal.ReleaseComObject(wb);
+                    //}
                 }
-                catch { }
+                catch {
+                    AddLog("Error", $"분기 파일 정리 실패");
+                }
             }
         }
         #endregion
@@ -3754,6 +3793,43 @@ namespace SmartReport
                 finally
                 {
                     Marshal.ReleaseComObject(shape);
+                }
+            }
+        }
+
+        public void RemovePicturesInRange(
+            Excel.Worksheet ws,
+            Excel.Range targetRange,
+            bool removeInside = true)
+        {
+            double left = (double)targetRange.Left;
+            double top = (double)targetRange.Top;
+            double right = left + (double)targetRange.Width;
+            double bottom = top + (double)targetRange.Height;
+
+            for (int i = ws.Shapes.Count; i >= 1; i--)
+            {
+                Excel.Shape shape = ws.Shapes.Item(i);
+
+                if (shape.Type != Office.MsoShapeType.msoPicture &&
+                    shape.Type != Office.MsoShapeType.msoLinkedPicture)
+                    continue;
+
+                double sLeft = shape.Left;
+                double sTop = shape.Top;
+                double sRight = sLeft + shape.Width;
+                double sBottom = sTop + shape.Height;
+
+                bool overlap =
+                    sLeft < right &&
+                    sRight > left &&
+                    sTop < bottom &&
+                    sBottom > top;
+
+                if ((removeInside && overlap) ||
+                    (!removeInside && !overlap))
+                {
+                    shape.Delete();
                 }
             }
         }
@@ -4656,6 +4732,381 @@ namespace SmartReport
             }
         }
         #endregion
+
+        private void btnCompressImages_Click(object sender, EventArgs e)
+        {
+            var filePath = tbQuantityFile.Text?.Trim();
+            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+            {
+                MessageBox.Show("엑셀 파일을 먼저 선택하세요.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            Cursor = Cursors.WaitCursor;
+            Excel.Application xlApp = null;
+            Excel.Workbook wb = null;
+            Excel.Worksheet ws = null;
+
+            try
+            {
+                xlApp = new Excel.Application { Visible = false, DisplayAlerts = false };
+                //wb = xlApp.Workbooks.Open(filePath, ReadOnly: false);\
+                wb = xlApp.Workbooks.Open(filePath);
+
+
+                string baseFolder = Path.GetDirectoryName(filePath);
+
+                ws = GetWorksheetByName(wb, "사진");
+
+                if (ws == null)
+                {
+                    throw new Exception("사진 시트를 찾을 수 없습니다.");
+                }
+
+                CompressSheetImages(ws, 1);
+                //CompressMediaImages(filePath);
+
+            }
+
+            catch (Exception ex)
+            {
+                AddLog("Error", $"사진 이미지 삽입 실패: {ex.Message}");
+
+            }
+            finally
+            {
+                try
+                {
+                    if (ws != null) Marshal.ReleaseComObject(ws);
+                    if (wb != null)
+                    {
+                        wb.Save();
+                        wb.Close(false);
+                        Marshal.ReleaseComObject(wb);
+                    }
+
+                    if (xlApp != null)
+                    {
+                        xlApp.Quit();
+                        Marshal.ReleaseComObject(xlApp);
+                    }
+
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+
+                    Cursor = Cursors.Default;
+                }
+                catch { }
+            }
+        }
+
+        private void CompressMediaImages(
+            string xlsxPath,
+            double scale = 0.5)
+        {
+            string tempXlsx = xlsxPath + ".tmp";
+
+
+            using (var archive =
+                ZipFile.Open(
+                    xlsxPath,
+                    ZipArchiveMode.Read))
+            {
+                using (var newArchive =
+                    ZipFile.Open(
+                        tempXlsx,
+                        ZipArchiveMode.Create))
+                {
+                    foreach (var entry in archive.Entries)
+                    {
+                        // 이미지 파일만 처리
+                        if (entry.FullName.StartsWith("xl/media/") &&
+                           (entry.Name.EndsWith(".png") ||
+                            entry.Name.EndsWith(".jpg") ||
+                            entry.Name.EndsWith(".jpeg")))
+                        {
+                            using (var stream = entry.Open())
+                            using (var img = Image.FromStream(stream))
+                            {
+                                int width =
+                                    (int)(img.Width * scale);
+
+                                int height =
+                                    (int)(img.Height * scale);
+
+
+                                using (Bitmap bmp =
+                                    ResizeBitmap(
+                                        new Bitmap(img),
+                                        width,
+                                        height))
+                                {
+                                    var newEntry =
+                                        newArchive.CreateEntry(
+                                            entry.FullName,
+                                            CompressionLevel.Optimal);
+
+
+                                    using (var outStream =
+                                        newEntry.Open())
+                                    {
+                                        bmp.Save(
+                                            outStream,
+                                            ImageFormat.Jpeg);
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // 나머지 xml 등은 그대로 복사
+                            var newEntry =
+                                newArchive.CreateEntry(
+                                    entry.FullName);
+
+                            using (var input =
+                                entry.Open())
+                            using (var output =
+                                newEntry.Open())
+                            {
+                                input.CopyTo(output);
+                            }
+                        }
+                    }
+                }
+            }
+
+
+            File.Delete(xlsxPath);
+            File.Move(tempXlsx, xlsxPath);
+        }
+
+        private static void ApplyExifOrientation(Image image)
+        {
+            const int ExifOrientationId = 0x0112;
+
+            if (!image.PropertyIdList.Contains(ExifOrientationId))
+                return;
+
+            var prop = image.GetPropertyItem(ExifOrientationId);
+            ushort orientation = BitConverter.ToUInt16(prop.Value, 0);
+
+            switch (orientation)
+            {
+                case 2:
+                    image.RotateFlip(RotateFlipType.RotateNoneFlipX);
+                    break;
+                case 3:
+                    image.RotateFlip(RotateFlipType.Rotate180FlipNone);
+                    break;
+                case 4:
+                    image.RotateFlip(RotateFlipType.Rotate180FlipX);
+                    break;
+                case 5:
+                    image.RotateFlip(RotateFlipType.Rotate90FlipX);
+                    break;
+                case 6:
+                    image.RotateFlip(RotateFlipType.Rotate90FlipNone);
+                    break;
+                case 7:
+                    image.RotateFlip(RotateFlipType.Rotate270FlipX);
+                    break;
+                case 8:
+                    image.RotateFlip(RotateFlipType.Rotate270FlipNone);
+                    break;
+            }
+
+            image.RemovePropertyItem(ExifOrientationId);
+        }
+
+        public void CompressSheetImages(
+                Excel.Worksheet ws,
+                double scale = 1.5)
+        {
+            var pictures = new System.Collections.Generic.List<Excel.Shape>();
+
+            // Shape 목록 복사 (삭제하면서 순회하면 오류 발생)
+            foreach (Excel.Shape shape in ws.Shapes)
+            {
+                if (shape.Type == Office.MsoShapeType.msoPicture ||
+                    shape.Type == Office.MsoShapeType.msoLinkedPicture)
+                {
+                    pictures.Add(shape);
+                }
+            }
+
+
+            foreach (Excel.Shape shape in pictures)
+            {
+                string tempFile = null;
+
+                try
+                {
+                    float left = shape.Left;
+                    float top = shape.Top;
+                    float width = shape.Width;
+                    float height = shape.Height;
+
+                    float rotation = shape.Rotation;
+
+                    // Excel point -> pixel
+                    int targetWidth = (int)(width * 96 / 72 * scale);
+                    int targetHeight = (int)(height * 96 / 72 * scale);
+
+                    var shadowVisible = shape.Shadow.Visible;
+                    var placement = shape.Placement;
+                    var lockAspect = shape.LockAspectRatio;
+                    var z = shape.ZOrderPosition;
+
+                    shape.Shadow.Visible =
+                        Office.MsoTriState.msoFalse;
+
+                    // 이미지 복사
+                    shape.Copy();
+
+                    Bitmap source = null;
+
+                    // Clipboard 대기
+                    for (int i = 0; i < 10; i++)
+                    {
+                        if (Clipboard.ContainsImage())
+                        {
+                            source = Clipboard.GetImage() as Bitmap;
+                            break;
+                        }
+
+                        System.Threading.Thread.Sleep(100);
+                    }
+
+
+                    if (source == null)
+                        continue;
+
+                    Console.WriteLine(
+                             $"{shape.Name}  {source.Width}x{source.Height}  Rotation={shape.Rotation}");
+                    Console.WriteLine("leftTop: " + left + " , " + top);
+                    Console.WriteLine(source.Width + " x " + source.Height);
+                    Console.WriteLine(rotation);
+
+                    using (source)
+                    {
+                        ApplyExifOrientation(source);
+                        using (Bitmap resized = ResizeBitmap(
+                            source,
+                            targetWidth,
+                            targetHeight))
+                        {
+                            tempFile = Path.Combine(
+                                Path.GetTempPath(),
+                                Guid.NewGuid() + ".jpg");
+
+                            var encoder = ImageCodecInfo.GetImageEncoders()
+                                .First(x => x.FormatID == ImageFormat.Jpeg.Guid);
+
+                            var param = new EncoderParameters(1);
+
+                            param.Param[0] = new EncoderParameter(
+                                Encoder.Quality,
+                                80L);
+
+
+                            resized.Save(
+                                tempFile,
+                                encoder,
+                                param);
+                        }
+                    }
+
+
+                    // 기존 그림 삭제
+                    shape.Delete();
+
+                    if (rotation == 90 || rotation == 270)
+                    {
+                        float oldWidth = width;
+                        float oldHeight = height;
+
+                        width = oldHeight;
+                        height = oldWidth;
+
+                        left += (oldWidth - width) / 2f;
+                        top += (oldHeight - height) / 2f;
+
+                    }
+                        // 다시 삽입
+                    Excel.Shape newShape = ws.Shapes.AddPicture(
+                        tempFile,
+                        Office.MsoTriState.msoFalse,
+                        Office.MsoTriState.msoTrue,
+                        left,
+                        top,
+                        width,
+                        height);
+
+
+                    //newShape.Rotation = rotation;
+                    if (rotation == 90 || rotation == 270)
+                        newShape.Rotation = 0;
+                    else
+                        newShape.Rotation = rotation;
+                    newShape.Shadow.Visible = shadowVisible;
+                    newShape.Placement = placement;
+                    newShape.LockAspectRatio = lockAspect;
+
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+                finally
+                {
+                    if (tempFile != null && File.Exists(tempFile))
+                    {
+                        try
+                        {
+                            File.Delete(tempFile);
+                        }
+                        catch { }
+                    }
+                }
+            }
+        }
+
+        private Bitmap ResizeBitmap(
+            Bitmap src,
+            int maxWidth,
+            int maxHeight)
+        {
+            //double ratio = Math.Min(
+            //    (double)maxWidth / src.Width,
+            //    (double)maxHeight / src.Height);
+
+
+            //if (ratio >= 1)
+            //    return new Bitmap(src);
+
+
+            //int width = (int)(src.Width * ratio);
+            //int height = (int)(src.Height * ratio);
+
+
+            Bitmap bmp = new Bitmap(maxWidth, maxHeight);
+
+            using (Graphics g = Graphics.FromImage(bmp))
+            {
+                g.InterpolationMode =
+                    System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+
+                g.DrawImage(
+                    src,
+                    0,
+                    0,
+                    maxWidth,
+                    maxHeight);
+            }
+
+            return bmp;
+        }
     }
 
 }

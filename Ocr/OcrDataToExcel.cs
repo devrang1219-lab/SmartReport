@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OpenCvSharp;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -110,4 +111,5 @@ namespace WindowsFormsApp1
         // 다음 이미지가 시작되는 행 간격
         public int RowOffset { get; set; }
     }
+
 }
