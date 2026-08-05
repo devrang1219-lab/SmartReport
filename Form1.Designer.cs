@@ -38,6 +38,7 @@ namespace SmartReport
             this.tabMain = new System.Windows.Forms.TabControl();
             this.tpFunction = new System.Windows.Forms.TabPage();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.btnCompressImages = new System.Windows.Forms.Button();
             this.label9 = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
             this.textBoxImageAlignBottomGap = new System.Windows.Forms.TextBox();
@@ -95,7 +96,7 @@ namespace SmartReport
             this.textBoxKeyword = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.checkBoxAnnual = new System.Windows.Forms.CheckBox();
-            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.txtBxSampleReport = new System.Windows.Forms.TextBox();
             this.lbSample = new System.Windows.Forms.Label();
             this.cbAutoGenerateExcel = new System.Windows.Forms.CheckBox();
             this.comboBoxSeason = new System.Windows.Forms.ComboBox();
@@ -109,7 +110,7 @@ namespace SmartReport
             this.lbFolder = new System.Windows.Forms.Label();
             this.cbName = new System.Windows.Forms.ComboBox();
             this.lbName = new System.Windows.Forms.Label();
-            this.btnCompressImages = new System.Windows.Forms.Button();
+            this.btnUpdateJuapList = new System.Windows.Forms.Button();
             this.pnlMain.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -214,6 +215,7 @@ namespace SmartReport
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.btnCompressImages);
             this.groupBox1.Controls.Add(this.label9);
             this.groupBox1.Controls.Add(this.label8);
             this.groupBox1.Controls.Add(this.textBoxImageAlignBottomGap);
@@ -232,6 +234,16 @@ namespace SmartReport
             this.groupBox1.TabIndex = 27;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "이미지 정렬";
+            // 
+            // btnCompressImages
+            // 
+            this.btnCompressImages.Location = new System.Drawing.Point(381, 70);
+            this.btnCompressImages.Name = "btnCompressImages";
+            this.btnCompressImages.Size = new System.Drawing.Size(216, 30);
+            this.btnCompressImages.TabIndex = 27;
+            this.btnCompressImages.Text = "시트 이미지 용량 최적화";
+            this.btnCompressImages.UseVisualStyleBackColor = true;
+            this.btnCompressImages.Click += new System.EventHandler(this.btnCompressImages_Click);
             // 
             // label9
             // 
@@ -330,7 +342,7 @@ namespace SmartReport
             // 
             // btnSnapImage
             // 
-            this.btnSnapImage.Location = new System.Drawing.Point(356, 62);
+            this.btnSnapImage.Location = new System.Drawing.Point(129, 67);
             this.btnSnapImage.Name = "btnSnapImage";
             this.btnSnapImage.Size = new System.Drawing.Size(241, 32);
             this.btnSnapImage.TabIndex = 27;
@@ -340,7 +352,7 @@ namespace SmartReport
             // 
             // textBoxSheetForSnapImage
             // 
-            this.textBoxSheetForSnapImage.Location = new System.Drawing.Point(246, 67);
+            this.textBoxSheetForSnapImage.Location = new System.Drawing.Point(8, 67);
             this.textBoxSheetForSnapImage.Name = "textBoxSheetForSnapImage";
             this.textBoxSheetForSnapImage.Size = new System.Drawing.Size(104, 37);
             this.textBoxSheetForSnapImage.TabIndex = 28;
@@ -349,7 +361,7 @@ namespace SmartReport
             // 
             // gbReport
             // 
-            this.gbReport.Controls.Add(this.btnCompressImages);
+            this.gbReport.Controls.Add(this.btnUpdateJuapList);
             this.gbReport.Controls.Add(this.btnQuantityFile);
             this.gbReport.Controls.Add(this.tbQuantityFile);
             this.gbReport.Controls.Add(this.lbQuantityFile);
@@ -482,7 +494,7 @@ namespace SmartReport
             this.gbImage.Controls.Add(this.btnQuntityFileRun);
             this.gbImage.Location = new System.Drawing.Point(5, 218);
             this.gbImage.Name = "gbImage";
-            this.gbImage.Size = new System.Drawing.Size(1126, 246);
+            this.gbImage.Size = new System.Drawing.Size(1126, 271);
             this.gbImage.TabIndex = 24;
             this.gbImage.TabStop = false;
             this.gbImage.Text = "이미지 삽입";
@@ -654,7 +666,7 @@ namespace SmartReport
             // btnQuntityFileRun
             // 
             this.btnQuntityFileRun.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnQuntityFileRun.Location = new System.Drawing.Point(990, 110);
+            this.btnQuntityFileRun.Location = new System.Drawing.Point(990, 135);
             this.btnQuntityFileRun.Name = "btnQuntityFileRun";
             this.btnQuntityFileRun.Size = new System.Drawing.Size(134, 116);
             this.btnQuntityFileRun.TabIndex = 23;
@@ -802,7 +814,7 @@ namespace SmartReport
             this.pnlTop.Controls.Add(this.textBoxKeyword);
             this.pnlTop.Controls.Add(this.label3);
             this.pnlTop.Controls.Add(this.checkBoxAnnual);
-            this.pnlTop.Controls.Add(this.textBox1);
+            this.pnlTop.Controls.Add(this.txtBxSampleReport);
             this.pnlTop.Controls.Add(this.lbSample);
             this.pnlTop.Controls.Add(this.cbAutoGenerateExcel);
             this.pnlTop.Controls.Add(this.comboBoxSeason);
@@ -871,16 +883,16 @@ namespace SmartReport
             this.checkBoxAnnual.Text = "연차 여부";
             this.checkBoxAnnual.UseVisualStyleBackColor = true;
             // 
-            // textBox1
+            // txtBxSampleReport
             // 
-            this.textBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.txtBxSampleReport.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBox1.Location = new System.Drawing.Point(120, 124);
-            this.textBox1.Margin = new System.Windows.Forms.Padding(4);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(838, 37);
-            this.textBox1.TabIndex = 48;
-            this.textBox1.Text = "D:\\work\\한경이엔지\\0_org\\한경이엔지2본부_26년연차보고서(샘플)_rang.xlsx";
+            this.txtBxSampleReport.Location = new System.Drawing.Point(120, 124);
+            this.txtBxSampleReport.Margin = new System.Windows.Forms.Padding(4);
+            this.txtBxSampleReport.Name = "txtBxSampleReport";
+            this.txtBxSampleReport.Size = new System.Drawing.Size(838, 37);
+            this.txtBxSampleReport.TabIndex = 48;
+            this.txtBxSampleReport.Text = "D:\\work\\한경이엔지\\0_org\\한경이엔지2본부_26년연차보고서(샘플)_rang.xlsx";
             // 
             // lbSample
             // 
@@ -984,6 +996,9 @@ namespace SmartReport
             this.tbFolder.Name = "tbFolder";
             this.tbFolder.Size = new System.Drawing.Size(838, 37);
             this.tbFolder.TabIndex = 9;
+            this.tbFolder.TextChanged += new System.EventHandler(this.tbFolder_TextChanged);
+            this.tbFolder.Enter += new System.EventHandler(this.tbFolder_Enter);
+            this.tbFolder.KeyUp += new System.Windows.Forms.KeyEventHandler(this.tbFolder_KeyUp);
             // 
             // lbFolder
             // 
@@ -1023,15 +1038,15 @@ namespace SmartReport
             this.lbName.TabIndex = 5;
             this.lbName.Text = "측정자     : ";
             // 
-            // btnCompressImages
+            // btnUpdateJuapList
             // 
-            this.btnCompressImages.Location = new System.Drawing.Point(320, 65);
-            this.btnCompressImages.Name = "btnCompressImages";
-            this.btnCompressImages.Size = new System.Drawing.Size(216, 30);
-            this.btnCompressImages.TabIndex = 27;
-            this.btnCompressImages.Text = "시트 이미지 용량 최적화";
-            this.btnCompressImages.UseVisualStyleBackColor = true;
-            this.btnCompressImages.Click += new System.EventHandler(this.btnCompressImages_Click);
+            this.btnUpdateJuapList.Location = new System.Drawing.Point(320, 69);
+            this.btnUpdateJuapList.Name = "btnUpdateJuapList";
+            this.btnUpdateJuapList.Size = new System.Drawing.Size(129, 30);
+            this.btnUpdateJuapList.TabIndex = 27;
+            this.btnUpdateJuapList.Text = "저압 접지저항 목록 업데이트";
+            this.btnUpdateJuapList.UseVisualStyleBackColor = true;
+            this.btnUpdateJuapList.Click += new System.EventHandler(this.btnUpdateJuapList_Click);
             // 
             // Form1
             // 
@@ -1133,7 +1148,7 @@ namespace SmartReport
         private TextBox tbQuantityFile;
         private Label lbQuantityFile;
         private CheckBox checkBoxOcr;
-        private TextBox textBox1;
+        private TextBox txtBxSampleReport;
         private Label lbSample;
         private CheckBox cbAutoGenerateExcel;
         private CheckBox checkBoxAnnual;
@@ -1156,6 +1171,7 @@ namespace SmartReport
         private Label label9;
         private Button btnUploadReport;
         private Button btnCompressImages;
+        private Button btnUpdateJuapList;
     }
 }
 
