@@ -5008,6 +5008,282 @@ namespace SmartReport
             UpdateEquipmentList(null, filePath);
         }
         #endregion
+
+        #region [절연의 저항과 전류, 결과값 유효성 확인]
+        //private void CheckResistanceAndCurrentForJulyeon(Excel.Workbook wb, string filePath)
+        //{
+        //    Excel.Application app = null;
+        //    bool openedHere = false;
+
+        //    try
+        //    {
+        //        // Workbook이 없으면 filePath를 연다.
+        //        if (wb == null)
+        //        {
+        //            if (!File.Exists(filePath))
+        //            {
+        //                AddLog("WARN", "파일이 존재하지 않습니다.");
+        //                return;
+        //            }
+
+        //            app = new Excel.Application();
+        //            app.Visible = false;
+        //            app.DisplayAlerts = false;
+
+        //            wb = app.Workbooks.Open(filePath);
+        //            openedHere = true;
+        //        }
+
+        //        Excel.Worksheet wsSrc = wb.Worksheets["절연"];
+
+        //        int lastRow = wsSrc.Cells[wsSrc.Rows.Count, "U"]
+        //                           .End(Excel.XlDirection.xlUp).Row;
+
+        //        // B/L열은 측정번호, G/Q열은 절연저항, H/R열은 누설전류, I/S열은 결과, J/T열은 비고
+        //        // A/K열은 좌/우 표시, E/O열은 전류규격
+        //        // 시트는 좌우 한 세트로 되어 있음, 좌우는 독립적으로 확인
+
+        //        // 1. 측정번호가 1번인 것 중
+        //        //    B/L열의 값이 모두 있으면 A열은 "좌", K열은 "우"로 채움
+        //        //    L열이 비어있다면 A, K열에 "좌", "우"를 지움
+
+        //        // 2. 측정번호가 채워진 열 중 절연전류와 누설전류가 모두 없으면 결과 열은 'ᅳ' 채우면서 비고란이 비어있으면 'SP' 채움
+
+        //        // 3. 절연전류와 누설전류가 모두 있으면 두 셀을 노란색으로 채움
+
+        //        // 4. 누설전류 값이 있고 전류규격/20 보다 크거나 같으면 결과에 '점검요', 그 이상은 '양호' 채움, 양호일 경우는 비고열 지움
+
+        //        // 5. 절연저항 값이 있고 0부터 0.19까지는 결과열에 '점검요', 0.2부터 0.99까지 주의, 1.0 이상은 정상으로 결과열에 '양호' 채움, 양호일 경우는 비고열 지움
+
+        //        if (openedHere)
+        //            wb.Save();
+        //    }
+        //    finally
+        //    {
+        //        if (openedHere)
+        //        {
+        //            wb.Close(false);
+        //            app.Quit();
+
+        //            System.Runtime.InteropServices.Marshal.ReleaseComObject(wb);
+        //            System.Runtime.InteropServices.Marshal.ReleaseComObject(app);
+        //        }
+        //    }
+        //}
+        private void CheckResistanceAndCurrentForJulyeon(Excel.Workbook wb, string filePath)
+        {
+            Excel.Application app = null;
+            bool openedHere = false;
+
+            try
+            {
+                if (wb == null)
+                {
+                    if (!File.Exists(filePath))
+                    {
+                        AddLog("WARN", "파일이 존재하지 않습니다.");
+                        return;
+                    }
+
+                    app = new Excel.Application();
+                    app.Visible = false;
+                    app.DisplayAlerts = false;
+
+                    wb = app.Workbooks.Open(filePath);
+                    openedHere = true;
+                }
+
+                Excel.Worksheet wsSrc = wb.Worksheets["절연"];
+
+                int lastRow = wsSrc.Cells[wsSrc.Rows.Count, "U"]
+                                   .End(Excel.XlDirection.xlUp).Row;
+
+                ProcessSide("A", "B", "E", "G", "H", "I", "J");   // 좌
+                ProcessSide("K", "L", "O", "Q", "R", "S", "T");   // 우
+
+                if (openedHere)
+                    wb.Save();
+
+                // -----------------------------
+                void ProcessSide(string sideCol,
+                                 string noCol,
+                                 string limitCol,
+                                 string resistCol,
+                                 string currentCol,
+                                 string resultCol,
+                                 string remarkCol)
+                {
+                    // 1. 측정번호 1번 여부 확인
+                    for (int row = 2; row <= lastRow; row++)
+                    {
+                        string no = Convert.ToString(wsSrc.Range[$"{noCol}{row}"].Value2)?.Trim();
+
+                        if (no == "1")
+                        {
+                            if (sideCol == "A")
+                            {
+                                string rightNo = Convert.ToString(wsSrc.Range[$"L{row}"].Value2)?.Trim();
+
+                                if (!string.IsNullOrEmpty(rightNo))
+                                {
+                                    if (string.IsNullOrEmpty(Convert.ToString(wsSrc.Range[$"A{row}"].Value2))
+                                        && Convert.ToString(wsSrc.Range[$"A{row}"].Value2) != "좌")
+                                    {
+                                        AddLog("Info", $"측정번호 1번 좌측: A{row}에 '{Convert.ToString(wsSrc.Range[$"K{row}"].Value2)}' 대신 '좌' 채움");
+                                        wsSrc.Range[$"A{row}"].Value = "좌";
+                                    }
+                                    if (string.IsNullOrEmpty(Convert.ToString(wsSrc.Range[$"K{row}"].Value2))
+                                        && Convert.ToString(wsSrc.Range[$"K{row}"].Value2) != "좌")
+                                    {
+                                        AddLog("Info", $"우측: A{row}에 '{Convert.ToString(wsSrc.Range[$"K{row}"].Value2)}' 대신 '우' 채움");
+                                        wsSrc.Range[$"K{row}"].Value = "우";
+                                    }
+                                }
+                                else
+                                {
+                                    if (string.IsNullOrEmpty(Convert.ToString(wsSrc.Range[$"A{row}"].Value2))
+                                        && Convert.ToString(wsSrc.Range[$"A{row}"].Value2) != "좌")
+                                    {
+                                        AddLog("Info", $"측정번호 1번 좌측: A{row}에 '{Convert.ToString(wsSrc.Range[$"A{row}"].Value2)}' 지움");
+                                        wsSrc.Range[$"A{row}"].ClearContents();
+                                    }
+                                    if (string.IsNullOrEmpty(Convert.ToString(wsSrc.Range[$"K{row}"].Value2))
+                                        && Convert.ToString(wsSrc.Range[$"K{row}"].Value2) != "우")
+                                    {
+                                        AddLog("Info", $"측정번호 1번 우측: K{row}에 '{Convert.ToString(wsSrc.Range[$"K{row}"].Value2)}' 지움"); AddLog("Info", $"측정번호 1번 좌측: A{row}에 '{Convert.ToString(wsSrc.Range[$"A{row}"].Value2)}' 지움");
+                                        wsSrc.Range[$"K{row}"].ClearContents();
+
+                                    }                                }
+                            }
+                        }
+
+                        if (string.IsNullOrWhiteSpace(no))
+                            continue;
+
+                        Excel.Range rResist = wsSrc.Range[$"{resistCol}{row}"];
+                        Excel.Range rCurrent = wsSrc.Range[$"{currentCol}{row}"];
+                        Excel.Range rResult = wsSrc.Range[$"{resultCol}{row}"];
+                        Excel.Range rRemark = wsSrc.Range[$"{remarkCol}{row}"];
+                        Excel.Range rLimit = wsSrc.Range[$"{limitCol}{row}"];
+
+                        bool hasResist = double.TryParse(Convert.ToString(rResist.Value2), out double resist);
+                        bool hasCurrent = double.TryParse(Convert.ToString(rCurrent.Value2), out double current);
+                        double.TryParse(Convert.ToString(rLimit.Value2), out double limit);
+
+                        // 흰색으로 초기화
+                        rResist.Interior.Pattern = Excel.XlPattern.xlPatternSolid;
+                        rCurrent.Interior.Pattern = Excel.XlPattern.xlPatternSolid;
+                        rResist.Interior.ColorIndex = Excel.XlColorIndex.xlColorIndexNone;
+                        rCurrent.Interior.ColorIndex = Excel.XlColorIndex.xlColorIndexNone;
+
+                        // 2. 둘 다 없으면
+                        if (!hasResist && !hasCurrent)
+                        {
+                            if (rResult.Value != "'ᅳ")
+                            {
+                                AddLog("Info", $"{resultCol}{row}에 'ᅳ' 채움");
+                                rResult.Value = "'ᅳ";
+                            }
+
+                            if (string.IsNullOrWhiteSpace(Convert.ToString(rRemark.Value2)))
+                            {
+
+                                AddLog("Info", $"{remarkCol}{row}에 'SP' 채움");
+                                rRemark.Value = "SP";
+                            }
+
+                            continue;
+                        }
+
+                        // 4. 누설전류 판정
+                        if (hasCurrent && limit > 0)
+                        {
+                            if (current >= limit / 20.0)
+                            {
+                                if (string.IsNullOrWhiteSpace(Convert.ToString(rResult.Value2) 
+                                    && Convert.ToString(rResult.Value2) != "점검요"))
+                                {
+                                    AddLog("Info", $"{rResult}{row}에 누설전류'점검요' 채움");
+                                    rResult.Value = "점검요";
+                                }
+                            }
+                            else
+                            {
+                                if (Convert.ToString(rResult.Value2) != "양호")
+                                {
+                                    AddLog("Info", $"{rResult}{row}에 누설전류'양호' 채움");
+                                    rResult.Value = "양호";
+                                }
+                                rRemark.ClearContents();
+                            }
+                        }
+
+                        // 5. 절연저항 판정 (누설전류보다 우선)
+                        if (hasResist)
+                        {
+                            if (resist < 0.2)
+                            {
+                                if (Convert.ToString(rResult.Value2) != "점검요")
+                                {
+                                    AddLog("Info", $"{rResult}{row}에 절연저항 '점검요' 채움");
+                                    rResult.Value = "점검요";
+                                }
+                            }
+                            else if (resist < 1.0)
+                            {
+                                if (Convert.ToString(rResult.Value2) != "주의")
+                                {
+                                    AddLog("Info", $"{rResult}{row}에 절연저항 '주의' 채움");
+
+                                    rResult.Value = "주의";
+                                }
+                            }
+                            else
+                            {
+                                if (Convert.ToString(rResult.Value2) != "양호")
+                                {
+                                    AddLog("Info", $"{rResult}{row}에 절연저항 '양호' 채움");
+
+                                    rResult.Value = "양호";
+                                    rRemark.ClearContents();
+                                }
+                            }
+                        }
+
+                        // 3. 둘 다 있으면 노란색
+                        if (hasResist && hasCurrent)
+                        {
+                            rResist.Interior.Color = ColorTranslator.ToOle(Color.Yellow);
+                            rCurrent.Interior.Color = ColorTranslator.ToOle(Color.Yellow);
+                            AddLog("Info", $"{rResist}{row}, {rCurrent}{row}에 저항과 전류가 모두 표시되어 있음");
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                if (openedHere)
+                {
+                    wb.Close(false);
+                    app.Quit();
+
+                    System.Runtime.InteropServices.Marshal.ReleaseComObject(wb);
+                    System.Runtime.InteropServices.Marshal.ReleaseComObject(app);
+                }
+            }
+        }
+
+        private void btnConfirmJulyeon_Click(object sender, EventArgs e)
+        {
+            string filePath = tbQuantityFile.Text.Trim();
+            if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
+            {
+                AddLog("WARN", "파일 경로가 올바르지 않습니다.");
+                return;
+            }
+            CheckResistanceAndCurrentForJulyeon(null, filePath);
+        }
+        #endregion
     }
 
 }

@@ -52,6 +52,7 @@ namespace SmartReport
             this.btnSnapImage = new System.Windows.Forms.Button();
             this.textBoxSheetForSnapImage = new System.Windows.Forms.TextBox();
             this.gbReport = new System.Windows.Forms.GroupBox();
+            this.btnUpdateJuapList = new System.Windows.Forms.Button();
             this.btnQuantityFile = new System.Windows.Forms.Button();
             this.tbQuantityFile = new System.Windows.Forms.TextBox();
             this.lbQuantityFile = new System.Windows.Forms.Label();
@@ -110,7 +111,7 @@ namespace SmartReport
             this.lbFolder = new System.Windows.Forms.Label();
             this.cbName = new System.Windows.Forms.ComboBox();
             this.lbName = new System.Windows.Forms.Label();
-            this.btnUpdateJuapList = new System.Windows.Forms.Button();
+            this.btnConfirmJulyeon = new System.Windows.Forms.Button();
             this.pnlMain.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -361,6 +362,7 @@ namespace SmartReport
             // 
             // gbReport
             // 
+            this.gbReport.Controls.Add(this.btnConfirmJulyeon);
             this.gbReport.Controls.Add(this.btnUpdateJuapList);
             this.gbReport.Controls.Add(this.btnQuantityFile);
             this.gbReport.Controls.Add(this.tbQuantityFile);
@@ -373,6 +375,16 @@ namespace SmartReport
             this.gbReport.TabIndex = 26;
             this.gbReport.TabStop = false;
             this.gbReport.Text = "보고서";
+            // 
+            // btnUpdateJuapList
+            // 
+            this.btnUpdateJuapList.Location = new System.Drawing.Point(320, 69);
+            this.btnUpdateJuapList.Name = "btnUpdateJuapList";
+            this.btnUpdateJuapList.Size = new System.Drawing.Size(129, 30);
+            this.btnUpdateJuapList.TabIndex = 27;
+            this.btnUpdateJuapList.Text = "저압 접지저항 목록 업데이트";
+            this.btnUpdateJuapList.UseVisualStyleBackColor = true;
+            this.btnUpdateJuapList.Click += new System.EventHandler(this.btnUpdateJuapList_Click);
             // 
             // btnQuantityFile
             // 
@@ -494,7 +506,7 @@ namespace SmartReport
             this.gbImage.Controls.Add(this.btnQuntityFileRun);
             this.gbImage.Location = new System.Drawing.Point(5, 218);
             this.gbImage.Name = "gbImage";
-            this.gbImage.Size = new System.Drawing.Size(1126, 271);
+            this.gbImage.Size = new System.Drawing.Size(1126, 282);
             this.gbImage.TabIndex = 24;
             this.gbImage.TabStop = false;
             this.gbImage.Text = "이미지 삽입";
@@ -666,7 +678,7 @@ namespace SmartReport
             // btnQuntityFileRun
             // 
             this.btnQuntityFileRun.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnQuntityFileRun.Location = new System.Drawing.Point(990, 135);
+            this.btnQuntityFileRun.Location = new System.Drawing.Point(990, 146);
             this.btnQuntityFileRun.Name = "btnQuntityFileRun";
             this.btnQuntityFileRun.Size = new System.Drawing.Size(134, 116);
             this.btnQuntityFileRun.TabIndex = 23;
@@ -1038,15 +1050,15 @@ namespace SmartReport
             this.lbName.TabIndex = 5;
             this.lbName.Text = "측정자     : ";
             // 
-            // btnUpdateJuapList
+            // btnConfirmJulyeon
             // 
-            this.btnUpdateJuapList.Location = new System.Drawing.Point(320, 69);
-            this.btnUpdateJuapList.Name = "btnUpdateJuapList";
-            this.btnUpdateJuapList.Size = new System.Drawing.Size(129, 30);
-            this.btnUpdateJuapList.TabIndex = 27;
-            this.btnUpdateJuapList.Text = "저압 접지저항 목록 업데이트";
-            this.btnUpdateJuapList.UseVisualStyleBackColor = true;
-            this.btnUpdateJuapList.Click += new System.EventHandler(this.btnUpdateJuapList_Click);
+            this.btnConfirmJulyeon.Location = new System.Drawing.Point(474, 69);
+            this.btnConfirmJulyeon.Name = "btnConfirmJulyeon";
+            this.btnConfirmJulyeon.Size = new System.Drawing.Size(190, 30);
+            this.btnConfirmJulyeon.TabIndex = 28;
+            this.btnConfirmJulyeon.Text = "절연 오류 확인";
+            this.btnConfirmJulyeon.UseVisualStyleBackColor = true;
+            this.btnConfirmJulyeon.Click += new System.EventHandler(this.btnConfirmJulyeon_Click);
             // 
             // Form1
             // 
@@ -1172,6 +1184,7 @@ namespace SmartReport
         private Button btnUploadReport;
         private Button btnCompressImages;
         private Button btnUpdateJuapList;
+        private Button btnConfirmJulyeon;
     }
 }
 
