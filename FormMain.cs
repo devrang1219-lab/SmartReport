@@ -23,12 +23,12 @@ using Office = Microsoft.Office.Core;
 
 namespace SmartReport
 {
-    public partial class Form1 : Form
+    public partial class FormMain : Form
     {
         private SoborLog soborLog = null;
         private Report report = null;
         private SynologyFileUploader _uploader = null;
-        public Form1()
+        public FormMain()
         {
             InitializeComponent();
             //TestCopyGapjiSheet();
@@ -1893,7 +1893,7 @@ namespace SmartReport
         }
 
 
-        private void Form1_Load(object sender, EventArgs e)
+        private void FormMain_Load(object sender, EventArgs e)
         {
             InitGrid();
             AddLog("INFO", "프로그램 시작");
@@ -4210,6 +4210,7 @@ namespace SmartReport
             try
             {
                 this.report = Report.ParseReport(filePath, soborLog);
+                
             }
             catch (Exception ex)
             {
@@ -5010,70 +5011,37 @@ namespace SmartReport
         #endregion
 
         #region [절연의 저항과 전류, 결과값 유효성 확인]
-        //private void CheckResistanceAndCurrentForJulyeon(Excel.Workbook wb, string filePath)
-        //{
-        //    Excel.Application app = null;
-        //    bool openedHere = false;
 
-        //    try
-        //    {
-        //        // Workbook이 없으면 filePath를 연다.
-        //        if (wb == null)
-        //        {
-        //            if (!File.Exists(filePath))
-        //            {
-        //                AddLog("WARN", "파일이 존재하지 않습니다.");
-        //                return;
-        //            }
+        private void SetIncorrectCell(Excel.Range cell, string value, string message)
+        {
+            if (cell == null) return;
+            if (value == null) return;
 
-        //            app = new Excel.Application();
-        //            app.Visible = false;
-        //            app.DisplayAlerts = false;
+            if (Convert.ToString(cell.Value2) == value) return;
 
-        //            wb = app.Workbooks.Open(filePath);
-        //            openedHere = true;
-        //        }
+            if (checkBoxCorrect.Checked)
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    cell.ClearContents();
+                }
+                else
+                {
+                    cell.Value = value;
+                }
+            }
+            else
+            {
+                cell.Interior.Color = ColorTranslator.ToOle(Color.Yellow);
+            }
+            AddLog("WARN", message);
+        }
 
-        //        Excel.Worksheet wsSrc = wb.Worksheets["절연"];
-
-        //        int lastRow = wsSrc.Cells[wsSrc.Rows.Count, "U"]
-        //                           .End(Excel.XlDirection.xlUp).Row;
-
-        //        // B/L열은 측정번호, G/Q열은 절연저항, H/R열은 누설전류, I/S열은 결과, J/T열은 비고
-        //        // A/K열은 좌/우 표시, E/O열은 전류규격
-        //        // 시트는 좌우 한 세트로 되어 있음, 좌우는 독립적으로 확인
-
-        //        // 1. 측정번호가 1번인 것 중
-        //        //    B/L열의 값이 모두 있으면 A열은 "좌", K열은 "우"로 채움
-        //        //    L열이 비어있다면 A, K열에 "좌", "우"를 지움
-
-        //        // 2. 측정번호가 채워진 열 중 절연전류와 누설전류가 모두 없으면 결과 열은 'ᅳ' 채우면서 비고란이 비어있으면 'SP' 채움
-
-        //        // 3. 절연전류와 누설전류가 모두 있으면 두 셀을 노란색으로 채움
-
-        //        // 4. 누설전류 값이 있고 전류규격/20 보다 크거나 같으면 결과에 '점검요', 그 이상은 '양호' 채움, 양호일 경우는 비고열 지움
-
-        //        // 5. 절연저항 값이 있고 0부터 0.19까지는 결과열에 '점검요', 0.2부터 0.99까지 주의, 1.0 이상은 정상으로 결과열에 '양호' 채움, 양호일 경우는 비고열 지움
-
-        //        if (openedHere)
-        //            wb.Save();
-        //    }
-        //    finally
-        //    {
-        //        if (openedHere)
-        //        {
-        //            wb.Close(false);
-        //            app.Quit();
-
-        //            System.Runtime.InteropServices.Marshal.ReleaseComObject(wb);
-        //            System.Runtime.InteropServices.Marshal.ReleaseComObject(app);
-        //        }
-        //    }
-        //}
         private void CheckResistanceAndCurrentForJulyeon(Excel.Workbook wb, string filePath)
         {
             Excel.Application app = null;
             bool openedHere = false;
+            bool bCorrect = checkBoxCorrect.Checked;
 
             try
             {
@@ -5123,48 +5091,54 @@ namespace SmartReport
                             if (sideCol == "A")
                             {
                                 string rightNo = Convert.ToString(wsSrc.Range[$"L{row}"].Value2)?.Trim();
+                                string leftNo = Convert.ToString(wsSrc.Range[$"B{row}"].Value2)?.Trim();
 
-                                if (!string.IsNullOrEmpty(rightNo))
-                                {
-                                    if (string.IsNullOrEmpty(Convert.ToString(wsSrc.Range[$"A{row}"].Value2))
-                                        && Convert.ToString(wsSrc.Range[$"A{row}"].Value2) != "좌")
-                                    {
-                                        AddLog("Info", $"측정번호 1번 좌측: A{row}에 '{Convert.ToString(wsSrc.Range[$"K{row}"].Value2)}' 대신 '좌' 채움");
-                                        wsSrc.Range[$"A{row}"].Value = "좌";
-                                    }
-                                    if (string.IsNullOrEmpty(Convert.ToString(wsSrc.Range[$"K{row}"].Value2))
-                                        && Convert.ToString(wsSrc.Range[$"K{row}"].Value2) != "좌")
-                                    {
-                                        AddLog("Info", $"우측: A{row}에 '{Convert.ToString(wsSrc.Range[$"K{row}"].Value2)}' 대신 '우' 채움");
-                                        wsSrc.Range[$"K{row}"].Value = "우";
-                                    }
-                                }
-                                else
-                                {
-                                    if (string.IsNullOrEmpty(Convert.ToString(wsSrc.Range[$"A{row}"].Value2))
-                                        && Convert.ToString(wsSrc.Range[$"A{row}"].Value2) != "좌")
-                                    {
-                                        AddLog("Info", $"측정번호 1번 좌측: A{row}에 '{Convert.ToString(wsSrc.Range[$"A{row}"].Value2)}' 지움");
-                                        wsSrc.Range[$"A{row}"].ClearContents();
-                                    }
-                                    if (string.IsNullOrEmpty(Convert.ToString(wsSrc.Range[$"K{row}"].Value2))
-                                        && Convert.ToString(wsSrc.Range[$"K{row}"].Value2) != "우")
-                                    {
-                                        AddLog("Info", $"측정번호 1번 우측: K{row}에 '{Convert.ToString(wsSrc.Range[$"K{row}"].Value2)}' 지움"); AddLog("Info", $"측정번호 1번 좌측: A{row}에 '{Convert.ToString(wsSrc.Range[$"A{row}"].Value2)}' 지움");
-                                        wsSrc.Range[$"K{row}"].ClearContents();
-
-                                    }                                }
+                                bool bRight = !string.IsNullOrEmpty(rightNo);
+                                SetIncorrectCell(wsSrc.Range[$"A{row}"], (bRight)?"좌":"",
+                                        $"좌측: A{row}에 '{Convert.ToString(wsSrc.Range[$"A{row}"].Value2)}' 대신 '좌' 채움");
+                                SetIncorrectCell(wsSrc.Range[$"K{row}"], (bRight) ? "우" : "",
+                                        $"우측: K{row}에 '{Convert.ToString(wsSrc.Range[$"K{row}"].Value2)}' 대신 '우' 채움");
+                                
                             }
                         }
 
-                        if (string.IsNullOrWhiteSpace(no))
-                            continue;
+
 
                         Excel.Range rResist = wsSrc.Range[$"{resistCol}{row}"];
                         Excel.Range rCurrent = wsSrc.Range[$"{currentCol}{row}"];
                         Excel.Range rResult = wsSrc.Range[$"{resultCol}{row}"];
                         Excel.Range rRemark = wsSrc.Range[$"{remarkCol}{row}"];
                         Excel.Range rLimit = wsSrc.Range[$"{limitCol}{row}"];
+
+                        if (string.IsNullOrWhiteSpace(no))
+                        {
+                            if (Convert.ToString(rResist.Value2) != null
+                                || Convert.ToString(rCurrent.Value2) != null
+                                || Convert.ToString(rResult.Value2) != null
+                                || Convert.ToString(rRemark.Value2) != null
+                                || Convert.ToString(rLimit.Value2) != null)    
+                            {
+                                if (bCorrect)
+                                {
+                                    rResist.ClearContents();
+                                    rRemark.ClearContents();
+                                    rLimit.ClearContents();
+                                    rResult.ClearContents();
+                                    rLimit.ClearContents();
+                                }
+                                else
+                                {
+                                    rResist.Interior.Color = ColorTranslator.ToOle(Color.Yellow);
+                                    rCurrent.Interior.Color = ColorTranslator.ToOle(Color.Yellow);
+                                    rRemark.Interior.Color = ColorTranslator.ToOle(Color.Yellow);
+                                    rLimit.Interior.Color = ColorTranslator.ToOle(Color.Yellow);
+                                    rResult.Interior.Color = ColorTranslator.ToOle(Color.Yellow);
+                                }
+
+                                AddLog("WARN", $"측정번호가 없는데 값이 있음");
+                            }
+                            continue;
+                        }
 
                         bool hasResist = double.TryParse(Convert.ToString(rResist.Value2), out double resist);
                         bool hasCurrent = double.TryParse(Convert.ToString(rCurrent.Value2), out double current);
@@ -5282,6 +5256,319 @@ namespace SmartReport
                 return;
             }
             CheckResistanceAndCurrentForJulyeon(null, filePath);
+        }
+        #endregion
+
+        #region [날짜로 반기 분기 판정, 적용]
+        private void SetDateForJechulmoon(Excel.Workbook wb, string filePath)
+        {
+            Excel.Application app = null;
+            bool openedHere = false;
+
+            try
+            {
+                if (wb == null)
+                {
+                    if (!File.Exists(filePath))
+                    {
+                        AddLog("WARN", "파일이 존재하지 않습니다.");
+                        return;
+                    }
+
+                    app = new Excel.Application();
+                    app.Visible = false;
+                    app.DisplayAlerts = false;
+
+                    wb = app.Workbooks.Open(filePath);
+                    openedHere = true;
+                }
+
+                Excel.Worksheet wsSrc = wb.Worksheets["제출문"];
+
+                if (report != null)
+                {
+                    var month = (report.nDay > 15 ? report.nMonth + 1 : report.nMonth);
+                    wsSrc.Range["A20"].Value2 
+                        = $"{report.nYear}년 " +
+                        $"{month}월";
+
+                    var papers = (report.isAnnual)? "2~8, 코로나방전, 축전지" : (report.isHalfYear)? "2접지,6,7":"7";
+                    wsSrc.Range["B18"].Value2 = $"첨부 별지서식 : {papers}";
+                }
+
+                if (openedHere)
+                    wb.Save();
+
+
+                if (wsSrc != null) Marshal.ReleaseComObject(wsSrc);
+
+            }
+            finally
+            {
+                if (openedHere)
+                {
+                    wb.Close(false);
+                    app.Quit();
+
+                    Marshal.ReleaseComObject(wb);
+                    Marshal.ReleaseComObject(app);
+                }
+            }
+        }
+
+        private void SetDateForOpinion(Excel.Workbook wb, string filePath)
+        {
+            Excel.Application app = null;
+            bool openedHere = false;
+
+            try
+            {
+                if (wb == null)
+                {
+                    if (!File.Exists(filePath))
+                    {
+                        AddLog("WARN", "파일이 존재하지 않습니다.");
+                        return;
+                    }
+
+                    app = new Excel.Application();
+                    app.Visible = false;
+                    app.DisplayAlerts = false;
+
+                    wb = app.Workbooks.Open(filePath);
+                    openedHere = true;
+                }
+
+                Excel.Worksheet wsSrc = wb.Worksheets["의견"];
+
+                if (report != null)
+                {
+                    //A2 셀 예시 "원흥퍼스트푸르지오시티 2026년 전기 연간점검 계획표"
+                    wsSrc.Range["A2"].Value2 = $"{report.strSite} {report.nYear}년 전기 연간점검 계획표";
+                }
+
+                if (openedHere)
+                    wb.Save();
+
+            }
+            finally
+            {
+                if (openedHere)
+                {
+                    wb.Close(false);
+                    app.Quit();
+
+                    Marshal.ReleaseComObject(wb);
+                    Marshal.ReleaseComObject(app);
+                }
+            }
+        }
+
+        private void SetDateJeoap(Excel.Workbook wb, string filePath)
+        {
+            Excel.Application app = null;
+            bool openedHere = false;
+
+            try
+            {
+                if (wb == null)
+                {
+                    if (!File.Exists(filePath))
+                    {
+                        AddLog("WARN", "파일이 존재하지 않습니다.");
+                        return;
+                    }
+
+                    app = new Excel.Application();
+                    app.Visible = false;
+                    app.DisplayAlerts = false;
+
+                    wb = app.Workbooks.Open(filePath);
+                    openedHere = true;
+                }
+
+                Excel.Worksheet wsSrc = GetWorksheetByName(wb, "저압");
+
+                if (wsSrc == null)
+                {
+                    AddLog("Error", "저압 시트를 찾을 수 없습니다.");
+                }
+
+                if (report != null)
+                {
+                    var half = (report.nMonth>6) ? "하" : "상";
+                    wsSrc.Range["A2"].Value2 = $"◈ 접지저항 측정기록표({half}반기)";
+
+                    wsSrc.Name = $"저압({half})";
+                }
+
+                if (openedHere)
+                    wb.Save();
+
+            }
+            finally
+            {
+                if (openedHere)
+                {
+                    wb.Close(false);
+                    app.Quit();
+
+                    Marshal.ReleaseComObject(wb);
+                    Marshal.ReleaseComObject(app);
+                }
+            }
+        }
+
+        private void SetDateYaeby(Excel.Workbook wb, string filePath)
+        {
+            Excel.Application app = null;
+            bool openedHere = false;
+
+            try
+            {
+                if (wb == null)
+                {
+                    if (!File.Exists(filePath))
+                    {
+                        AddLog("WARN", "파일이 존재하지 않습니다.");
+                        return;
+                    }
+
+                    app = new Excel.Application();
+                    app.Visible = false;
+                    app.DisplayAlerts = false;
+
+                    wb = app.Workbooks.Open(filePath);
+                    openedHere = true;
+                }
+
+                Excel.Worksheet wsSrc = GetWorksheetByName(wb, "예비");
+
+                if (wsSrc == null)
+                {
+                    AddLog("Error", "예비 시트를 찾을 수 없습니다.");
+                }
+
+                if (report != null)
+                {
+                    var half = (report.nMonth > 6) ? "하" : "상";
+                    wsSrc.Range["A2"].Value2 = $"발전설비 점검기록표({half}반기)";
+
+                    wsSrc.Name = $"예비({half})";
+                }
+
+                if (openedHere)
+                    wb.Save();
+
+            }
+            finally
+            {
+                if (openedHere)
+                {
+                    wb.Close(false);
+                    app.Quit();
+
+                    Marshal.ReleaseComObject(wb);
+                    Marshal.ReleaseComObject(app);
+                }
+            }
+        }
+
+        private void SetDateBungy(Excel.Workbook wb, string filePath)
+        {
+
+            if (report.isOnlyAnnual) return;
+
+            Excel.Application app = null;
+            bool openedHere = false;
+
+            try
+            {
+                if (wb == null)
+                {
+                    if (!File.Exists(filePath))
+                    {
+                        AddLog("WARN", "파일이 존재하지 않습니다.");
+                        return;
+                    }
+
+                    app = new Excel.Application();
+                    app.Visible = false;
+                    app.DisplayAlerts = false;
+
+                    wb = app.Workbooks.Open(filePath);
+                    openedHere = true;
+                }
+
+                Excel.Worksheet wsSrc = GetWorksheetByName(wb, "분기");
+
+                if (wsSrc == null)
+                {
+                    AddLog("Error", "분기 시트를 찾을 수 없습니다.");
+                }
+
+                if (report != null)
+                {
+                    wsSrc.Range["L5"].Value2 = $"[{report.nQuater}분기]";
+                    wsSrc.Name = $"{report.nQuater}분기";
+                }
+
+                if (openedHere)
+                    wb.Save();
+
+            }
+            finally
+            {
+                if (openedHere)
+                {
+                    wb.Close(false);
+                    app.Quit();
+
+                    Marshal.ReleaseComObject(wb);
+                    Marshal.ReleaseComObject(app);
+                }
+            }
+        }
+        private void btnSeasonCorrect_Click(object sender, EventArgs e)
+        {
+            string filePath = tbQuantityFile.Text.Trim();
+            if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
+            {
+                AddLog("WARN", "파일 경로가 올바르지 않습니다.");
+                return;
+            }
+
+
+            Excel.Application app = null;
+            app = new Excel.Application();
+            app.Visible = false;
+            app.DisplayAlerts = false; 
+            Excel.Workbook wb;
+
+            wb = app.Workbooks.Open(filePath);
+
+            // 제출문 시트의 A21 셀 년 월 예시 "2026년 8월" 날짜가 16일 이상이면 현재달 +1로 표시
+            SetDateForJechulmoon(wb, filePath);
+            // 연계획 시트의 A2 셀 예시 "원흥퍼스트푸르지오시티 2026년 전기 연간점검 계획표" 사이트 + 연 + 전지 연간점검 계획표
+            SetDateForOpinion(wb, filePath);
+            // 저압, 예비가 포함된 시트 이름을 저압(상)/저압(하), 예비(상)/예비(하)로 변경
+            // 저압 A2셀: ◈ 접지저항 측정기록표(하반기), 예비 A2셀: 발전설비 점검기록표(하반기)
+            SetDateYaeby(wb, filePath);
+            SetDateJeoap(wb, filePath);
+            // 연차 점검만 있는 보고서가 아닐 경우 예시 [3분기], 연차 점검만 할 경우는 E5~O5가 머지되지 않았으면 머지
+            SetDateBungy(wb, filePath);
+
+            wb.Save();
+
+            wb.Close(false);
+            app.Quit();
+
+            Marshal.ReleaseComObject(wb);
+            Marshal.ReleaseComObject(app);
+
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+
         }
         #endregion
     }

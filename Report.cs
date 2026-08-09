@@ -13,6 +13,7 @@ namespace WindowsFormsApp1
     public class Report
     {
         public bool isAnnual { get; set; } = false;
+        public bool isHalfYear { get; set; } = false;
         public bool isOnlyAnnual { get; set; } = false;
         public bool isUpperOfHalfYear { get; set; } = false;
         public int nQuater { get; set; } = 1;
@@ -62,6 +63,8 @@ namespace WindowsFormsApp1
 
             // 상반기 여부
             report.isUpperOfHalfYear = report.nQuater <= 2;
+
+            report.quaterCount = report.GetQuarterCount(filePath);
 
             return report;
         }
@@ -135,14 +138,22 @@ namespace WindowsFormsApp1
                     }
                 }
 
+                // 절연 점검 포함은 연차, 절연점검 미포함, 접지저항측정은 반기
+                var val1 = ws.Cells[13, 3 + targetMonth].Text.Trim();
+                var val2 = ws.Cells[10, 3 + targetMonth].Text.Trim();
+                if (val1 == "●" && val2 != "●")
+                {
+                    isHalfYear = true;
+                }
+
                 return quaterCount;
             }
             catch (Exception ex)
             {
-                // Form1 인스턴스가 있으면 AddLog 호출, 없으면 MessageBox 표시
+                // FormMain 인스턴스가 있으면 AddLog 호출, 없으면 MessageBox 표시
                 try
                 {
-                    var mainForm = Application.OpenForms.OfType<SmartReport.Form1>().FirstOrDefault();
+                    var mainForm = Application.OpenForms.OfType<SmartReport.FormMain>().FirstOrDefault();
                     if (mainForm != null)
                         mainForm.AddLog("Error", $"분기 수 계산 중 오류 발생: {ex.Message}");
                     else
@@ -409,7 +420,7 @@ namespace WindowsFormsApp1
             {
                 try
                 {
-                    var mainForm = Application.OpenForms.OfType<SmartReport.Form1>().FirstOrDefault();
+                    var mainForm = Application.OpenForms.OfType<SmartReport.FormMain>().FirstOrDefault();
                     if (mainForm != null)
                         mainForm.AddLog("Error", $"이미지 스냅 처리 중 오류 발생: {ex.Message}");
                     else
