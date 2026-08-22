@@ -123,6 +123,11 @@ namespace WindowsFormsApp1
 
                 ws = GetWorksheetByName(wb, "연계획");
 
+                if(ws == null) 
+                {
+                    throw new Exception("연계획 시트를 찾을 수 없습니다.");
+                }
+
                 // D열 = 4, 1월이라고 가정
                 for (int month = 1; month <= 12; month++)
                 {

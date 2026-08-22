@@ -348,6 +348,9 @@ namespace SmartReport
                 Excel.Range area = _ws.Range[cellFrom, cellTo];
                 Debug.WriteLine($"cell from: {cellFrom}, to: {cellTo}");
 
+                Excel.Range fromCell = _ws.Range[cellFrom];
+                Excel.Range toCell = _ws.Range[cellTo];
+
                 Debug.WriteLine($"image name: {imagePath}");
                 Debug.WriteLine($"area: {area.Left}, {area.Top}, {area.Width}, {area.Height}");
 
@@ -356,14 +359,21 @@ namespace SmartReport
                 //float width = (float)area.Width;
                 //float height = (float)area.Height;
 
-                float left = (float)_ws.Range[cellFrom].Left;
-                float top = (float)_ws.Range[cellFrom].Top;
+                float left = (float)fromCell.Left;
+                float top = (float)fromCell.Top;
 
                 float width =
-                    (float)(_ws.Range[cellTo].Left + _ws.Range[cellTo].Width - left);
+                    (float)(toCell.Left + toCell.Width - left);
 
                 float height =
-                    (float)(_ws.Range[cellTo].Top + _ws.Range[cellTo].Height - top);
+                    (float)(toCell.Top + toCell.Height - top);
+
+                // 셀 테두리 보정
+                float borderLeftGap =
+                    GetBorderGap(fromCell, Excel.XlBordersIndex.xlEdgeLeft);
+
+                float borderTopGap =
+                    GetBorderGap(fromCell, Excel.XlBordersIndex.xlEdgeTop);
 
                 //Point(1/72인치)를 사용하고 일반적인 화면은 96dpi이므로 pixel = point × 96 / 72 정도로 계산
                 //화질을 위해 조금 더 크게 계산 1.3배 정도로 계산
@@ -431,6 +441,12 @@ namespace SmartReport
                     }
                 }
 
+                // 테두리 보정
+                pic.Left += borderLeftGap;
+                pic.Top += borderTopGap;
+                pic.Width -= borderLeftGap;
+                pic.Height -= borderTopGap;
+
                 Debug.WriteLine($"pic left: {pic.Left}, top: {pic.Top}, width: {pic.Width}, height: {pic.Height}");
 
             }
@@ -447,6 +463,62 @@ namespace SmartReport
 
 
             return pic;
+        }
+
+        private float GetBorderGap(Excel.Range cell, Excel.XlBordersIndex borderIndex)
+        {
+            Excel.Border border = null;
+
+            try
+            {
+                border = cell.Borders[borderIndex];
+
+                if (border == null)
+                    return 0f;
+
+                // 선 없음
+                if ((Excel.XlLineStyle)border.LineStyle == Excel.XlLineStyle.xlLineStyleNone)
+                    return 0f;
+
+                var lineStyle = (Excel.XlLineStyle)border.LineStyle;
+                var weight = (Excel.XlBorderWeight)border.Weight;
+
+                // Excel Shape 좌표 단위는 pt
+                float gap = 0f;
+
+                // 먼저 굵기 기준
+                switch (weight)
+                {
+                    case Excel.XlBorderWeight.xlHairline:
+                        gap = 0.25f;
+                        break;
+
+                    case Excel.XlBorderWeight.xlThin:
+                        gap = 0.75f;
+                        break;
+
+                    case Excel.XlBorderWeight.xlMedium:
+                        gap = 1.5f;
+                        break;
+
+                    case Excel.XlBorderWeight.xlThick:
+                        var offset = (borderIndex == Excel.XlBordersIndex.xlEdgeLeft) ? 0.75f : 0f;
+                        gap = 2.25f - offset;
+                        break;
+                }
+
+                // 이중선은 실제로 안쪽 공간을 더 차지하므로 추가 보정
+                if (lineStyle == Excel.XlLineStyle.xlDouble)
+                {
+                    gap = Math.Max(gap, 2.5f);
+                }
+
+                return gap;
+            }
+            catch
+            {
+                return 0f;
+            }
         }
 
 
