@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using WindowsFormsApp1.Comm;
 using Excel = Microsoft.Office.Interop.Excel;
+using Office = Microsoft.Office.Core;
 
 namespace WindowsFormsApp1
 {
@@ -123,7 +124,7 @@ namespace WindowsFormsApp1
 
                 ws = GetWorksheetByName(wb, "연계획");
 
-                if(ws == null) 
+                if (ws == null)
                 {
                     throw new Exception("연계획 시트를 찾을 수 없습니다.");
                 }
@@ -275,7 +276,7 @@ namespace WindowsFormsApp1
             return gap;
         }
 
-        public void SnapImageMergedCell(Excel.Worksheet ws, string sheetName, 
+        public void SnapImageMergedCell(Excel.Worksheet ws, string sheetName,
             float gapLeft = 1.5f, float gapTop = 1.5f, float gapRight = 0f, float gapBottom = 0.5f)
         {
             Excel.Application xlApp = null;
@@ -456,5 +457,51 @@ namespace WindowsFormsApp1
                 }
             }
         }
+
+
+        #region 바닥글 이미지 교체
+        private void SetRightFooterLogo(
+            Excel.Worksheet ws,
+            string logoPath)
+        {
+            if (!File.Exists(logoPath))
+                throw new FileNotFoundException(
+                    "로고 파일을 찾을 수 없습니다.", logoPath);
+
+            Excel.PageSetup setup = ws.PageSetup;
+            Excel.Graphic graphic = setup.RightFooterPicture;
+
+            // 이미지 교체
+            graphic.Filename = logoPath;
+
+            // 정확한 크기를 먼저 지정하기 위해 비율 고정 해제
+            graphic.LockAspectRatio = Office.MsoTriState.msoFalse;
+
+            // Excel은 point 단위
+            // 1cm = 28.3464567 point
+            graphic.Width = (float)(2.68 * 28.3464567);
+            graphic.Height = (float)(0.53 * 28.3464567);
+
+            // 가로 세로 비율 고정
+            graphic.LockAspectRatio = Office.MsoTriState.msoTrue;
+
+            // 오른쪽 바닥글에 그림 표시
+            setup.RightFooter = "&G";
+        }
+
+        private void ReplaceRightFooterLogo(
+            Excel.Worksheet ws,
+            string logoPath)
+        {
+            Excel.PageSetup setup = ws.PageSetup;
+
+            setup.RightFooter = "&G";
+
+            Excel.Graphic graphic = setup.RightFooterPicture;
+
+            // 기존 크기/배율 설정은 그대로 두고 이미지만 교체
+            graphic.Filename = logoPath;
+        }
+        #endregion
     }
 }

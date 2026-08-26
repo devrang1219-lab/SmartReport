@@ -18,6 +18,7 @@ using System.Windows.Forms;
 using System.Xml.Linq;
 using WindowsFormsApp1;
 using WindowsFormsApp1.Comm;
+using WindowsFormsApp1.SortImage;
 using Action = System.Action;
 using Excel = Microsoft.Office.Interop.Excel;
 using Office = Microsoft.Office.Core;
@@ -1898,6 +1899,46 @@ namespace SmartReport
         {
             InitGrid();
             AddLog("INFO", "프로그램 시작");
+
+
+
+            try
+            {
+                // 탭에 Form을 임베드할 때는 TopLevel을 false로 설정해야 보입니다.
+                var imageOrderForm = new FormSortImage();
+
+                imageOrderForm.TopLevel = false;
+                imageOrderForm.TopMost = false;
+                imageOrderForm.FormBorderStyle = FormBorderStyle.None;
+                imageOrderForm.Dock = DockStyle.Fill;
+
+                // 중복 추가 방지
+                this.tabSortImage.Controls.Clear();
+
+                // 부모를 명시적으로 설정
+                imageOrderForm.Parent = this.tabSortImage;
+                this.tabSortImage.Controls.Add(imageOrderForm);
+                imageOrderForm.Visible = true;
+                imageOrderForm.Show();
+                imageOrderForm.BringToFront();
+
+                // 진단 로그: 탭에 추가된 컨트롤 정보 출력
+                try
+                {
+                    AddLog("DEBUG", $"tabSortImage.Controls.Count={this.tabSortImage.Controls.Count}");
+                    foreach (Control c in this.tabSortImage.Controls)
+                    {
+                        AddLog("DEBUG", $"Control: {c.GetType().FullName}, Name={c.Name}, Visible={c.Visible}");
+                    }
+                    // 탭 배경과 스크롤 옵션 체크
+                    this.tabSortImage.AutoScroll = true;
+                }
+                catch { }
+            }
+            catch (Exception ex)
+            {
+                AddLog("ERROR", $"이미지 정렬 탭 초기화 실패: {ex.Message}");
+            }
         }
 
         private async void tbCompany_Enter(object sender, EventArgs e)
@@ -2079,18 +2120,20 @@ namespace SmartReport
                         }
 
                         int pages = 1;
+                        int preRow = 0;
 
                         foreach (Excel.HPageBreak pb in sh.HPageBreaks)
                         {
-                            if (pb.Type == Excel.XlPageBreak.xlPageBreakManual &&
+                            if ((pb.Type == Excel.XlPageBreak.xlPageBreakManual &&
                                 pb.Location.Row >= lastRow + 1)
+                                || preRow >= pb.Location.Row)
                             {
                                 // 인쇄영역 바로 다음 행에 있는 수동 페이지 나누기는 무시
                                 continue;
                             }
                             Debug.WriteLine($"page : {pages}, row: {pb.Location.Row}");
-
                             pages++;
+                            preRow = pb.Location.Row;
                         }
                         sh.PageSetup.FirstPageNumber = currentStartPage;
 
@@ -2866,7 +2909,22 @@ namespace SmartReport
                 //Marshal.ReleaseComObject(sheet);
             }
             return null;
-        }   
+        }
+
+        private Excel.Worksheet GetWorksheetByLastName(Excel.Workbook wb, string sheetName)
+        {
+            foreach (Excel.Worksheet sheet in wb.Worksheets)
+            {
+                if (sheet.Name.Trim().EndsWith(
+                        sheetName.Trim(),
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    return sheet;
+                }
+            }
+
+            return null;
+        }
 
         private void ProcCoronaSheet(Excel.Application xlApp, Excel.Workbook wb, string baseFolder, string text)
         {
@@ -2956,6 +3014,7 @@ namespace SmartReport
                         }
                     }
                 }
+                AddLog("Info", $"사진 이미지 삽입 완료");
 
             }
 
@@ -3289,12 +3348,12 @@ namespace SmartReport
                         CropLeft = 150,
                         CropTop = 145,
                         CropRight = 1130,
-                        CropBottom = 150,
+                        CropBottom = 145,
                         GapLeft = 5
                     };
 
                     // 1페이지
-                    inserter.InsertFit("A262", "R294", option);
+                    inserter.InsertFit("A263", "R294", option);
                     //inserter.Insert("A262", 1.0);
 
                     // wb.Save();
@@ -3314,6 +3373,8 @@ namespace SmartReport
                 int startRow = 295;
                 int blockHeight = 8;   // 293~300 = 8행
 
+                List<int> rows = new List<int> { 0, 2, 1, 7, 3, 5, 4, 6 };
+
                 for (int i = 0; i < files.Length && i < 8; i++)
                 {
                     int row = i / 2;    // 0~3
@@ -3330,7 +3391,7 @@ namespace SmartReport
                         ? $"G{toRow}"
                         : $"R{toRow}";
 
-                    using (var inserter = new ImageInserter(ws, files[i]))
+                    using (var inserter = new ImageInserter(ws, files[rows[i]]))
                     {
                         inserter.InsertFit(
                             fromCell,
@@ -3355,7 +3416,7 @@ namespace SmartReport
             {
                 try
                 {
-                    AddLog("Info", $"분기 이미지 삽입 완료");
+                    AddLog("Info", $"품질 이미지 삽입 완료");
                     if (ws != null) Marshal.ReleaseComObject(ws);
                     //if (wb != null)
                     //{
@@ -3381,7 +3442,7 @@ namespace SmartReport
 
             try
             {
-                sourceWs = GetWorksheetByName(wb, "분기");
+                sourceWs = GetWorksheetByLastName(wb, "분기");
 
                 if (sourceWs == null)
                 {
@@ -4806,7 +4867,7 @@ namespace SmartReport
 
             catch (Exception ex)
             {
-                AddLog("Error", $"사진 이미지 삽입 실패: {ex.Message}");
+                AddLog("Error", $"사진 용량 줄이기 실패: {ex.Message}");
 
             }
             finally
@@ -6132,6 +6193,149 @@ namespace SmartReport
 
         }
         #endregion
+
+        private void btnChangeFooterLogo_Click(object sender, EventArgs e)
+        {
+            string filePath = tbQuantityFile.Text?.Trim();
+            string logoPath = @"D:\Logo.png";
+
+            Excel.Application app = null;
+            Excel.Workbook wb = null;
+
+            try
+            {
+                if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
+                {
+                    MessageBox.Show(
+                        "엑셀 파일 경로가 올바르지 않습니다.",
+                        "확인",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                    return;
+                }
+
+                if (!File.Exists(logoPath))
+                {
+                    MessageBox.Show(
+                        $"로고 파일이 없습니다.\n{logoPath}",
+                        "확인",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                    return;
+                }
+
+                Cursor = Cursors.WaitCursor;
+
+                app = new Excel.Application();
+                app.Visible = false;
+                app.DisplayAlerts = false;
+
+                wb = app.Workbooks.Open(filePath, ReadOnly: false);
+
+                int sheetCount = wb.Worksheets.Count;
+
+                for (int i = 1; i <= sheetCount; i++)
+                {
+                    Excel.Worksheet ws = null;
+                    Excel.PageSetup pageSetup = null;
+                    Excel.Graphic graphic = null;
+
+                    try
+                    {
+                        ws = (Excel.Worksheet)wb.Worksheets[i];
+                        pageSetup = ws.PageSetup;
+
+                        graphic = pageSetup.RightFooterPicture;
+
+                        // 바닥글 이미지 교체
+                        graphic.Filename = logoPath;
+
+                        // 정확한 크기 지정
+                        graphic.LockAspectRatio =
+                            Office.MsoTriState.msoFalse;
+
+                        // 2.68cm × 0.53cm
+                        graphic.Width = 75.97f;
+                        graphic.Height = 15.02f;
+
+                        // 가로세로 비율 고정
+                        graphic.LockAspectRatio =
+                            Office.MsoTriState.msoTrue;
+
+                        // 오른쪽 바닥글에 그림 표시
+                        pageSetup.RightFooter = "&G";
+
+                        AddLog(
+                            "Info",
+                            $"{ws.Name} 시트 바닥글 로고 변경 완료");
+                    }
+                    catch (Exception ex)
+                    {
+                        AddLog(
+                            "Error",
+                            $"{ws?.Name ?? i.ToString()} 시트 로고 변경 실패: {ex.Message}");
+                    }
+                    finally
+                    {
+                        if (graphic != null)
+                            Marshal.ReleaseComObject(graphic);
+
+                        if (pageSetup != null)
+                            Marshal.ReleaseComObject(pageSetup);
+
+                        if (ws != null)
+                            Marshal.ReleaseComObject(ws);
+                    }
+                }
+
+                wb.Save();
+
+                MessageBox.Show(
+                    "모든 시트의 바닥글 로고를 변경했습니다.",
+                    "완료",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                AddLog("Error", $"바닥글 로고 변경 실패: {ex.Message}");
+
+                MessageBox.Show(
+                    ex.Message,
+                    "오류",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+            finally
+            {
+                if (wb != null)
+                {
+                    try
+                    {
+                        wb.Close(SaveChanges: false);
+                    }
+                    catch { }
+
+                    Marshal.ReleaseComObject(wb);
+                }
+
+                if (app != null)
+                {
+                    try
+                    {
+                        app.Quit();
+                    }
+                    catch { }
+
+                    Marshal.ReleaseComObject(app);
+                }
+
+                Cursor = Cursors.Default;
+
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+            }
+        }
     }
 
 }
