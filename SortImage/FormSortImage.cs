@@ -102,6 +102,8 @@ namespace WindowsFormsApp1.SortImage
                 AnchorStyles.Top |
                 AnchorStyles.Right;
 
+            tbFolder.KeyUp += tbFolder_KeyDown;
+
             topPanel.Controls.Add(tbFolder);
 
 
@@ -470,6 +472,36 @@ namespace WindowsFormsApp1.SortImage
             //        bottomPanel.ClientSize.Width -
             //        btnMakeFolder.Width - 15;
             //};
+        }
+
+        // =========================================================
+        // 폴더 입력
+        // =========================================================
+        private void tbFolder_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode != Keys.Enter)
+                return;
+
+            string folderPath = tbFolder.Text?.Trim();
+
+            // 빈 값 확인
+            if (string.IsNullOrWhiteSpace(folderPath))
+            {
+                MessageBox.Show("폴더 경로를 입력하세요.");
+                return;
+            }
+
+            // 실제 폴더인지 확인
+            if (!Directory.Exists(folderPath))
+            {
+                MessageBox.Show("존재하지 않는 폴더입니다.");
+                return;
+            }
+
+            LoadRootFolder(folderPath);
+
+            // Enter 입력음 방지
+            e.SuppressKeyPress = true;
         }
 
 

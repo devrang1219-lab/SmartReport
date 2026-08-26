@@ -6073,6 +6073,7 @@ namespace SmartReport
         private void SetDateBungy(Excel.Workbook wb, string filePath)
         {
 
+            if (report == null) return;
             if (report.isOnlyAnnual) return;
 
             Excel.Application app = null;
