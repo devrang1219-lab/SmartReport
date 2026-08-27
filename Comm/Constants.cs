@@ -44,5 +44,17 @@ namespace WindowsFormsApp1.Comm
             Right = 0f,
             Bottom = 0.4f
         };
+
+        public static readonly List<string> HIGH_WAVE_GRAPH = new List<String>()
+        {
+            "고_그.pdf",
+            "고그.pdf"
+        };
+
+        public static readonly List<string> TIME_WAVE_GRAPH = new List<String>()
+        {
+            "시_그.pdf",
+            "시그.pdf"
+        };
     }
 }

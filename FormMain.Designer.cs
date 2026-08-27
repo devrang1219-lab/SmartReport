@@ -90,6 +90,7 @@ namespace SmartReport
             this.lbCompany = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
             this.dgvFiles = new System.Windows.Forms.DataGridView();
+            this.tabSortImage = new System.Windows.Forms.TabPage();
             this.tapLog = new System.Windows.Forms.TabControl();
             this.all = new System.Windows.Forms.TabPage();
             this.richTextBox1 = new System.Windows.Forms.RichTextBox();
@@ -115,7 +116,7 @@ namespace SmartReport
             this.lbFolder = new System.Windows.Forms.Label();
             this.cbName = new System.Windows.Forms.ComboBox();
             this.lbName = new System.Windows.Forms.Label();
-            this.tabSortImage = new System.Windows.Forms.TabPage();
+            this.btnInsertSign = new System.Windows.Forms.Button();
             this.pnlMain.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -370,15 +371,16 @@ namespace SmartReport
             // 
             this.gbReport.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.gbReport.Controls.Add(this.btnInsertSign);
+            this.gbReport.Controls.Add(this.btnChangeFooterLogo);
+            this.gbReport.Controls.Add(this.btnChangeInspector);
             this.gbReport.Controls.Add(this.btnSeasonCorrect);
-            this.gbReport.Controls.Add(this.checkBoxCorrect);
-            this.gbReport.Controls.Add(this.btnConfirmJulyeon);
-            this.gbReport.Controls.Add(this.btnUpdateJuapList);
             this.gbReport.Controls.Add(this.btnQuantityFile);
             this.gbReport.Controls.Add(this.tbQuantityFile);
             this.gbReport.Controls.Add(this.lbQuantityFile);
             this.gbReport.Controls.Add(this.btnPageNumber);
             this.gbReport.Controls.Add(this.btnExportForPdf);
+            this.gbReport.Controls.Add(this.btnGapjiPictureRelocate);
             this.gbReport.Location = new System.Drawing.Point(5, 0);
             this.gbReport.Name = "gbReport";
             this.gbReport.Size = new System.Drawing.Size(1395, 121);
@@ -388,7 +390,7 @@ namespace SmartReport
             // 
             // btnSeasonCorrect
             // 
-            this.btnSeasonCorrect.Location = new System.Drawing.Point(961, 71);
+            this.btnSeasonCorrect.Location = new System.Drawing.Point(535, 75);
             this.btnSeasonCorrect.Name = "btnSeasonCorrect";
             this.btnSeasonCorrect.Size = new System.Drawing.Size(190, 30);
             this.btnSeasonCorrect.TabIndex = 29;
@@ -401,7 +403,7 @@ namespace SmartReport
             this.checkBoxCorrect.AutoSize = true;
             this.checkBoxCorrect.Checked = true;
             this.checkBoxCorrect.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxCorrect.Location = new System.Drawing.Point(670, 74);
+            this.checkBoxCorrect.Location = new System.Drawing.Point(643, 126);
             this.checkBoxCorrect.Name = "checkBoxCorrect";
             this.checkBoxCorrect.Size = new System.Drawing.Size(346, 34);
             this.checkBoxCorrect.TabIndex = 3;
@@ -410,7 +412,7 @@ namespace SmartReport
             // 
             // btnConfirmJulyeon
             // 
-            this.btnConfirmJulyeon.Location = new System.Drawing.Point(474, 69);
+            this.btnConfirmJulyeon.Location = new System.Drawing.Point(447, 121);
             this.btnConfirmJulyeon.Name = "btnConfirmJulyeon";
             this.btnConfirmJulyeon.Size = new System.Drawing.Size(190, 30);
             this.btnConfirmJulyeon.TabIndex = 28;
@@ -420,9 +422,9 @@ namespace SmartReport
             // 
             // btnUpdateJuapList
             // 
-            this.btnUpdateJuapList.Location = new System.Drawing.Point(320, 69);
+            this.btnUpdateJuapList.Location = new System.Drawing.Point(892, 36);
             this.btnUpdateJuapList.Name = "btnUpdateJuapList";
-            this.btnUpdateJuapList.Size = new System.Drawing.Size(129, 30);
+            this.btnUpdateJuapList.Size = new System.Drawing.Size(177, 30);
             this.btnUpdateJuapList.TabIndex = 27;
             this.btnUpdateJuapList.Text = "저압 접지저항 목록 업데이트";
             this.btnUpdateJuapList.UseVisualStyleBackColor = true;
@@ -460,7 +462,7 @@ namespace SmartReport
             // 
             // btnPageNumber
             // 
-            this.btnPageNumber.Location = new System.Drawing.Point(6, 64);
+            this.btnPageNumber.Location = new System.Drawing.Point(185, 74);
             this.btnPageNumber.Name = "btnPageNumber";
             this.btnPageNumber.Size = new System.Drawing.Size(172, 32);
             this.btnPageNumber.TabIndex = 0;
@@ -470,7 +472,7 @@ namespace SmartReport
             // 
             // btnExportForPdf
             // 
-            this.btnExportForPdf.Location = new System.Drawing.Point(185, 66);
+            this.btnExportForPdf.Location = new System.Drawing.Point(1088, 71);
             this.btnExportForPdf.Name = "btnExportForPdf";
             this.btnExportForPdf.Size = new System.Drawing.Size(129, 30);
             this.btnExportForPdf.TabIndex = 20;
@@ -531,13 +533,13 @@ namespace SmartReport
             this.gbImage.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.gbImage.Controls.Add(this.btnChangeFooterLogo);
-            this.gbImage.Controls.Add(this.btnChangeInspector);
+            this.gbImage.Controls.Add(this.btnUpdateJuapList);
+            this.gbImage.Controls.Add(this.checkBoxCorrect);
+            this.gbImage.Controls.Add(this.btnConfirmJulyeon);
             this.gbImage.Controls.Add(this.checkBoxOcr);
             this.gbImage.Controls.Add(this.comboBoxTestReport);
             this.gbImage.Controls.Add(this.comboBoxTimeGraph);
             this.gbImage.Controls.Add(this.comboBoxHwaveGraph);
-            this.gbImage.Controls.Add(this.btnGapjiPictureRelocate);
             this.gbImage.Controls.Add(this.textBoxPictureFolder);
             this.gbImage.Controls.Add(this.textBoxCoronaFolder);
             this.gbImage.Controls.Add(this.textBoxQuntatyFolder);
@@ -550,14 +552,14 @@ namespace SmartReport
             this.gbImage.Controls.Add(this.btnQuntityFileRun);
             this.gbImage.Location = new System.Drawing.Point(5, 250);
             this.gbImage.Name = "gbImage";
-            this.gbImage.Size = new System.Drawing.Size(1399, 354);
+            this.gbImage.Size = new System.Drawing.Size(1399, 368);
             this.gbImage.TabIndex = 24;
             this.gbImage.TabStop = false;
             this.gbImage.Text = "이미지 삽입";
             // 
             // btnChangeFooterLogo
             // 
-            this.btnChangeFooterLogo.Location = new System.Drawing.Point(542, 97);
+            this.btnChangeFooterLogo.Location = new System.Drawing.Point(370, 74);
             this.btnChangeFooterLogo.Name = "btnChangeFooterLogo";
             this.btnChangeFooterLogo.Size = new System.Drawing.Size(157, 32);
             this.btnChangeFooterLogo.TabIndex = 47;
@@ -567,7 +569,7 @@ namespace SmartReport
             // 
             // btnChangeInspector
             // 
-            this.btnChangeInspector.Location = new System.Drawing.Point(413, 144);
+            this.btnChangeInspector.Location = new System.Drawing.Point(912, 74);
             this.btnChangeInspector.Name = "btnChangeInspector";
             this.btnChangeInspector.Size = new System.Drawing.Size(157, 32);
             this.btnChangeInspector.TabIndex = 46;
@@ -580,7 +582,7 @@ namespace SmartReport
             this.checkBoxOcr.AutoSize = true;
             this.checkBoxOcr.Checked = true;
             this.checkBoxOcr.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxOcr.Location = new System.Drawing.Point(551, 27);
+            this.checkBoxOcr.Location = new System.Drawing.Point(413, 25);
             this.checkBoxOcr.Name = "checkBoxOcr";
             this.checkBoxOcr.Size = new System.Drawing.Size(261, 34);
             this.checkBoxOcr.TabIndex = 45;
@@ -593,7 +595,7 @@ namespace SmartReport
             this.comboBoxTestReport.Items.AddRange(new object[] {
             "시보.pdf",
             "시_보.pdf"});
-            this.comboBoxTestReport.Location = new System.Drawing.Point(551, 53);
+            this.comboBoxTestReport.Location = new System.Drawing.Point(413, 53);
             this.comboBoxTestReport.Name = "comboBoxTestReport";
             this.comboBoxTestReport.Size = new System.Drawing.Size(98, 38);
             this.comboBoxTestReport.TabIndex = 44;
@@ -605,7 +607,7 @@ namespace SmartReport
             this.comboBoxTimeGraph.Items.AddRange(new object[] {
             "시그.pdf",
             "시_그.pdf"});
-            this.comboBoxTimeGraph.Location = new System.Drawing.Point(846, 52);
+            this.comboBoxTimeGraph.Location = new System.Drawing.Point(708, 52);
             this.comboBoxTimeGraph.Name = "comboBoxTimeGraph";
             this.comboBoxTimeGraph.Size = new System.Drawing.Size(98, 38);
             this.comboBoxTimeGraph.TabIndex = 43;
@@ -617,7 +619,7 @@ namespace SmartReport
             this.comboBoxHwaveGraph.Items.AddRange(new object[] {
             "고그.pdf",
             "고_그.pdf"});
-            this.comboBoxHwaveGraph.Location = new System.Drawing.Point(699, 53);
+            this.comboBoxHwaveGraph.Location = new System.Drawing.Point(561, 53);
             this.comboBoxHwaveGraph.Name = "comboBoxHwaveGraph";
             this.comboBoxHwaveGraph.Size = new System.Drawing.Size(98, 38);
             this.comboBoxHwaveGraph.TabIndex = 42;
@@ -625,7 +627,7 @@ namespace SmartReport
             // 
             // btnGapjiPictureRelocate
             // 
-            this.btnGapjiPictureRelocate.Location = new System.Drawing.Point(16, 145);
+            this.btnGapjiPictureRelocate.Location = new System.Drawing.Point(13, 74);
             this.btnGapjiPictureRelocate.Name = "btnGapjiPictureRelocate";
             this.btnGapjiPictureRelocate.Size = new System.Drawing.Size(157, 32);
             this.btnGapjiPictureRelocate.TabIndex = 41;
@@ -635,7 +637,7 @@ namespace SmartReport
             // 
             // textBoxPictureFolder
             // 
-            this.textBoxPictureFolder.Location = new System.Drawing.Point(292, 113);
+            this.textBoxPictureFolder.Location = new System.Drawing.Point(185, 114);
             this.textBoxPictureFolder.Margin = new System.Windows.Forms.Padding(4);
             this.textBoxPictureFolder.Name = "textBoxPictureFolder";
             this.textBoxPictureFolder.Size = new System.Drawing.Size(217, 37);
@@ -644,7 +646,7 @@ namespace SmartReport
             // 
             // textBoxCoronaFolder
             // 
-            this.textBoxCoronaFolder.Location = new System.Drawing.Point(292, 83);
+            this.textBoxCoronaFolder.Location = new System.Drawing.Point(185, 84);
             this.textBoxCoronaFolder.Margin = new System.Windows.Forms.Padding(4);
             this.textBoxCoronaFolder.Name = "textBoxCoronaFolder";
             this.textBoxCoronaFolder.Size = new System.Drawing.Size(217, 37);
@@ -653,7 +655,7 @@ namespace SmartReport
             // 
             // textBoxQuntatyFolder
             // 
-            this.textBoxQuntatyFolder.Location = new System.Drawing.Point(292, 53);
+            this.textBoxQuntatyFolder.Location = new System.Drawing.Point(185, 54);
             this.textBoxQuntatyFolder.Margin = new System.Windows.Forms.Padding(4);
             this.textBoxQuntatyFolder.Name = "textBoxQuntatyFolder";
             this.textBoxQuntatyFolder.Size = new System.Drawing.Size(217, 37);
@@ -663,7 +665,7 @@ namespace SmartReport
             // btErrorPageUpdate
             // 
             this.btErrorPageUpdate.Enabled = false;
-            this.btErrorPageUpdate.Location = new System.Drawing.Point(185, 146);
+            this.btErrorPageUpdate.Location = new System.Drawing.Point(995, 127);
             this.btErrorPageUpdate.Name = "btErrorPageUpdate";
             this.btErrorPageUpdate.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.btErrorPageUpdate.Size = new System.Drawing.Size(222, 30);
@@ -674,7 +676,7 @@ namespace SmartReport
             // 
             // textBoxFeverImageFolder
             // 
-            this.textBoxFeverImageFolder.Location = new System.Drawing.Point(292, 24);
+            this.textBoxFeverImageFolder.Location = new System.Drawing.Point(185, 25);
             this.textBoxFeverImageFolder.Margin = new System.Windows.Forms.Padding(4);
             this.textBoxFeverImageFolder.Name = "textBoxFeverImageFolder";
             this.textBoxFeverImageFolder.Size = new System.Drawing.Size(217, 37);
@@ -735,7 +737,7 @@ namespace SmartReport
             | System.Windows.Forms.AnchorStyles.Right)));
             this.btnQuntityFileRun.Location = new System.Drawing.Point(1259, 22);
             this.btnQuntityFileRun.Name = "btnQuntityFileRun";
-            this.btnQuntityFileRun.Size = new System.Drawing.Size(134, 279);
+            this.btnQuntityFileRun.Size = new System.Drawing.Size(134, 257);
             this.btnQuntityFileRun.TabIndex = 23;
             this.btnQuntityFileRun.Text = "실행";
             this.btnQuntityFileRun.UseVisualStyleBackColor = true;
@@ -745,11 +747,11 @@ namespace SmartReport
             // 
             this.tpGap.Controls.Add(this.panel2);
             this.tpGap.Controls.Add(this.panel1);
-            this.tpGap.Location = new System.Drawing.Point(4, 39);
+            this.tpGap.Location = new System.Drawing.Point(4, 25);
             this.tpGap.Margin = new System.Windows.Forms.Padding(4);
             this.tpGap.Name = "tpGap";
             this.tpGap.Padding = new System.Windows.Forms.Padding(4);
-            this.tpGap.Size = new System.Drawing.Size(1407, 536);
+            this.tpGap.Size = new System.Drawing.Size(1407, 550);
             this.tpGap.TabIndex = 0;
             this.tpGap.Text = "파일다운로드";
             this.tpGap.UseVisualStyleBackColor = true;
@@ -803,7 +805,7 @@ namespace SmartReport
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(4, 4);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(1399, 528);
+            this.panel1.Size = new System.Drawing.Size(1399, 542);
             this.panel1.TabIndex = 16;
             // 
             // dgvFiles
@@ -816,6 +818,16 @@ namespace SmartReport
             this.dgvFiles.Size = new System.Drawing.Size(1611, 628);
             this.dgvFiles.TabIndex = 15;
             this.dgvFiles.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellContentClick);
+            // 
+            // tabSortImage
+            // 
+            this.tabSortImage.Location = new System.Drawing.Point(4, 25);
+            this.tabSortImage.Name = "tabSortImage";
+            this.tabSortImage.Padding = new System.Windows.Forms.Padding(3);
+            this.tabSortImage.Size = new System.Drawing.Size(1407, 550);
+            this.tabSortImage.TabIndex = 2;
+            this.tabSortImage.Text = "이미지 정렬";
+            this.tabSortImage.UseVisualStyleBackColor = true;
             // 
             // tapLog
             // 
@@ -856,20 +868,20 @@ namespace SmartReport
             // 
             // info
             // 
-            this.info.Location = new System.Drawing.Point(4, 28);
+            this.info.Location = new System.Drawing.Point(4, 25);
             this.info.Name = "info";
             this.info.Padding = new System.Windows.Forms.Padding(3);
-            this.info.Size = new System.Drawing.Size(1407, 308);
+            this.info.Size = new System.Drawing.Size(1407, 311);
             this.info.TabIndex = 1;
             this.info.Text = "Info";
             this.info.UseVisualStyleBackColor = true;
             // 
             // tabError
             // 
-            this.tabError.Location = new System.Drawing.Point(4, 28);
+            this.tabError.Location = new System.Drawing.Point(4, 25);
             this.tabError.Name = "tabError";
             this.tabError.Padding = new System.Windows.Forms.Padding(5);
-            this.tabError.Size = new System.Drawing.Size(1407, 308);
+            this.tabError.Size = new System.Drawing.Size(1407, 311);
             this.tabError.TabIndex = 2;
             this.tabError.Text = "Error";
             this.tabError.UseVisualStyleBackColor = true;
@@ -1105,15 +1117,15 @@ namespace SmartReport
             this.lbName.TabIndex = 5;
             this.lbName.Text = "측정자     : ";
             // 
-            // tabSortImage
+            // btnInsertSign
             // 
-            this.tabSortImage.Location = new System.Drawing.Point(4, 39);
-            this.tabSortImage.Name = "tabSortImage";
-            this.tabSortImage.Padding = new System.Windows.Forms.Padding(3);
-            this.tabSortImage.Size = new System.Drawing.Size(1407, 536);
-            this.tabSortImage.TabIndex = 2;
-            this.tabSortImage.Text = "이미지 정렬";
-            this.tabSortImage.UseVisualStyleBackColor = true;
+            this.btnInsertSign.Location = new System.Drawing.Point(738, 74);
+            this.btnInsertSign.Name = "btnInsertSign";
+            this.btnInsertSign.Size = new System.Drawing.Size(157, 32);
+            this.btnInsertSign.TabIndex = 48;
+            this.btnInsertSign.Text = "서명 변경";
+            this.btnInsertSign.UseVisualStyleBackColor = true;
+            this.btnInsertSign.Click += new System.EventHandler(this.btnInsertSign_Click);
             // 
             // FormMain
             // 
@@ -1244,6 +1256,7 @@ namespace SmartReport
         private Button btnSeasonCorrect;
         private Button btnChangeFooterLogo;
         private TabPage tabSortImage;
+        private Button btnInsertSign;
     }
 }
 

@@ -89,7 +89,7 @@ namespace WindowsFormsApp1
         {
             string fileName = Path.GetFileNameWithoutExtension(filePath);
 
-            Match m = Regex.Match(fileName, @"_(\d{6})$");
+            Match m = Regex.Match(fileName, @"(\d{6})$");
 
             if (!m.Success)
                 throw new Exception("파일명에서 날짜를 찾을 수 없습니다.");
