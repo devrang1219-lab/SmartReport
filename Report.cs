@@ -72,17 +72,55 @@ namespace WindowsFormsApp1
 
 
 
-        private Excel.Worksheet GetWorksheetByName(Excel.Workbook wb, string sheetName)
+        public Excel.Worksheet GetWorksheetByName(
+            Excel.Workbook wb,
+            string sheetName)
         {
-            foreach (Excel.Worksheet sheet in wb.Worksheets)
+            Excel.Sheets sheets = null;
+
+            try
             {
-                if (sheet.Name.Trim().IndexOf(sheetName, StringComparison.OrdinalIgnoreCase) >= 0)
+                sheets = wb.Worksheets;
+
+                int count = sheets.Count;
+
+                for (int i = 1; i <= count; i++)
                 {
-                    return sheet;
+                    Excel.Worksheet sheet = null;
+
+                    try
+                    {
+                        sheet = (Excel.Worksheet)sheets[i];
+
+                        bool matched =
+                            sheet.Name.Trim()
+                                .IndexOf(
+                                    sheetName,
+                                    StringComparison.OrdinalIgnoreCase) >= 0;
+
+                        if (matched)
+                        {
+                            // 소유권을 호출한 쪽으로 넘김
+                            Excel.Worksheet result = sheet;
+                            sheet = null;
+
+                            return result;
+                        }
+                    }
+                    finally
+                    {
+                        if (sheet != null)
+                            Marshal.ReleaseComObject(sheet);
+                    }
                 }
-                //Marshal.ReleaseComObject(sheet);
+
+                return null;
             }
-            return null;
+            finally
+            {
+                if (sheets != null)
+                    Marshal.ReleaseComObject(sheets);
+            }
         }
 
         private int GetMonthFromFileName(string filePath)
@@ -97,6 +135,13 @@ namespace WindowsFormsApp1
             string yymmdd = m.Groups[1].Value;
 
             return int.Parse(yymmdd.Substring(2, 2)); // MM
+        }
+
+        public int GetQuarterCount()
+        {
+            var quarterCount = 1;
+            quarterCount = this.nMonth / 3 + 1;
+            return quarterCount;
         }
 
         public int GetQuarterCount(string filePath)
@@ -119,10 +164,9 @@ namespace WindowsFormsApp1
             try
             {
                 xlApp = new Excel.Application { Visible = false, DisplayAlerts = false };
-                // Open for write because we modify PageSetup
-                wb = xlApp.Workbooks.Open(filePath, ReadOnly: false);
 
-                ws = GetWorksheetByName(wb, "연계획");
+                wb = ExcelComHelper.OpenWorkbook(xlApp, filePath, false);
+                ws = ExcelComHelper.GetWorksheet(wb, "연계획");
 
                 if (ws == null)
                 {
@@ -134,7 +178,7 @@ namespace WindowsFormsApp1
                 {
                     int col = 3 + month; // D=4
 
-                    var value = ws.Cells[24, col].Text.Trim();
+                    string value = ExcelComHelper.GetCellText(ws, 24, col);
 
                     if (value == "●")
                     {
@@ -145,8 +189,9 @@ namespace WindowsFormsApp1
                 }
 
                 // 절연 점검 포함은 연차, 절연점검 미포함, 접지저항측정은 반기
-                var val1 = ws.Cells[13, 3 + targetMonth].Text.Trim();
-                var val2 = ws.Cells[10, 3 + targetMonth].Text.Trim();
+                string val1 = ExcelComHelper.GetCellText(ws, 13, 3 + targetMonth);
+                string val2 = ExcelComHelper.GetCellText(ws, 10, 3 + targetMonth);
+
                 if (val1 == "●" && val2 != "●")
                 {
                     isHalfYear = true;
@@ -174,38 +219,34 @@ namespace WindowsFormsApp1
             }
             finally
             {
-
-                // 연차 보고서만 있는 경우 추출
                 if (totalCount == 0)
                 {
-                    MessageBox.Show("연계획 시트에서 분기 수를 찾을 수 없습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show(
+                        "연계획 시트에서 분기 수를 찾을 수 없습니다.",
+                        "오류",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+
                     isOnlyAnnual = false;
-                }
-                else if (quaterCount == 1)
-                {
-                    isOnlyAnnual = true;
                 }
                 else
                 {
-                    isOnlyAnnual = false;
+                    isOnlyAnnual = quaterCount == 1;
                 }
 
-                // 분기
                 nQuater = quaterCount;
 
-                if (ws != null) Marshal.ReleaseComObject(ws);
-                if (wb != null)
-                {
-                    wb.Close(false);
-                    Marshal.ReleaseComObject(wb);
-                }
-                if (xlApp != null)
-                {
-                    xlApp.Quit();
-                    Marshal.ReleaseComObject(xlApp);
-                }
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
+                ExcelComHelper.Release(ws);
+                ws = null;
+
+                ExcelComHelper.CloseWorkbook(
+                    ref wb,
+                    false);
+
+                ExcelComHelper.QuitApplication(
+                    ref xlApp);
+
+                ExcelComHelper.Cleanup();
             }
 
 

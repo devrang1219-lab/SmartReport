@@ -194,6 +194,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Comm\Constants.cs" />
+    <Compile Include="Comm\ExcelComHelper.cs" />
     <Compile Include="Comm\SoborIni.cs" />
     <Compile Include="Comm\SoborIni2.cs" />
     <Compile Include="Comm\SoborLog.cs" />
