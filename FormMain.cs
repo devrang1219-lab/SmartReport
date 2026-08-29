@@ -1998,222 +1998,42 @@ namespace SmartReport
             await TestSynologyAsync(null, keyword);
         }
 
-        private void btnPageNumber_Click(object sender, EventArgs e)
+        private void btnPageNumber_Click(
+            object sender,
+            EventArgs e)
         {
-            var filePath = tbQuantityFile.Text?.Trim();
-            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+            if (report == null)
+                return;
+
+            string filePath = tbQuantityFile.Text?.Trim();
+
+            if (string.IsNullOrEmpty(filePath) ||
+                !File.Exists(filePath))
             {
                 MessageBox.Show("페이지 번호를 매길 엑셀 파일을 먼저 선택하세요.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
                 return;
             }
 
             Cursor = Cursors.WaitCursor;
-            Excel.Application xlApp = null;
-            Excel.Workbook wb = null;
 
             try
             {
-                xlApp = new Excel.Application { Visible = false, DisplayAlerts = false };
-                // Open for write because we modify PageSetup
-                wb = xlApp.Workbooks.Open(filePath, ReadOnly: false);
+                ProcResult result =
+                    report.SetPageNumbers(filePath);
 
-                int sheetCount = 0;
-                try { sheetCount = wb.Worksheets.Count; } catch { }
-
-                //AddLog("Info", $"Worksheet Count = {sheetCount}");
-                //AddLog("Info",
-                //    $"Sheets={wb.Sheets.Count}, Worksheets={wb.Worksheets.Count}");
-
-                //for (int i = 1; i <= wb.Sheets.Count; i++)
-                //{
-                //    object obj = null;
-
-                //    try
-                //    {
-                //        obj = wb.Sheets[i];
-
-                //        if (obj is Excel.Worksheet ws)
-                //        {
-                //            AddLog("Info", $"[{i}] Worksheet : {ws.Name}");
-                //            Marshal.ReleaseComObject(ws);
-                //        }
-                //        else if (obj is Excel.Chart chart)
-                //        {
-                //            AddLog("Info", $"[{i}] Chart : {chart.Name}");
-                //            Marshal.ReleaseComObject(chart);
-                //        }
-                //        else
-                //        {
-                //            AddLog("Info", $"[{i}] 기타 Sheet");
-                //        }
-                //    }
-                //    catch (Exception ex)
-                //    {
-                //        AddLog("Error", $"Sheet[{i}] : {ex.Message}");
-                //    }
-                //}
-
-                int currentStartPage = 1;
-
-                for (int i = 1; i <= sheetCount; i++)
+                if (result.Success)
                 {
-                    Excel.Worksheet sh = null;
-                    try
-                    {
-                        sh = (Excel.Worksheet)wb.Worksheets[i];
-                        string name = "";
-                        try { name = sh.Name; } catch { }
-
-                        AddLog(
-                            "Info",
-                            $"[{i}] Name={sh.Name}, " +
-                            $"Visible={sh.Visible}, " +
-                            $"Type={sh.Type}");
-
-                        // '갑지' 시트는 페이지 번호 매기기에서 제외
-                        if (string.Equals(name, "갑지", StringComparison.OrdinalIgnoreCase))
-                            continue;
-
-                        // 현재 시트를 활성화
-                        sh.Activate();
-                        //int pages = sh.HPageBreaks.Count + 1; // 페이지 나누기의 개수
-
-                        //if (sh.PageSetup.PrintArea == null)
-                        //{
-                        //    continue;
-                        //}
-
-                        //string printArea = sh.PageSetup.PrintArea;
-
-                        //AddLog("Info", $"{sh.Name} PrintArea=[{printArea}]");
-
-                        //if (string.IsNullOrWhiteSpace(printArea))
-                        //{
-                        //    AddLog("WARN", $"{sh.Name} : 인쇄영역 없음");
-                        //    continue;
-                        //}
-
-
-
-                        //Excel.Range printRange = sh.Range[sh.PageSetup.PrintArea];
-                        int lastRow = 0;// = printRange.Row + printRange.Rows.Count - 1;
-
-                        string printAreaAddress = sh.PageSetup.PrintArea;
-
-                        if (!string.IsNullOrWhiteSpace(printAreaAddress))
-                        {
-                            // 인쇄영역이 설정되어 있는 경우
-                            Excel.Range printArea = sh.Range[printAreaAddress];
-
-                            lastRow = printArea.Row + printArea.Rows.Count - 1;
-
-                            Marshal.ReleaseComObject(printArea);
-                        }
-                        else
-                        {
-                            // 인쇄영역이 없는 경우 UsedRange 기준
-                            Excel.Range usedRange = sh.UsedRange;
-
-                            lastRow = usedRange.Row + usedRange.Rows.Count - 1;
-
-                            Marshal.ReleaseComObject(usedRange);
-                        }
-
-                        int pages = 1;
-                        int preRow = 0;
-
-                        foreach (Excel.HPageBreak pb in sh.HPageBreaks)
-                        {
-                            if ((pb.Type == Excel.XlPageBreak.xlPageBreakManual &&
-                                pb.Location.Row >= lastRow + 1)
-                                || preRow >= pb.Location.Row)
-                            {
-                                // 인쇄영역 바로 다음 행에 있는 수동 페이지 나누기는 무시
-                                continue;
-                            }
-                            Debug.WriteLine($"page : {pages}, row: {pb.Location.Row}");
-                            pages++;
-                            preRow = pb.Location.Row;
-                        }
-                        sh.PageSetup.FirstPageNumber = currentStartPage;
-
-                        System.Diagnostics.Debug.WriteLine(
-                            $"{name} : 시작={currentStartPage}, 페이지수={pages}");
-
-                        Debug.WriteLine(sh.PageSetup.PrintArea);
-                        Debug.WriteLine(sh.UsedRange.Address);
-                        Debug.WriteLine(sh.HPageBreaks.Count);
-                        Debug.WriteLine(sh.DisplayPageBreaks);
-
-                        Debug.WriteLine($"시트 : {sh.Name}");
-
-                        foreach (Excel.HPageBreak pb in sh.HPageBreaks)
-                        {
-                            Debug.WriteLine($"Break : {pb.Location.Address}");
-                            Debug.WriteLine($"{pb.Location.Address}  {pb.Type}");
-                        }
-
-                        currentStartPage += pages;
-
-                        //if (sh.Name == "마")
-                        //{
-                        //    break;
-                        //}
-                    }
-                    catch (Exception ex)
-                    {
-                        string sheetName = "(알 수 없음)";
-
-                        try
-                        {
-                            if (sh != null)
-                                sheetName = sh.Name;
-                        }
-                        catch { }
-
-                        AddLog(
-                            "Error",
-                            $"페이지 번호 처리 중 오류(idx={i}, name={sheetName}): {ex.Message}");
-                    }
-                    //finally
-                    //{
-                    //    try { wb.Save(); } catch { }
-                    //    if (sh != null)
-                    //        Marshal.ReleaseComObject(sh);
-                    //}
+                    AddLog("Info", result.Message);
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"페이지 번호 매기기 중 오류가 발생했습니다:\r\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-
-                AddLog("Error", $"페이지 번호 매기기 중 오류가 발생했습니다: {ex.Message}");
+                else
+                {
+                    AddLog("Error", result.Message);
+                    MessageBox.Show( result.Message, "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
             finally
             {
-                try
-                {
-                    if (wb != null)
-                    {
-                        wb.Save();
-                        wb.Close(false);
-                        Marshal.ReleaseComObject(wb);
-                    }
-                }
-                catch { }
-
-                try
-                {
-                    if (xlApp != null)
-                    {
-                        xlApp.Quit();
-                        Marshal.ReleaseComObject(xlApp);
-                    }
-                }
-                catch { }
-
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
                 Cursor = Cursors.Default;
             }
         }
@@ -4145,159 +3965,203 @@ namespace SmartReport
         #endregion
 
         #region 갑지 이미지 중앙 정렬
-        public void relocatePictures()
-        {
+        //public void relocatePictures()
+        //{
 
-            var filePath = tbQuantityFile.Text?.Trim();
-            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
-            {
-                MessageBox.Show("페이지 번호를 매길 엑셀 파일을 먼저 선택하세요.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
+        //    var filePath = tbQuantityFile.Text?.Trim();
+        //    if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+        //    {
+        //        MessageBox.Show("페이지 번호를 매길 엑셀 파일을 먼저 선택하세요.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        //        return;
+        //    }
 
-            if (report == null) {
-                AddLog("Error", "report를 찾을 수 없습니다.");
-            }
+        //    if (report == null) {
+        //        AddLog("Error", "report를 찾을 수 없습니다.");
+        //    }
 
-            Cursor = Cursors.WaitCursor;
-            Excel.Application xlApp = null;
-            Excel.Workbook wb = null;
-            Excel.Worksheet ws = null;
+        //    Cursor = Cursors.WaitCursor;
+        //    Excel.Application xlApp = null;
+        //    Excel.Workbook wb = null;
+        //    Excel.Worksheet ws = null;
 
-            try
-            {
-                xlApp = new Excel.Application { Visible = false, DisplayAlerts = false };
-                // Open for write because we modify PageSetup
-                wb = xlApp.Workbooks.Open(filePath, ReadOnly: false);
+        //    try
+        //    {
+        //        xlApp = new Excel.Application { Visible = false, DisplayAlerts = false };
+        //        // Open for write because we modify PageSetup
+        //        wb = xlApp.Workbooks.Open(filePath, ReadOnly: false);
 
-                ws = report.GetWorksheetByName(wb, "갑지");
+        //        ws = report.GetWorksheetByName(wb, "갑지");
 
-                if (ws == null)
-                {
-                    AddLog("Error", "갑지 시트를 찾을 수 없습니다.");
-                }
+        //        if (ws == null)
+        //        {
+        //            AddLog("Error", "갑지 시트를 찾을 수 없습니다.");
+        //        }
 
-                //int quarterCount = GetQuarterCount(filePath);
+        //        //int quarterCount = GetQuarterCount(filePath);
 
-                Match match = Regex.Match(filePath, @"(\d{2})년(\d)분기");
+        //        Match match = Regex.Match(filePath, @"(\d{2})년(\d)분기");
 
-                if (match.Success)
-                {
+        //        if (match.Success)
+        //        {
 
-                    string title =
-                    $"{2000 + int.Parse(match.Groups[1].Value)}년 {match.Groups[2].Value}분기" +
-                    (filePath.Contains("연차") ? " 연차" : "");
+        //            string title =
+        //            $"{2000 + int.Parse(match.Groups[1].Value)}년 {match.Groups[2].Value}분기" +
+        //            (filePath.Contains("연차") ? " 연차" : "");
 
-                    ws.Cells[11, 1].Value = title;
-                }
-
-
-                ws.PageSetup.LeftMargin = 28.35;   // 약 1cm
-                ws.PageSetup.RightMargin = 28.35;  // 약 1cm
-                ws.PageSetup.BottomMargin = 28.35;   // 약 1cm
-                ws.PageSetup.TopMargin = 28.35;  // 약 1cm
-                ws.PageSetup.CenterHorizontally = true;   // 좌우 가운데
-                ws.PageSetup.CenterVertically = true;     // 상하 가운데
-
-                // 인쇄 영역 기준
-                Excel.Range printRange = ws.Range[ws.PageSetup.PrintArea];
-                if (string.IsNullOrWhiteSpace(ws.PageSetup.PrintArea))
-                    printRange = ws.UsedRange;
-                else
-                    printRange = ws.Range[ws.PageSetup.PrintArea];
-
-                double pageLeft = (double)printRange.Left;
-                double pageWidth = (double)printRange.Width;
-
-                // 페이지 중앙
-                double centerX = pageLeft + pageWidth / 2;
-
-                double centerY = (double)printRange.Top + (double)printRange.Height / 2;
-
-                Excel.Shape picture = ws.Shapes.Cast<Excel.Shape>()
-                    .Where(s => s.Type == Microsoft.Office.Core.MsoShapeType.msoPicture)
-                    .OrderBy(s =>
-                    {
-                        double shapeCenterY = s.Top + s.Height / 2.0;
-                        return Math.Abs(shapeCenterY - centerY);
-                    })
-                    .FirstOrDefault();
-
-                if (picture != null)
-                {
-                    picture.Left = (float)(centerX - picture.Width / 2);
-                }
-
-                // 모서리 둥근 사각형 1개
-                Excel.Shape roundRect = ws.Shapes.Cast<Excel.Shape>()
-                    .FirstOrDefault(s =>
-                        s.Type == Microsoft.Office.Core.MsoShapeType.msoAutoShape &&
-                        s.AutoShapeType == Microsoft.Office.Core.MsoAutoShapeType.msoShapeRoundedRectangle);
-
-                if (roundRect != null)
-                {
-                    //roundRect.Left = (float)(centerX - roundRect.Width / 2);
+        //            ws.Cells[11, 1].Value = title;
+        //        }
 
 
+        //        ws.PageSetup.LeftMargin = 28.35;   // 약 1cm
+        //        ws.PageSetup.RightMargin = 28.35;  // 약 1cm
+        //        ws.PageSetup.BottomMargin = 28.35;   // 약 1cm
+        //        ws.PageSetup.TopMargin = 28.35;  // 약 1cm
+        //        ws.PageSetup.CenterHorizontally = true;   // 좌우 가운데
+        //        ws.PageSetup.CenterVertically = true;     // 상하 가운데
 
-                    Debug.WriteLine($"PrintArea={ws.PageSetup.PrintArea}");
-                    Debug.WriteLine($"Print Left={printRange.Left}");
-                    Debug.WriteLine($"Print Width={printRange.Width}");
-                    Debug.WriteLine($"CenterX={centerX}");
+        //        // 인쇄 영역 기준
+        //        Excel.Range printRange = ws.Range[ws.PageSetup.PrintArea];
+        //        if (string.IsNullOrWhiteSpace(ws.PageSetup.PrintArea))
+        //            printRange = ws.UsedRange;
+        //        else
+        //            printRange = ws.Range[ws.PageSetup.PrintArea];
 
-                    Debug.WriteLine($"Before={roundRect.Left}");
-                    roundRect.Left = (float)(centerX - roundRect.Width / 2);
-                    Debug.WriteLine($"After={roundRect.Left}");
-                }
+        //        double pageLeft = (double)printRange.Left;
+        //        double pageWidth = (double)printRange.Width;
 
+        //        // 페이지 중앙
+        //        double centerX = pageLeft + pageWidth / 2;
 
-                if (printRange != null)
-                    Marshal.ReleaseComObject(printRange);
+        //        double centerY = (double)printRange.Top + (double)printRange.Height / 2;
+
+        //        Excel.Shape picture = ws.Shapes.Cast<Excel.Shape>()
+        //            .Where(s => s.Type == Microsoft.Office.Core.MsoShapeType.msoPicture)
+        //            .OrderBy(s =>
+        //            {
+        //                double shapeCenterY = s.Top + s.Height / 2.0;
+        //                return Math.Abs(shapeCenterY - centerY);
+        //            })
+        //            .FirstOrDefault();
+
+        //        if (picture != null)
+        //        {
+        //            picture.Left = (float)(centerX - picture.Width / 2);
+        //        }
+
+        //        // 모서리 둥근 사각형 1개
+        //        Excel.Shape roundRect = ws.Shapes.Cast<Excel.Shape>()
+        //            .FirstOrDefault(s =>
+        //                s.Type == Microsoft.Office.Core.MsoShapeType.msoAutoShape &&
+        //                s.AutoShapeType == Microsoft.Office.Core.MsoAutoShapeType.msoShapeRoundedRectangle);
+
+        //        if (roundRect != null)
+        //        {
+        //            //roundRect.Left = (float)(centerX - roundRect.Width / 2);
 
 
 
-                try { wb.Save(); } catch { }
-            }
-            catch (Exception ex)
-            {
-                //MessageBox.Show($"갑지 시트 위치 조정 중 오류가 발생했습니다:\r\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                AddLog("Error", $"갑지 시트 위치 조정 중 오류가 발생했습니다: {ex.Message}");
-            }
-            finally
-            {
+        //            Debug.WriteLine($"PrintArea={ws.PageSetup.PrintArea}");
+        //            Debug.WriteLine($"Print Left={printRange.Left}");
+        //            Debug.WriteLine($"Print Width={printRange.Width}");
+        //            Debug.WriteLine($"CenterX={centerX}");
 
-                if (ws != null)
-                    Marshal.ReleaseComObject(ws);
-                try
-                {
-                    if (wb != null)
-                    {
-                        wb.Close(true);
-                        Marshal.ReleaseComObject(wb);
-                    }
-                }
-                catch { }
+        //            Debug.WriteLine($"Before={roundRect.Left}");
+        //            roundRect.Left = (float)(centerX - roundRect.Width / 2);
+        //            Debug.WriteLine($"After={roundRect.Left}");
+        //        }
 
-                try
-                {
-                    if (xlApp != null)
-                    {
-                        xlApp.Quit();
-                        Marshal.ReleaseComObject(xlApp);
-                    }
-                }
-                catch { }
 
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                Cursor = Cursors.Default;
-            }
-        }
+        //        if (printRange != null)
+        //            Marshal.ReleaseComObject(printRange);
+
+
+
+        //        try { wb.Save(); } catch { }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        //MessageBox.Show($"갑지 시트 위치 조정 중 오류가 발생했습니다:\r\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        //        AddLog("Error", $"갑지 시트 위치 조정 중 오류가 발생했습니다: {ex.Message}");
+        //    }
+        //    finally
+        //    {
+
+        //        if (ws != null)
+        //            Marshal.ReleaseComObject(ws);
+        //        try
+        //        {
+        //            if (wb != null)
+        //            {
+        //                wb.Close(true);
+        //                Marshal.ReleaseComObject(wb);
+        //            }
+        //        }
+        //        catch { }
+
+        //        try
+        //        {
+        //            if (xlApp != null)
+        //            {
+        //                xlApp.Quit();
+        //                Marshal.ReleaseComObject(xlApp);
+        //            }
+        //        }
+        //        catch { }
+
+        //        GC.Collect();
+        //        GC.WaitForPendingFinalizers();
+        //        Cursor = Cursors.Default;
+        //    }
+        //}
 
 
         private void btnGapjiPictureRelocate_Click(object sender, EventArgs e)
         {
-            relocatePictures();
+
+            if (report == null)
+            {
+                return;
+            }
+
+            string filePath = tbQuantityFile.Text?.Trim();
+
+
+            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+            {
+                MessageBox.Show(
+                    "엑셀 파일을 먼저 선택하세요.",
+                    "오류",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+
+                return;
+            }
+
+            Cursor = Cursors.WaitCursor;
+            try
+            {
+                ProcResult result =
+                    report.relocatePictures(filePath);
+
+                if (result.Success)
+                {
+                    AddLog("Info", result.Message);
+                }
+                else
+                {
+                    AddLog("Error", result.Message);
+
+                    MessageBox.Show(
+                        result.Message,
+                        "오류",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+                }
+            }
+            finally
+            {
+                Cursor = Cursors.Default;
+            }
         }
         #endregion
 
@@ -4407,129 +4271,7 @@ namespace SmartReport
                 GC.WaitForPendingFinalizers();
             }
         }
-        //private void SetPrintAreaForPDCorona(string xlsFile)
-        //{
-        //    Excel.Application xlApp = null;
-        //    Excel.Workbook wb = null;
-        //    Excel.Worksheet ws = null;
-
-        //    try
-        //    {
-        //        xlApp = new Excel.Application
-        //        {
-        //            Visible = false,
-        //            DisplayAlerts = false
-        //        };
-
-        //        wb = xlApp.Workbooks.Open(xlsFile);
-
-        //        // 첫 번째 시트
-        //        ws = (Excel.Worksheet)wb.Worksheets[1];
-
-        //        // 상·하 여백 0cm
-        //        ws.PageSetup.TopMargin = xlApp.CentimetersToPoints(0);
-        //        ws.PageSetup.BottomMargin = xlApp.CentimetersToPoints(0);
-        //        ws.PageSetup.LeftMargin = xlApp.CentimetersToPoints(0);
-        //        ws.PageSetup.RightMargin = xlApp.CentimetersToPoints(0);
-        //        ws.PageSetup.CenterHorizontally = true;   // 좌우 가운데
-        //        ws.PageSetup.CenterVertically = true;     // 상하 가운데
-
-        //        // 인쇄 영역 설정
-        //        ws.PageSetup.PrintArea = "$A$1:$K$300";
-
-        //        // 기존 수동 페이지 나누기 삭제
-        //        for (int i = ws.HPageBreaks.Count; i >= 1; i--)
-        //        {
-        //            Excel.HPageBreak pb = (Excel.HPageBreak)ws.HPageBreaks[i];
-
-        //            if (pb.Type == Excel.XlPageBreak.xlPageBreakManual)
-        //            {
-        //                pb.Delete();
-        //            }
-
-        //            Marshal.ReleaseComObject(pb);
-        //        }
-
-        //        // 50행마다 페이지 나누기 추가
-        //        for (int row = 51; row <= 251; row += 50)
-        //        {
-        //            ws.HPageBreaks.Add((Excel.Range)ws.Cells[row, 1]);
-        //        }
-
-        //        wb.Save();
-        //    }
-        //    finally
-        //    {
-        //        if (ws != null) Marshal.ReleaseComObject(ws);
-
-        //        if (wb != null)
-        //        {
-        //            wb.Close(true);
-        //            Marshal.ReleaseComObject(wb);
-        //        }
-
-        //        if (xlApp != null)
-        //        {
-        //            xlApp.Quit();
-        //            Marshal.ReleaseComObject(xlApp);
-        //        }
-
-        //        GC.Collect();
-        //        GC.WaitForPendingFinalizers();
-        //    }
-        //}
-
-        //private string ExportExcelToPdf(string xlsPath)
-        //{
-        //    var pdfPath = Path.ChangeExtension(xlsPath, ".pdf");
-
-        //    Excel.Application app = null;
-        //    Excel.Workbook wb = null;
-
-        //    try
-        //    {
-        //        app = new Excel.Application();
-        //        app.DisplayAlerts = false;
-
-        //        wb = app.Workbooks.Open(xlsPath);
-
-        //        foreach (Excel.Worksheet ws in wb.Worksheets)
-        //        {
-        //            try
-        //            {
-        //                // 기존 인쇄영역 제거
-        //                ws.PageSetup.PrintArea = "";
-        //            }
-        //            finally
-        //            {
-        //                Marshal.ReleaseComObject(ws);
-        //            }
-        //        }
-
-        //        wb.ExportAsFixedFormat(
-        //            Excel.XlFixedFormatType.xlTypePDF,
-        //            pdfPath);
-
-        //        return pdfPath;
-        //    }
-        //    finally
-        //    {
-        //        if (wb != null)
-        //        {
-        //            wb.Close(false);
-        //            Marshal.ReleaseComObject(wb);
-        //        }
-
-        //        if (app != null)
-        //        {
-        //            app.Quit();
-        //            Marshal.ReleaseComObject(app);
-        //        }
-
-        //        GC.Collect();
-        //        GC.WaitForPendingFinalizers();
-        //    }
-        //}
+        
 
         private string ExportExcelToPdf(string xlsPath)
         {

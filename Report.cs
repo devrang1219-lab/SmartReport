@@ -1,5 +1,8 @@
 ﻿using OpenCvSharp;
+using SmartReport;
 using System;
+using System.ComponentModel.Composition.Primitives;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -26,6 +29,8 @@ namespace WindowsFormsApp1
         public string strSite { get; set; }
         public string strInspector { get; set; }
         public string xlsFilePath { get; set; }
+
+        static public FormMain mainForm { get; set; }
 
         public static Report ParseReport(string filePath, SoborLog soborLog)
         {
@@ -67,6 +72,7 @@ namespace WindowsFormsApp1
 
             report.quaterCount = report.GetQuarterCount(filePath);
 
+            mainForm = Application.OpenForms.OfType<SmartReport.FormMain>().FirstOrDefault();
             return report;
         }
 
@@ -201,20 +207,7 @@ namespace WindowsFormsApp1
             }
             catch (Exception ex)
             {
-                // FormMain 인스턴스가 있으면 AddLog 호출, 없으면 MessageBox 표시
-                try
-                {
-                    var mainForm = Application.OpenForms.OfType<SmartReport.FormMain>().FirstOrDefault();
-                    if (mainForm != null)
-                        mainForm.AddLog("Error", $"분기 수 계산 중 오류 발생: {ex.Message}");
-                    else
-                        MessageBox.Show($"분기 수 계산 중 오류 발생: {ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                catch
-                {
-                    // 추가 안전 장치: 예외가 발생해도 무시
-                    MessageBox.Show($"분기 수 계산 중 오류 발생: {ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+                AddLog($"분기 수 계산 중 오류 발생: {ex.Message}");
                 return 0;
             }
             finally
@@ -465,18 +458,7 @@ namespace WindowsFormsApp1
             }
             catch (Exception ex)
             {
-                try
-                {
-                    var mainForm = Application.OpenForms.OfType<SmartReport.FormMain>().FirstOrDefault();
-                    if (mainForm != null)
-                        mainForm.AddLog("Error", $"이미지 스냅 처리 중 오류 발생: {ex.Message}");
-                    else
-                        MessageBox.Show($"이미지 스냅 처리 중 오류 발생: {ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                catch
-                {
-                    MessageBox.Show($"이미지 스냅 처리 중 오류 발생: {ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+                AddLog($"이미지 스냅 처리 중 오류 발생: {ex.Message}");
             }
             finally
             {
@@ -542,6 +524,592 @@ namespace WindowsFormsApp1
 
             // 기존 크기/배율 설정은 그대로 두고 이미지만 교체
             graphic.Filename = logoPath;
+        }
+        #endregion
+
+        #region 갑지 이미지 중앙 정렬
+
+        public ProcResult relocatePictures(string filePath)
+        {
+
+            Excel.Application xlApp = null;
+            Excel.Workbook wb = null;
+            Excel.Worksheet ws = null;
+            Excel.PageSetup pageSetup = null;
+            Excel.Range printRange = null;
+            Excel.Shapes shapes = null;
+            Excel.Shape picture = null;
+            Excel.Shape roundRect = null;
+
+            try
+            {
+                // =====================================================
+                // Excel 열기
+                // =====================================================
+
+                xlApp = new Excel.Application
+                {
+                    Visible = false,
+                    DisplayAlerts = false
+                };
+
+                wb = ExcelComHelper.OpenWorkbook(
+                    xlApp,
+                    filePath,
+                    false);
+
+                ws = ExcelComHelper.GetWorksheet(
+                    wb,
+                    "갑지");
+
+                if (ws == null)
+                    return ProcResult.Fail("갑지 시트를 찾을 수 없습니다.");
+
+
+                // =====================================================
+                // 제목 설정
+                // =====================================================
+
+                Match match =
+                    Regex.Match(filePath, @"(\d{2})년(\d)분기");
+
+                if (match.Success)
+                {
+                    string title =
+                        $"{2000 + int.Parse(match.Groups[1].Value)}년 " +
+                        $"{match.Groups[2].Value}분기" +
+                        (filePath.Contains("연차") ? " 연차" : "");
+
+                    ExcelComHelper.SetCellValue(
+                        ws,
+                        11,
+                        1,
+                        title);
+                }
+
+
+                // =====================================================
+                // PageSetup
+                // =====================================================
+
+                pageSetup = ws.PageSetup;
+
+                pageSetup.LeftMargin = 28.35;
+                pageSetup.RightMargin = 28.35;
+                pageSetup.BottomMargin = 28.35;
+                pageSetup.TopMargin = 28.35;
+
+                pageSetup.CenterHorizontally = true;
+                pageSetup.CenterVertically = true;
+
+
+                // =====================================================
+                // 인쇄 영역
+                // =====================================================
+
+                string printArea = pageSetup.PrintArea;
+
+                if (string.IsNullOrWhiteSpace(printArea))
+                {
+                    printRange = ws.UsedRange;
+                }
+                else
+                {
+                    printRange = ws.Range[printArea];
+                }
+
+
+                double pageLeft = printRange.Left;
+                double pageWidth = printRange.Width;
+
+                double centerX =
+                    pageLeft + pageWidth / 2.0;
+
+                double centerY =
+                    printRange.Top +
+                    printRange.Height / 2.0;
+
+
+                // =====================================================
+                // Shape 검색
+                // =====================================================
+
+                shapes = ws.Shapes;
+
+                int shapeCount = shapes.Count;
+
+                double minDistance = double.MaxValue;
+
+
+                // =====================================================
+                // 중앙에 가장 가까운 Picture 찾기
+                // =====================================================
+
+                for (int i = 1; i <= shapeCount; i++)
+                {
+                    Excel.Shape shape = null;
+
+                    try
+                    {
+                        shape = shapes.Item(i);
+
+                        if (shape.Type ==
+                            Microsoft.Office.Core.MsoShapeType.msoPicture)
+                        {
+                            double shapeCenterY =
+                                shape.Top +
+                                shape.Height / 2.0;
+
+                            double distance =
+                                Math.Abs(shapeCenterY - centerY);
+
+                            if (distance < minDistance)
+                            {
+                                minDistance = distance;
+
+                                // 이전 picture 해제
+                                if (picture != null)
+                                {
+                                    ExcelComHelper.Release(picture);
+                                    picture = null;
+                                }
+
+                                // 현재 shape를 picture로 넘김
+                                picture = shape;
+                                shape = null;
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        ExcelComHelper.Release(shape);
+                    }
+                }
+
+
+                // =====================================================
+                // Picture 좌우 중앙 정렬
+                // =====================================================
+
+                if (picture != null)
+                {
+                    picture.Left =
+                        (float)(
+                            centerX -
+                            picture.Width / 2.0);
+                }
+
+
+                // =====================================================
+                // 둥근 사각형 찾기
+                // =====================================================
+
+                for (int i = 1; i <= shapeCount; i++)
+                {
+                    Excel.Shape shape = null;
+
+                    try
+                    {
+                        shape = shapes.Item(i);
+
+                        if (shape.Type ==
+                                Microsoft.Office.Core.MsoShapeType.msoAutoShape &&
+                            shape.AutoShapeType ==
+                                Microsoft.Office.Core.MsoAutoShapeType
+                                    .msoShapeRoundedRectangle)
+                        {
+                            // 호출자 소유로 넘김
+                            roundRect = shape;
+                            shape = null;
+
+                            break;
+                        }
+                    }
+                    finally
+                    {
+                        ExcelComHelper.Release(shape);
+                    }
+                }
+
+
+                // =====================================================
+                // 둥근 사각형 중앙 정렬
+                // =====================================================
+
+                if (roundRect != null)
+                {
+                    Debug.WriteLine(
+                        $"PrintArea={printArea}");
+
+                    Debug.WriteLine(
+                        $"Print Left={printRange.Left}");
+
+                    Debug.WriteLine(
+                        $"Print Width={printRange.Width}");
+
+                    Debug.WriteLine(
+                        $"CenterX={centerX}");
+
+                    Debug.WriteLine(
+                        $"Before={roundRect.Left}");
+
+                    roundRect.Left =
+                        (float)(
+                            centerX -
+                            roundRect.Width / 2.0);
+
+                    Debug.WriteLine(
+                        $"After={roundRect.Left}");
+                }
+
+
+                // =====================================================
+                // 저장
+                // =====================================================
+
+                wb.Save();
+
+                return ProcResult.Ok("갑지 이미지 위치 조정이 완료되었습니다.");
+            }
+            catch (Exception ex)
+            {
+                return ProcResult.Fail(
+                    $"갑지 이미지 위치 조정 중 오류가 발생했습니다.\r\n{ex.Message}");
+            }
+            finally
+            {
+                // =====================================================
+                // COM 해제
+                //
+                // 생성한 역순으로 해제
+                // =====================================================
+
+                ExcelComHelper.Release(roundRect);
+                roundRect = null;
+
+                ExcelComHelper.Release(picture);
+                picture = null;
+
+                ExcelComHelper.Release(shapes);
+                shapes = null;
+
+                ExcelComHelper.Release(printRange);
+                printRange = null;
+
+                ExcelComHelper.Release(pageSetup);
+                pageSetup = null;
+
+                ExcelComHelper.Release(ws);
+                ws = null;
+
+                ExcelComHelper.CloseWorkbook(
+                    ref wb,
+                    false);
+
+                ExcelComHelper.QuitApplication(
+                    ref xlApp);
+
+                ExcelComHelper.Cleanup();
+            }
+        }
+        #endregion
+
+        #region [페이지 번호 매기기]
+        private int GetLastPrintRow(
+            Excel.Worksheet ws,
+            Excel.PageSetup pageSetup)
+        {
+            Excel.Range range = null;
+            Excel.Range rows = null;
+
+            try
+            {
+                string printArea =
+                    pageSetup.PrintArea;
+
+                if (!string.IsNullOrWhiteSpace(printArea))
+                {
+                    range = ws.Range[printArea];
+                }
+                else
+                {
+                    range = ws.UsedRange;
+                }
+
+                int firstRow = range.Row;
+
+                rows = range.Rows;
+
+                int rowCount = rows.Count;
+
+                return firstRow + rowCount - 1;
+            }
+            finally
+            {
+                ExcelComHelper.Release(rows);
+                ExcelComHelper.Release(range);
+            }
+        }
+
+        private int GetHorizontalPageCount(
+            Excel.Worksheet ws,
+            int lastRow)
+        {
+            Excel.HPageBreaks pageBreaks = null;
+
+            try
+            {
+                pageBreaks = ws.HPageBreaks;
+
+                int count = pageBreaks.Count;
+
+                int pages = 1;
+                int preRow = 0;
+
+                for (int i = 1; i <= count; i++)
+                {
+                    Excel.HPageBreak pb = null;
+                    Excel.Range location = null;
+
+                    try
+                    {
+                        pb = pageBreaks.Item[i];
+
+                        location = pb.Location;
+
+                        int breakRow =
+                            location.Row;
+
+                        Excel.XlPageBreak breakType =
+                            pb.Type;
+
+                        // 인쇄영역 바로 다음에 존재하는
+                        // 수동 페이지 나누기 무시
+                        if ((breakType ==
+                                 Excel.XlPageBreak.xlPageBreakManual &&
+                             breakRow >= lastRow + 1)
+                            ||
+                            preRow >= breakRow)
+                        {
+                            continue;
+                        }
+
+                        Debug.WriteLine(
+                            $"page : {pages}, row : {breakRow}");
+
+                        pages++;
+
+                        preRow = breakRow;
+                    }
+                    finally
+                    {
+                        ExcelComHelper.Release(location);
+                        ExcelComHelper.Release(pb);
+                    }
+                }
+
+                return pages;
+            }
+            finally
+            {
+                ExcelComHelper.Release(pageBreaks);
+            }
+        }
+
+        private void DebugPageBreaks(
+            Excel.Worksheet ws)
+        {
+            Excel.HPageBreaks pageBreaks = null;
+
+            try
+            {
+                pageBreaks = ws.HPageBreaks;
+
+                int count = pageBreaks.Count;
+
+                for (int i = 1; i <= count; i++)
+                {
+                    Excel.HPageBreak pb = null;
+                    Excel.Range location = null;
+
+                    try
+                    {
+                        pb = pageBreaks.Item[i];
+                        location = pb.Location;
+
+                        Debug.WriteLine(
+                            $"Break : {location.Address} / {pb.Type}");
+                    }
+                    finally
+                    {
+                        ExcelComHelper.Release(location);
+                        ExcelComHelper.Release(pb);
+                    }
+                }
+            }
+            finally
+            {
+                ExcelComHelper.Release(pageBreaks);
+            }
+        }
+
+        public ProcResult SetPageNumbers(string filePath)
+        {
+            Excel.Application xlApp = null;
+            Excel.Workbook wb = null;
+            Excel.Sheets sheets = null;
+
+            try
+            {
+                if (string.IsNullOrEmpty(filePath) ||
+                    !File.Exists(filePath))
+                {
+                    return ProcResult.Fail("엑셀 파일이 존재하지 않습니다.");
+                }
+
+                xlApp = new Excel.Application
+                {
+                    Visible = false,
+                    DisplayAlerts = false
+                };
+
+                wb = ExcelComHelper.OpenWorkbook(
+                    xlApp,
+                    filePath,
+                    false);
+
+                sheets = wb.Worksheets;
+
+                int sheetCount = sheets.Count;
+                int currentStartPage = 1;
+
+                for (int i = 1; i <= sheetCount; i++)
+                {
+                    Excel.Worksheet sh = null;
+                    Excel.PageSetup pageSetup = null;
+
+                    try
+                    {
+                        sh = (Excel.Worksheet)sheets[i];
+
+                        string name = sh.Name;
+
+                        // 갑지는 제외
+                        if (string.Equals(
+                            name,
+                            "갑지",
+                            StringComparison.OrdinalIgnoreCase))
+                        {
+                            continue;
+                        }
+
+                        sh.Activate();
+
+                        pageSetup = sh.PageSetup;
+
+                        // ============================================
+                        // 마지막 인쇄 행
+                        // ============================================
+
+                        int lastRow =
+                            GetLastPrintRow(
+                                sh,
+                                pageSetup);
+
+                        // ============================================
+                        // 페이지 수 계산
+                        // ============================================
+
+                        int pages =
+                            GetHorizontalPageCount(
+                                sh,
+                                lastRow);
+
+                        // ============================================
+                        // 시작 페이지 설정
+                        // ============================================
+
+                        pageSetup.FirstPageNumber =
+                            currentStartPage;
+
+                        Debug.WriteLine(
+                            $"{name} : 시작={currentStartPage}, " +
+                            $"페이지수={pages}");
+
+                        currentStartPage += pages;
+                    }
+                    catch (Exception ex)
+                    {
+                        string sheetName = "(알 수 없음)";
+
+                        try
+                        {
+                            if (sh != null)
+                                sheetName = sh.Name;
+                        }
+                        catch
+                        {
+                        }
+
+                        Debug.WriteLine(
+                            $"페이지 번호 처리 오류 " +
+                            $"idx={i}, " +
+                            $"name={sheetName}: " +
+                            ex.Message);
+
+                        // 한 시트가 실패해도 다음 시트 계속
+                    }
+                    finally
+                    {
+                        ExcelComHelper.Release(pageSetup);
+                        pageSetup = null;
+
+                        ExcelComHelper.Release(sh);
+                        sh = null;
+                    }
+                }
+
+                wb.Save();
+
+                return ProcResult.Ok(
+                    "페이지 번호 매기기가 완료되었습니다.");
+            }
+            catch (Exception ex)
+            {
+                return ProcResult.Fail(
+                    $"페이지 번호 매기기 중 오류가 발생했습니다.\r\n{ex.Message}");
+            }
+            finally
+            {
+                ExcelComHelper.Release(sheets);
+                sheets = null;
+
+                ExcelComHelper.CloseWorkbook(
+                    ref wb,
+                    false);
+
+                ExcelComHelper.QuitApplication(
+                    ref xlApp);
+
+                ExcelComHelper.Cleanup();
+            }
+        }
+        #endregion
+
+        #region [log]
+        private void AddLog(string msg)
+        {
+            try
+            {
+                if (mainForm != null)
+                    mainForm.AddLog("Error", msg);
+                else
+                    MessageBox.Show(msg, "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(msg, "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
         #endregion
     }
