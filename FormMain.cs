@@ -15,6 +15,7 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Media.Media3D;
 using System.Xml.Linq;
 using WindowsFormsApp1;
 using WindowsFormsApp1.Comm;
@@ -2620,7 +2621,7 @@ namespace SmartReport
                 // 품질
                 if (checkBoxQuantity.Checked)
                 {
-                    ProcQuantitySheet(xlApp, wb, baseFolder, textBoxQuntatyFolder.Text, comboBoxTestReport.Text,
+                    ProcQuantitySheet(xlApp, wb, baseFolder, textBoxQuntatyFolder.Text, WindowsFormsApp1.Comm.Constants.TEST_REPORT,
                          //comboBoxTimeGraph.Text, comboBoxHwaveGraph.Text);
                          WindowsFormsApp1.Comm.Constants.HIGH_WAVE_GRAPH, WindowsFormsApp1.Comm.Constants.TIME_WAVE_GRAPH);
                 }
@@ -2642,6 +2643,11 @@ namespace SmartReport
                 if (cbEquipment.Checked)
                 {
                     ProcEquipment(xlApp, wb, baseFolder, tbEquipment.Text);
+                }
+
+                if (cbBattery.Checked)
+                {
+                    ProcBattery(xlApp, wb, baseFolder, tbBattery.Text);
                 }
             }
             catch (Exception ex)
@@ -3031,6 +3037,135 @@ namespace SmartReport
                 $"설치기기 인쇄영역: A1:AA{lastRow}");
         }
 
+        private int ExcelColumnToNumber(string column)
+        {
+            int result = 0;
+
+            foreach (char c in column.ToUpper())
+            {
+                result = result * 26 + (c - 'A' + 1);
+            }
+
+            return result;
+        }
+
+        private string ExcelColumnToName(int columnNumber)
+        {
+            string result = "";
+
+            while (columnNumber > 0)
+            {
+                columnNumber--;
+
+                result = (char)('A' + columnNumber % 26) + result;
+                columnNumber /= 26;
+            }
+
+            return result;
+        }
+
+        private void ProcBattery(
+            Excel.Application xlApp,
+            Excel.Workbook wb,
+            string baseFolder,
+            object text)
+        {
+            Excel.Worksheet ws = null;
+            if (report == null)
+            {
+                AddLog("Error", "report를 찾을 수 없습니다.");
+            }
+
+            try
+            {
+                ws = report.GetWorksheetByName(wb, "축");
+
+                if (ws == null)
+                {
+                    throw new Exception("축전지 시트를 찾을 수 없습니다.");
+                }
+
+                Excel.Range rng = ws.Range["A21:AG22"];
+                RemovePicturesInRange(ws, rng, true);
+
+                string folderPath = Path.Combine(baseFolder, Convert.ToString(text));
+
+                // 파일명 숫자를 Key로 사용
+                // 예: 1.jpg → 1, 3.jpg → 3
+                var files = Directory.GetFiles(folderPath, "*.jpg")
+                    .Select(f => new
+                    {
+                        Path = f,
+                        Number = int.TryParse(
+                            Path.GetFileNameWithoutExtension(f),
+                            out int n)
+                            ? n
+                            : -1
+                    })
+                    .Where(x => x.Number > 0)
+                    .ToDictionary(x => x.Number, x => x.Path);
+
+                if (files.Count < 3)
+                {
+                    AddLog("Info", "축전지 이미지가 올바르지 않습니다.");
+                    return;
+                }
+
+                string startCol = "A";
+                int startRow = 21;
+
+                int width = 11;   // 이미지당 11열
+                int height = 2;   // 이미지당 2행
+                int baseCol = ExcelColumnToNumber(startCol);
+
+                for (int number = 1; number <= 3; number++)
+                {
+                    // 이미지 번호에 따라 오른쪽으로 11열씩 이동
+                    int fromCol = baseCol + (number - 1) * width;
+                    int toCol = fromCol + width - 1;
+
+                    int fromRow = startRow;
+                    int toRow = startRow + height - 1;
+
+                    string cellFrom = $"{ExcelColumnToName(fromCol)}{fromRow}";
+                    string cellTo = $"{ExcelColumnToName(toCol)}{toRow}";
+
+                    AddLog(
+                        "Info",
+                        $"{number}.jpg → {cellFrom}:{cellTo}");
+
+                    using (var inserter = new ImageInserter(ws, files[number]))
+                    {
+                        inserter.InsertFit(
+                            cellFrom,
+                            cellTo,
+                            new ImageInsertOptions
+                            {
+                                KeepAspectRatio = false
+                            });
+                    }
+                }
+
+                // 이미지마다 저장할 필요 없이 마지막에 한 번만 저장
+                wb.Save();
+
+                AddLog("Info", "축전지 이미지 삽입 완료");
+            }
+            catch (Exception ex)
+            {
+                AddLog("Error", $"축전지 이미지 삽입 실패: {ex.Message}");
+            }
+            finally
+            {
+                try
+                {
+                    if (ws != null)
+                        Marshal.ReleaseComObject(ws);
+                }
+                catch { }
+            }
+        }
+
         private void ProcEquipment(
                 Excel.Application xlApp,
                 Excel.Workbook wb,
@@ -3191,22 +3326,105 @@ namespace SmartReport
         #endregion
 
         #region [PD부분방전 시트 처리]
-        private void ProcPdCoronaSheet(object xla, Excel.Workbook wb, string baseFolder, string pdFolder, string xlsPath)
+        private Excel.Worksheet GetOrCopyWorksheet(
+            Excel.Application xlApp,
+            Excel.Workbook wb,
+            string sheetName,
+            string refPath)
+        {
+            Excel.Worksheet ws = null;
+            Excel.Workbook refWb = null;
+            Excel.Worksheet refWs = null;
+
+            try
+            {
+                // 1. 현재 Workbook에서 먼저 찾기
+                ws = report.GetWorksheetByName(wb, sheetName);
+
+                if (ws != null)
+                    return ws;
+
+                AddLog("Info", $"{sheetName} 시트가 없어 ref.xlsx에서 가져옵니다.");
+
+                // 2. ref.xlsx 확인
+                if (!File.Exists(refPath))
+                    throw new FileNotFoundException(
+                        $"참조 파일을 찾을 수 없습니다: {refPath}");
+
+                refWb = xlApp.Workbooks.Open(
+                    refPath,
+                    ReadOnly: true);
+
+                refWs = report.GetWorksheetByName(refWb, sheetName);
+
+                if (refWs == null)
+                    throw new Exception(
+                        $"ref.xlsx에도 {sheetName} 시트가 없습니다.");
+
+                // 3. 현재 Workbook 마지막 시트 뒤에 복사
+                Excel.Worksheet lastSheet = null;
+
+                try
+                {
+                    lastSheet = (Excel.Worksheet)wb.Worksheets[wb.Worksheets.Count];
+
+                    refWs.Copy(After: lastSheet);
+                }
+                finally
+                {
+                    if (lastSheet != null)
+                        Marshal.ReleaseComObject(lastSheet);
+                }
+
+                // 4. 복사된 시트를 다시 가져오기
+                ws = report.GetWorksheetByName(wb, sheetName);
+
+                if (ws == null)
+                    throw new Exception(
+                        $"{sheetName} 시트 복사 후 시트를 찾지 못했습니다.");
+
+                AddLog("Info", $"{sheetName} 시트를 ref.xlsx에서 복사했습니다.");
+
+                return ws;
+            }
+            finally
+            {
+                if (refWs != null)
+                    Marshal.ReleaseComObject(refWs);
+
+                if (refWb != null)
+                {
+                    refWb.Close(false);
+                    Marshal.ReleaseComObject(refWb);
+                }
+            }
+        }
+        private void ProcPdCoronaSheet(Excel.Application xlApp, Excel.Workbook wb, string baseFolder, string pdFolder, string xlsPath)
         {
             Excel.Worksheet ws = null;
 
             try
             {
-                if (xlsPath != null || report == null)
+                string refPath = txtBxSampleReport.Text.Trim();
+
+                if (xlsPath == null || report == null)
                 {
                     throw new Exception("파일을 찾을 수 없습니다.");
                 }
 
                 string tmpFolder = Path.Combine(baseFolder, pdFolder);
 
+
+                ws = GetOrCopyWorksheet(
+                    xlApp,
+                    wb,
+                    "PD부분방전",
+                    refPath);
+
+
                 // PD 부분방전 결과지가 있으므로 PD 부분 방전 처리를 했다는 뜻으로 변환 과정이 실패하더라도 모두 true를 반환하도록 함
 
-                ws = report.GetWorksheetByName(wb, "PD부분방전");
+                //ws = report.GetWorksheetByName(wb, "PD부분방전");
 
                 if (ws == null)
                 {
@@ -3270,6 +3488,7 @@ namespace SmartReport
             {
                 try
                 {
+                    if (wb != null) Marshal.ReleaseComObject(wb);
                     if (ws != null) Marshal.ReleaseComObject(ws);
                 }
                 catch { }
@@ -3370,7 +3589,7 @@ namespace SmartReport
         #region [품질 시트 처리]
         private void ProcQuantitySheet(Excel.Application xlApp, Excel.Workbook wb, string baseFolder, string quantityFolder,
             //string testReport, string timeGraph, string HighGraph)
-            string testReport, List<string> highGraph, List<string> timeGraph)
+            List<string> testReport, List<string> highGraph, List<string> timeGraph)
         {
             Excel.Worksheet ws = null;
             string pdfPath = null;
@@ -3400,7 +3619,17 @@ namespace SmartReport
                 }
                 AddLog("Info", $"K.pdf 처리 완료");
 
-                pdfPath = Path.Combine(baseFolder, quantityFolder, testReport);
+                pdfPath = testReport
+                    .Select(fileName => Path.Combine(baseFolder, quantityFolder, fileName))
+                    .FirstOrDefault(File.Exists);
+
+                if (pdfPath == null)
+                {
+                    throw new FileNotFoundException(
+                        $"시험보고서 파일을 찾을 수 없습니다: {Path.Combine(baseFolder, quantityFolder)}");
+                }
+
+                //pdfPath = Path.Combine(baseFolder, quantityFolder, testReport);
                 using (ImageInserter inserter = new ImageInserter(ws, pdfPath))
                 {
                     inserter.InsertFit(
@@ -3508,7 +3737,7 @@ namespace SmartReport
                 if (pdfPath == null)
                 {
                     throw new FileNotFoundException(
-                        $"고조파 그래프 파일을 찾을 수 없습니다: {Path.Combine(baseFolder, quantityFolder)}");
+                        $"시계열 그래프 파일을 찾을 수 없습니다: {Path.Combine(baseFolder, quantityFolder)}");
                 }
 
                 using (ImageInserter inserter = new ImageInserter(ws, pdfPath))
@@ -3538,7 +3767,7 @@ namespace SmartReport
                 if (pdfPath == null)
                 {
                     throw new FileNotFoundException(
-                        $"시계열 그래프 파일을 찾을 수 없습니다: {Path.Combine(baseFolder, quantityFolder)}");
+                        $"고조파 그래프 파일을 찾을 수 없습니다: {Path.Combine(baseFolder, quantityFolder)}");
                 }
 
                 using (ImageInserter inserter = new ImageInserter(ws, pdfPath))
@@ -3571,7 +3800,7 @@ namespace SmartReport
                     .ToArray();
 
                 int startRow = 295;
-                int blockHeight = 8;   // 293~300 = 8행
+                int blockHeight = 8;   // 295~302 = 8행
 
                 List<int> rows = new List<int> { 0, 2, 1, 7, 3, 5, 4, 6 };
 
@@ -3617,6 +3846,7 @@ namespace SmartReport
                 try
                 {
                     AddLog("Info", $"품질 이미지 삽입 완료");
+                    if (wb != null) Marshal.ReleaseComObject(wb);
                     if (ws != null) Marshal.ReleaseComObject(ws);
                     //if (wb != null)
                     //{
@@ -3874,7 +4104,10 @@ namespace SmartReport
         public void RemovePictures(Excel.Worksheet ws, int? keepPictureIndex = null)
         {
             var pictureNames = new List<string>();
-            Excel.Shapes shapes = null;
+            Excel.Shapes shapes = ws.Shapes;
+
+            if (keepPictureIndex == null) return;
+            if (keepPictureIndex < 2) return;
 
             // 이미지 이름 수집
             for (int i = 1; i <= ws.Shapes.Count; i++)
@@ -3892,7 +4125,7 @@ namespace SmartReport
                 }
                 finally
                 {
-                    Marshal.ReleaseComObject(shape);
+                    if(shape != null) Marshal.ReleaseComObject(shape);
                 }
             }
 

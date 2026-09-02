@@ -56,5 +56,11 @@ namespace WindowsFormsApp1.Comm
             "시_그.pdf",
             "시그.pdf"
         };
+
+        public static readonly List<string> TEST_REPORT = new List<String>()
+        {
+            "시_보.pdf",
+            "시보.pdf"
+        };
     }
 }

@@ -67,6 +67,8 @@ namespace SmartReport
             this.checkBoxDate = new System.Windows.Forms.CheckBox();
             this.checkBoxChecker = new System.Windows.Forms.CheckBox();
             this.gbImage = new System.Windows.Forms.GroupBox();
+            this.tbEquipment = new System.Windows.Forms.TextBox();
+            this.cbEquipment = new System.Windows.Forms.CheckBox();
             this.btnUpdateJuapList = new System.Windows.Forms.Button();
             this.checkBoxCorrect = new System.Windows.Forms.CheckBox();
             this.btnConfirmJulyeon = new System.Windows.Forms.Button();
@@ -117,8 +119,8 @@ namespace SmartReport
             this.lbFolder = new System.Windows.Forms.Label();
             this.cbName = new System.Windows.Forms.ComboBox();
             this.lbName = new System.Windows.Forms.Label();
-            this.tbEquipment = new System.Windows.Forms.TextBox();
-            this.cbEquipment = new System.Windows.Forms.CheckBox();
+            this.tbBattery = new System.Windows.Forms.TextBox();
+            this.cbBattery = new System.Windows.Forms.CheckBox();
             this.pnlMain.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -543,6 +545,8 @@ namespace SmartReport
             this.gbImage.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.gbImage.Controls.Add(this.tbBattery);
+            this.gbImage.Controls.Add(this.cbBattery);
             this.gbImage.Controls.Add(this.tbEquipment);
             this.gbImage.Controls.Add(this.cbEquipment);
             this.gbImage.Controls.Add(this.btnUpdateJuapList);
@@ -564,14 +568,35 @@ namespace SmartReport
             this.gbImage.Controls.Add(this.btnQuntityFileRun);
             this.gbImage.Location = new System.Drawing.Point(5, 250);
             this.gbImage.Name = "gbImage";
-            this.gbImage.Size = new System.Drawing.Size(1399, 382);
+            this.gbImage.Size = new System.Drawing.Size(1399, 283);
             this.gbImage.TabIndex = 24;
             this.gbImage.TabStop = false;
             this.gbImage.Text = "이미지 삽입";
             // 
+            // tbEquipment
+            // 
+            this.tbEquipment.Location = new System.Drawing.Point(185, 142);
+            this.tbEquipment.Margin = new System.Windows.Forms.Padding(4);
+            this.tbEquipment.Name = "tbEquipment";
+            this.tbEquipment.Size = new System.Drawing.Size(217, 37);
+            this.tbEquipment.TabIndex = 47;
+            this.tbEquipment.Text = "03 점검사진\\설비현황사진";
+            // 
+            // cbEquipment
+            // 
+            this.cbEquipment.AutoSize = true;
+            this.cbEquipment.Checked = true;
+            this.cbEquipment.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbEquipment.Location = new System.Drawing.Point(18, 145);
+            this.cbEquipment.Name = "cbEquipment";
+            this.cbEquipment.Size = new System.Drawing.Size(127, 34);
+            this.cbEquipment.TabIndex = 46;
+            this.cbEquipment.Text = "설치기기";
+            this.cbEquipment.UseVisualStyleBackColor = true;
+            // 
             // btnUpdateJuapList
             // 
-            this.btnUpdateJuapList.Location = new System.Drawing.Point(892, 36);
+            this.btnUpdateJuapList.Location = new System.Drawing.Point(1001, 178);
             this.btnUpdateJuapList.Name = "btnUpdateJuapList";
             this.btnUpdateJuapList.Size = new System.Drawing.Size(177, 30);
             this.btnUpdateJuapList.TabIndex = 27;
@@ -584,7 +609,7 @@ namespace SmartReport
             this.checkBoxCorrect.AutoSize = true;
             this.checkBoxCorrect.Checked = true;
             this.checkBoxCorrect.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxCorrect.Location = new System.Drawing.Point(643, 126);
+            this.checkBoxCorrect.Location = new System.Drawing.Point(426, 214);
             this.checkBoxCorrect.Name = "checkBoxCorrect";
             this.checkBoxCorrect.Size = new System.Drawing.Size(346, 34);
             this.checkBoxCorrect.TabIndex = 3;
@@ -593,7 +618,7 @@ namespace SmartReport
             // 
             // btnConfirmJulyeon
             // 
-            this.btnConfirmJulyeon.Location = new System.Drawing.Point(447, 121);
+            this.btnConfirmJulyeon.Location = new System.Drawing.Point(426, 178);
             this.btnConfirmJulyeon.Name = "btnConfirmJulyeon";
             this.btnConfirmJulyeon.Size = new System.Drawing.Size(190, 30);
             this.btnConfirmJulyeon.TabIndex = 28;
@@ -679,7 +704,7 @@ namespace SmartReport
             // btErrorPageUpdate
             // 
             this.btErrorPageUpdate.Enabled = false;
-            this.btErrorPageUpdate.Location = new System.Drawing.Point(995, 127);
+            this.btErrorPageUpdate.Location = new System.Drawing.Point(764, 178);
             this.btErrorPageUpdate.Name = "btErrorPageUpdate";
             this.btErrorPageUpdate.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.btErrorPageUpdate.Size = new System.Drawing.Size(222, 30);
@@ -751,7 +776,7 @@ namespace SmartReport
             | System.Windows.Forms.AnchorStyles.Right)));
             this.btnQuntityFileRun.Location = new System.Drawing.Point(1259, 22);
             this.btnQuntityFileRun.Name = "btnQuntityFileRun";
-            this.btnQuntityFileRun.Size = new System.Drawing.Size(134, 271);
+            this.btnQuntityFileRun.Size = new System.Drawing.Size(134, 255);
             this.btnQuntityFileRun.TabIndex = 23;
             this.btnQuntityFileRun.Text = "실행";
             this.btnQuntityFileRun.UseVisualStyleBackColor = true;
@@ -1131,26 +1156,26 @@ namespace SmartReport
             this.lbName.TabIndex = 5;
             this.lbName.Text = "측정자     : ";
             // 
-            // tbEquipment
+            // tbBattery
             // 
-            this.tbEquipment.Location = new System.Drawing.Point(185, 142);
-            this.tbEquipment.Margin = new System.Windows.Forms.Padding(4);
-            this.tbEquipment.Name = "tbEquipment";
-            this.tbEquipment.Size = new System.Drawing.Size(217, 37);
-            this.tbEquipment.TabIndex = 47;
-            this.tbEquipment.Text = "03 점검사진\\설비현황사진";
+            this.tbBattery.Location = new System.Drawing.Point(186, 171);
+            this.tbBattery.Margin = new System.Windows.Forms.Padding(4);
+            this.tbBattery.Name = "tbBattery";
+            this.tbBattery.Size = new System.Drawing.Size(217, 37);
+            this.tbBattery.TabIndex = 49;
+            this.tbBattery.Text = "01 열화상\\축전지";
             // 
-            // cbEquipment
+            // cbBattery
             // 
-            this.cbEquipment.AutoSize = true;
-            this.cbEquipment.Checked = true;
-            this.cbEquipment.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbEquipment.Location = new System.Drawing.Point(18, 145);
-            this.cbEquipment.Name = "cbEquipment";
-            this.cbEquipment.Size = new System.Drawing.Size(127, 34);
-            this.cbEquipment.TabIndex = 46;
-            this.cbEquipment.Text = "설치기기";
-            this.cbEquipment.UseVisualStyleBackColor = true;
+            this.cbBattery.AutoSize = true;
+            this.cbBattery.Checked = true;
+            this.cbBattery.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbBattery.Location = new System.Drawing.Point(19, 172);
+            this.cbBattery.Name = "cbBattery";
+            this.cbBattery.Size = new System.Drawing.Size(105, 34);
+            this.cbBattery.TabIndex = 48;
+            this.cbBattery.Text = "축전지";
+            this.cbBattery.UseVisualStyleBackColor = true;
             // 
             // FormMain
             // 
@@ -1284,6 +1309,8 @@ namespace SmartReport
         private Button btnInsertSign;
         private TextBox tbEquipment;
         private CheckBox cbEquipment;
+        private TextBox tbBattery;
+        private CheckBox cbBattery;
     }
 }
 
