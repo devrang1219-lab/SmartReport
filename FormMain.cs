@@ -3863,6 +3863,264 @@ namespace SmartReport
         #endregion
 
         #region [열화상 이미지 분기 시트 삽입]
+        private void EnsureFeverPicturePages(
+    Excel.Worksheet ws,
+    int imageCount)
+        {
+            if (ws == null || imageCount <= 0)
+                return;
+
+            const int PAGE_ROW_OFFSET = 56;
+
+            // 한 페이지의 사진 위치
+            const int IMAGE_START_ROW = 27;
+            const int IMAGE_END_ROW = 43;
+
+            // 보고서 마지막 열
+            const string LAST_COLUMN = "AD";
+
+            Excel.Range printAreaRange = null;
+
+            try
+            {
+                //----------------------------------------------------------
+                // 1. 사진이 들어가야 하는 마지막 행 계산
+                //----------------------------------------------------------
+
+                // 페이지당 사진 2장
+                int requiredPages =
+                    (int)Math.Ceiling(imageCount / 2.0);
+
+                // 예:
+                // 1 page -> 43
+                // 2 page -> 99
+                // 3 page -> 155
+                // 4 page -> 211
+                int requiredImageLastRow =
+                    IMAGE_END_ROW +
+                    ((requiredPages - 1) * PAGE_ROW_OFFSET);
+
+
+                //----------------------------------------------------------
+                // 2. 현재 PrintArea의 마지막 행 확인
+                //----------------------------------------------------------
+
+                string printArea = ws.PageSetup.PrintArea;
+
+                if (string.IsNullOrWhiteSpace(printArea))
+                {
+                    throw new Exception(
+                        $"[{ws.Name}] 인쇄영역(PrintArea)이 설정되어 있지 않습니다.");
+                }
+
+                printAreaRange = ws.Range[printArea];
+
+                int printStartRow = printAreaRange.Row;
+
+                int currentPrintLastRow =
+                    printAreaRange.Row +
+                    printAreaRange.Rows.Count - 1;
+
+
+                Debug.WriteLine(
+                    $"[{ws.Name}] " +
+                    $"현재 PrintArea 마지막 행={currentPrintLastRow}, " +
+                    $"사진 필요 마지막 행={requiredImageLastRow}");
+
+
+                //----------------------------------------------------------
+                // 3. 이미 충분하면 아무것도 하지 않음
+                //----------------------------------------------------------
+
+                if (requiredImageLastRow <= currentPrintLastRow)
+                {
+                    Debug.WriteLine(
+                        $"[{ws.Name}] 페이지 추가 필요 없음.");
+
+                    return;
+                }
+
+
+                //----------------------------------------------------------
+                // 4. 필요한 만큼 페이지 추가
+                //----------------------------------------------------------
+
+                while (requiredImageLastRow > currentPrintLastRow)
+                {
+                    Excel.Range sourceRange = null;
+                    Excel.Range destRange = null;
+                    Excel.Range breakCell = null;
+
+                    try
+                    {
+                        /*
+                         * 현재 마지막 페이지 56행을 복사
+                         *
+                         * 예:
+                         *
+                         * PrintArea가 A1:AD168 이라면
+                         *
+                         * 마지막 페이지:
+                         * 113 ~ 168
+                         *
+                         * 복사 위치:
+                         * 169 ~ 224
+                         */
+
+                        int sourceStartRow =
+                            currentPrintLastRow -
+                            PAGE_ROW_OFFSET + 1;
+
+                        int sourceEndRow =
+                            currentPrintLastRow;
+
+                        int destStartRow =
+                            currentPrintLastRow + 1;
+
+                        int destEndRow =
+                            currentPrintLastRow +
+                            PAGE_ROW_OFFSET;
+
+
+                        Debug.WriteLine(
+                            $"[{ws.Name}] 페이지 복사: " +
+                            $"{sourceStartRow}~{sourceEndRow} " +
+                            $"→ {destStartRow}~{destEndRow}");
+
+
+                        //--------------------------------------------------
+                        // 마지막 페이지 복사
+                        //--------------------------------------------------
+
+                        sourceRange = ws.Range[
+                            $"A{sourceStartRow}",
+                            $"{LAST_COLUMN}{sourceEndRow}"
+                        ];
+
+                        destRange = ws.Range[
+                            $"A{destStartRow}",
+                            $"{LAST_COLUMN}{destEndRow}"
+                        ];
+
+                        sourceRange.Copy(destRange);
+
+
+                        //--------------------------------------------------
+                        // 행 높이 복사
+                        //
+                        // Range.Copy만으로 행 높이가 정확히 복사되지
+                        // 않는 경우가 있어서 별도로 맞춤
+                        //--------------------------------------------------
+
+                        for (int i = 0; i < PAGE_ROW_OFFSET; i++)
+                        {
+                            Excel.Range srcRow = null;
+                            Excel.Range dstRow = null;
+
+                            try
+                            {
+                                srcRow = ws.Rows[sourceStartRow + i];
+                                dstRow = ws.Rows[destStartRow + i];
+
+                                dstRow.RowHeight = srcRow.RowHeight;
+                            }
+                            finally
+                            {
+                                if (dstRow != null)
+                                    Marshal.ReleaseComObject(dstRow);
+
+                                if (srcRow != null)
+                                    Marshal.ReleaseComObject(srcRow);
+                            }
+                        }
+
+
+                        //--------------------------------------------------
+                        // 새 페이지 시작 위치에 페이지 나누기
+                        //--------------------------------------------------
+
+                        breakCell = ws.Cells[destStartRow, 1];
+
+                        bool breakExists = false;
+
+                        int breakCount = ws.HPageBreaks.Count;
+
+                        for (int i = 1; i <= breakCount; i++)
+                        {
+                            Excel.HPageBreak hp = null;
+                            Excel.Range location = null;
+
+                            try
+                            {
+                                hp = ws.HPageBreaks[i];
+
+                                location = hp.Location;
+
+                                if (location.Row == destStartRow)
+                                {
+                                    breakExists = true;
+                                    break;
+                                }
+                            }
+                            finally
+                            {
+                                if (location != null)
+                                    Marshal.ReleaseComObject(location);
+
+                                if (hp != null)
+                                    Marshal.ReleaseComObject(hp);
+                            }
+                        }
+
+                        if (!breakExists)
+                        {
+                            ws.HPageBreaks.Add(
+                                Before: breakCell);
+                        }
+
+
+                        //--------------------------------------------------
+                        // PrintArea 확장
+                        //--------------------------------------------------
+
+                        currentPrintLastRow = destEndRow;
+
+                        ws.PageSetup.PrintArea =
+                            $"$A${printStartRow}:${LAST_COLUMN}${currentPrintLastRow}";
+
+
+                        Debug.WriteLine(
+                            $"[{ws.Name}] PrintArea 확장 → " +
+                            $"A{printStartRow}:{LAST_COLUMN}{currentPrintLastRow}");
+                    }
+                    finally
+                    {
+                        if (breakCell != null)
+                            Marshal.ReleaseComObject(breakCell);
+
+                        if (destRange != null)
+                            Marshal.ReleaseComObject(destRange);
+
+                        if (sourceRange != null)
+                            Marshal.ReleaseComObject(sourceRange);
+                    }
+                }
+
+
+                //----------------------------------------------------------
+                // 5. 최종 상태
+                //----------------------------------------------------------
+
+                Debug.WriteLine(
+                    $"[{ws.Name}] 페이지 확장 완료. " +
+                    $"최종 마지막 행={currentPrintLastRow}");
+            }
+            finally
+            {
+                if (printAreaRange != null)
+                    Marshal.ReleaseComObject(printAreaRange);
+            }
+        }
 
         private void ProcFeverPicture(Excel.Application xlApp, Excel.Workbook wb, string baseFolder, string pictureFolder)
         {
@@ -3918,6 +4176,10 @@ namespace SmartReport
                         : int.MaxValue;
                 })
                 .ToArray();
+
+                // ★ 필요한 페이지가 부족하면 마지막 페이지 복사
+                EnsureFeverPicturePages(sourceWs, files.Length);
+                EnsureFeverPicturePages(ws, files.Length);
 
                 int imageIndex = 0;
 
