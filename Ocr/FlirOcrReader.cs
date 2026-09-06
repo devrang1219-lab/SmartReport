@@ -7,8 +7,9 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Tesseract;
 using System.Threading.Tasks;
+using Tesseract;
+using WindowsFormsApp1.Ocr;
 
 #if OPENCV
 using OpenCvSharp;
@@ -19,21 +20,48 @@ namespace WindowsFormsApp1
 {
     public class FlirOcrReader : IDisposable
     {
-        private readonly TesseractEngine engine;
+        // private readonly TesseractEngine engine;
+
+        private readonly OcrReader _ocr;
+        private readonly bool _ownsOcr;
 
         public FlirOcrReader()
         {
-            string tessPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Ocr\\tessdata");
-            engine = new TesseractEngine(tessPath, "eng", EngineMode.Default);
+            _ocr = new OcrReader("0123456789.");
 
-            engine.SetVariable("tessedit_char_whitelist", "0123456789.");
+            _ownsOcr = true;
         }
 
         public FlirOcrReader(string tessDataPath)
         {
-            engine = new TesseractEngine(tessDataPath, "eng", EngineMode.Default);
-            engine.SetVariable("tessedit_char_whitelist", "0123456789.");
+            _ocr = new OcrReader(
+                tessDataPath,
+                "0123456789.");
+
+            _ownsOcr = true;
         }
+
+        public FlirOcrReader(OcrReader ocr)
+        {
+            _ocr = ocr ??
+                throw new ArgumentNullException(nameof(ocr));
+
+            _ownsOcr = false;
+        }
+
+        //public FlirOcrReader()
+        //{
+        //    string tessPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Ocr\\tessdata");
+        //    engine = new TesseractEngine(tessPath, "eng", EngineMode.Default);
+
+        //    engine.SetVariable("tessedit_char_whitelist", "0123456789.");
+        //}
+
+        //public FlirOcrReader(string tessDataPath)
+        //{
+        //    engine = new TesseractEngine(tessDataPath, "eng", EngineMode.Default);
+        //    engine.SetVariable("tessedit_char_whitelist", "0123456789.");
+        //}
 
         public FlirResult Read(string imageFile)
         {
@@ -84,14 +112,14 @@ namespace WindowsFormsApp1
                 return result;
             }
         }
-
         private string Ocr(Bitmap bmp)
         {
-            using (Pix pix = PixConverter.ToPix(bmp))
-            using (Page page = engine.Process(pix, PageSegMode.SingleBlock))
-            {
-                return page.GetText();
-            }
+            OcrReadResult result =
+                _ocr.Read(
+                    bmp,
+                    PageSegMode.SingleBlock);
+
+            return result.Text;
         }
 
         private Dictionary<string, double> ParseItems(string text)
@@ -571,7 +599,10 @@ namespace WindowsFormsApp1
 
         public void Dispose()
         {
-            engine?.Dispose();
+            if (_ownsOcr)
+            {
+                _ocr?.Dispose();
+            }
         }
     }
 

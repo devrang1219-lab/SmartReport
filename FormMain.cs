@@ -8,6 +8,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -19,6 +20,7 @@ using System.Windows.Media.Media3D;
 using System.Xml.Linq;
 using WindowsFormsApp1;
 using WindowsFormsApp1.Comm;
+using WindowsFormsApp1.Ocr;
 using WindowsFormsApp1.SortImage;
 using Action = System.Action;
 using Excel = Microsoft.Office.Interop.Excel;
@@ -3617,6 +3619,33 @@ namespace SmartReport
 
                     //wb.Save();
                 }
+                using (OcrReader ocr = new OcrReader("0123456789:.~[]sec "))
+                {
+                    QualityPdfReader reader =
+                        new QualityPdfReader(ocr);
+
+                    QualityOcrResult result =
+                        reader.Read(
+                            pdfPath,
+                            page: 0,
+                            dpi: 400,
+                            debugOutputDir:
+                                Path.Combine(baseFolder, "OcrDebug"));
+
+                    //foreach (var pair in result.Items)
+                    //{
+                    //    QualityOcrItem item = pair.Value;
+
+                    //    Debug.WriteLine(
+                    //        $"{item.Name} = {item.Text}, " +
+                    //        $"confidence={item.Confidence:P1}, " +
+                    //        $"success={item.Success}");
+                    //}
+
+                    WriteQualityOcrResult(
+                        ws,
+                        result);
+                }
                 AddLog("Info", $"K.pdf 처리 완료");
 
                 pdfPath = testReport
@@ -3857,6 +3886,117 @@ namespace SmartReport
                 catch
                 {
                     AddLog("Error", $"분기 파일 정리 실패");
+                }
+            }
+        }
+
+        private void WriteQualityOcrResult(
+            Excel.Worksheet ws,
+            QualityOcrResult result)
+        {
+            if (ws == null)
+                throw new ArgumentNullException(nameof(ws));
+
+            if (result == null)
+                throw new ArgumentNullException(nameof(result));
+
+            Dictionary<string, string> cellMap =
+                new Dictionary<string, string>
+                {
+                    { "measurement_period", "H5" },
+                    { "record_interval",    "C6" },
+
+                    { "max_power",          "C12" },
+                    { "power_factor",       "D12" },
+
+                    { "voltage_r",          "F12" },
+                    { "voltage_s",          "F13" },
+                    { "voltage_t",          "F14" },
+
+                    { "voltage_thd_r",      "G12" },
+                    { "voltage_thd_s",      "G13" },
+                    { "voltage_thd_t",      "G14" },
+
+                    { "current_r",          "J12" },
+                    { "current_s",          "J13" },
+                    { "current_t",          "J14" },
+
+                    { "current_unbalance",  "M12" },
+
+                    { "current_thd_r",      "N12" },
+                    { "current_thd_s",      "N13" },
+                    { "current_thd_t",      "N14" }
+                };
+
+            foreach (var pair in cellMap)
+            {
+                string name = pair.Key;
+                string cellAddress = pair.Value;
+
+                QualityOcrItem item = result[name];
+
+                if (item == null)
+                {
+                    Debug.WriteLine(
+                        $"[OCR] {name} 결과 없음");
+
+                    continue;
+                }
+
+                if (!item.Success)
+                {
+                    Debug.WriteLine(
+                        $"[OCR FAIL] {name} " +
+                        $"Raw='{item.RawText}' " +
+                        $"Conf={item.Confidence:P1}");
+                }
+
+                Excel.Range cell = null;
+
+                try
+                {
+                    cell = ws.Range[cellAddress];
+
+                    Debug.WriteLine($"Name       = [{item.Name}]");
+                    Debug.WriteLine($"RawText    = [{item.RawText}]");
+                    Debug.WriteLine($"Text       = [{item.Text}]");
+                    Debug.WriteLine($"Numeric    = [{item.NumericValue}]");
+                    Debug.WriteLine($"Confidence = [{item.Confidence}]");
+                    Debug.WriteLine($"Success    = [{item.Success}]");
+
+                    // 숫자는 숫자로 입력
+                    if (double.TryParse(
+                        item.Text,
+                        NumberStyles.Any,
+                        CultureInfo.InvariantCulture,
+                        out double value))
+                    {
+                        cell.Value2 = value;
+                    }
+                    else
+                    {
+                        cell.Value2 = item.Text;
+                    }
+
+                    // 형식 오류 → 노란색
+                    if (!item.FormatValid)
+                    {
+                        cell.Interior.Color =
+                            ColorTranslator.ToOle(Color.Yellow);
+                    }
+
+                    Debug.WriteLine(
+                        $"[OCR OK] {name} " +
+                        $"→ {cellAddress} = {item.Text} " +
+                        $"({item.Confidence:P1})");
+                }
+                finally
+                {
+                    if (cell != null)
+                    {
+                        Marshal.ReleaseComObject(cell);
+                        cell = null;
+                    }
                 }
             }
         }
@@ -4129,9 +4269,11 @@ namespace SmartReport
             Excel.Worksheet sourceWs = null;
             Excel.Worksheet ws = null;
 
+            string sheetName = tbQuaterSheet.Text.Trim();
+
             try
             {
-                sourceWs = GetWorksheetByLastName(wb, "분기");
+                sourceWs = GetWorksheetByLastName(wb, sheetName);
 
                 if (sourceWs == null)
                 {

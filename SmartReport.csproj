@@ -209,6 +209,10 @@
     </Compile>
     <Compile Include="ImageInserter.cs" />
     <Compile Include="Ocr\OcrDataToExcel.cs" />
+    <Compile Include="Ocr\OcrImageProcessor.cs" />
+    <Compile Include="Ocr\OcrReader.cs" />
+    <Compile Include="Ocr\PdfRenderer.cs" />
+    <Compile Include="Ocr\QualityPdfReader.cs" />
     <Compile Include="OpinionMaker.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
