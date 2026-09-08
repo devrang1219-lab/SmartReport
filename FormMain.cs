@@ -7024,7 +7024,7 @@ namespace SmartReport
         private void btnChangeFooterLogo_Click(object sender, EventArgs e)
         {
             string filePath = tbQuantityFile.Text?.Trim();
-            string logoPath = @"D:\Logo.png";
+            string logoPath = @"D:\hkeng_ref\Logo.png";
 
             Excel.Application app = null;
             Excel.Workbook wb = null;
@@ -7068,8 +7068,10 @@ namespace SmartReport
                     Excel.Graphic graphic = null;
 
                     try
-                    {
+                    { 
                         ws = (Excel.Worksheet)wb.Worksheets[i];
+                        if (ws.Name == "갑지") continue;
+
                         pageSetup = ws.PageSetup;
 
                         graphic = pageSetup.RightFooterPicture;
@@ -7094,10 +7096,7 @@ namespace SmartReport
 
                         AddLog(
                             "Info",
-                            $"{ws.Name} 시트 바닥글 로고 변경 완료");
-
-
-                        if (i == 2) break;
+                            $"{ws.Name} 시트 바닥글 로고 변경");
                     }
                     catch (Exception ex)
                     {
