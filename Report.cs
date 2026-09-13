@@ -529,7 +529,235 @@ namespace WindowsFormsApp1
 
         #region 갑지 이미지 중앙 정렬
 
-        public ProcResult relocatePictures(string filePath)
+        private void ReplaceA13FromSample(
+            Excel.Worksheet targetWs,
+            string sampleFilePath)
+        {
+            Excel.Application app = null;
+            Excel.Workbook sampleWb = null;
+            Excel.Worksheet sampleWs = null;
+
+            Excel.Range targetCell = null;
+            Excel.Range sampleCell = null;
+
+            Excel.Shapes targetShapes = null;
+            Excel.Shapes sampleShapes = null;
+
+            try
+            {
+                if (!File.Exists(sampleFilePath))
+                    throw new FileNotFoundException(
+                        "sample.xlsx 파일을 찾을 수 없습니다.",
+                        sampleFilePath);
+
+                // =====================================================
+                // 대상 A13
+                // =====================================================
+
+                targetCell = targetWs.Range["A13"];
+
+                // 병합셀이라면 MergeArea 전체를 대상으로 사용
+                if (targetCell.MergeCells)
+                {
+                    Excel.Range mergeArea = targetCell.MergeArea;
+
+                    ExcelComHelper.Release(targetCell);
+                    targetCell = mergeArea;
+                }
+
+
+                // =====================================================
+                // 현재 시트의 A13 영역에 걸쳐 있는 Shape 제거
+                // =====================================================
+
+                targetShapes = targetWs.Shapes;
+
+                // 삭제하면서 Count가 변하므로 뒤에서부터 처리
+                for (int i = targetShapes.Count; i >= 1; i--)
+                {
+                    Excel.Shape shape = null;
+
+                    try
+                    {
+                        shape = targetShapes.Item(i);
+
+                        double shapeLeft = shape.Left;
+                        double shapeTop = shape.Top;
+                        double shapeRight =
+                            shape.Left + shape.Width;
+                        double shapeBottom =
+                            shape.Top + shape.Height;
+
+                        double cellLeft = targetCell.Left;
+                        double cellTop = targetCell.Top;
+                        double cellRight =
+                            targetCell.Left + targetCell.Width;
+                        double cellBottom =
+                            targetCell.Top + targetCell.Height;
+
+                        // Shape와 A13 영역이 겹치는지 검사
+                        bool overlaps =
+                            shapeLeft < cellRight &&
+                            shapeRight > cellLeft &&
+                            shapeTop < cellBottom &&
+                            shapeBottom > cellTop;
+
+                        if (overlaps)
+                        {
+                            Debug.WriteLine(
+                                $"A13 영역의 Shape 삭제: {shape.Name}");
+
+                            shape.Delete();
+                        }
+                    }
+                    finally
+                    {
+                        ExcelComHelper.Release(shape);
+                    }
+                }
+
+
+                // =====================================================
+                // sample.xlsx 열기
+                // =====================================================
+
+                app = new Excel.Application
+                {
+                    Visible = false,
+                    DisplayAlerts = false
+                };
+
+                sampleWb = ExcelComHelper.OpenWorkbook(
+                    app,
+                    sampleFilePath,
+                    true);       // ReadOnly
+
+                sampleWs = ExcelComHelper.GetWorksheet(
+                    sampleWb,
+                    targetWs.Name);
+
+                if (sampleWs == null)
+                    throw new Exception(
+                        $"sample.xlsx에서 '{targetWs.Name}' 시트를 찾을 수 없습니다.");
+
+
+                // =====================================================
+                // sample A13 셀 값 복사
+                // =====================================================
+
+                sampleCell = sampleWs.Range["A13"];
+
+                targetCell.Value = sampleCell.Value;
+
+
+                // =====================================================
+                // sample A13에 걸쳐 있는 Shape 찾기
+                // =====================================================
+
+                sampleShapes = sampleWs.Shapes;
+
+                for (int i = 1; i <= sampleShapes.Count; i++)
+                {
+                    Excel.Shape sampleShape = null;
+                    Excel.Range compareCell = sampleCell;
+
+
+                    try
+                    {
+                        sampleShape = sampleShapes.Item(i);
+
+                        if ((bool)sampleCell.MergeCells)
+                        {
+                            compareCell = sampleCell.MergeArea;
+                        }
+
+                        double shapeLeft = sampleShape.Left;
+                        double shapeTop = sampleShape.Top;
+                        double shapeRight =
+                            sampleShape.Left + sampleShape.Width;
+                        double shapeBottom =
+                            sampleShape.Top + sampleShape.Height;
+
+                        double cellLeft = compareCell.Left;
+                        double cellTop = compareCell.Top;
+                        double cellRight = cellLeft + compareCell.Width;
+                        double cellBottom = cellTop + compareCell.Height;
+
+                        bool overlaps =
+                            shapeLeft < cellRight &&
+                            shapeRight > cellLeft &&
+                            shapeTop < cellBottom &&
+                            shapeBottom > cellTop;
+
+                        if (!overlaps)
+                            continue;
+
+
+                        // =================================================
+                        // 이미지 복사
+                        // =================================================
+
+                        float left = sampleShape.Left;
+                        float top = sampleShape.Top;
+                        float width = sampleShape.Width;
+                        float height = sampleShape.Height;
+
+                        sampleShape.Copy();
+
+                        // 현재 시트에 붙여넣기
+                        targetWs.Paste();
+
+                        // 방금 붙여넣은 Shape
+                        Excel.Shape newShape = null;
+
+                        try
+                        {
+                            newShape =
+                                targetWs.Shapes.Item(
+                                    targetWs.Shapes.Count);
+
+                            // sample과 동일한 위치/크기
+                            newShape.Left = left;
+                            newShape.Top = top;
+                            newShape.Width = width;
+                            newShape.Height = height;
+                        }
+                        finally
+                        {
+                            ExcelComHelper.Release(newShape);
+                        }
+
+                        // A13에 해당하는 이미지는 하나만 복사
+                        break;
+                    }
+                    finally
+                    {
+                        ExcelComHelper.Release(sampleShape);
+                    }
+                }
+            }
+            finally
+            {
+                ExcelComHelper.Release(sampleShapes);
+                ExcelComHelper.Release(targetShapes);
+
+                ExcelComHelper.Release(sampleCell);
+                ExcelComHelper.Release(targetCell);
+
+                ExcelComHelper.Release(sampleWs);
+
+                ExcelComHelper.CloseWorkbook(
+                    ref sampleWb,
+                    false);
+
+                ExcelComHelper.QuitApplication(
+                    ref app);
+
+                ExcelComHelper.Cleanup();
+            }
+        }
+
+        public ProcResult relocatePictures(string filePath, string sampleFilePath = null)
         {
 
             Excel.Application xlApp = null;
@@ -564,6 +792,17 @@ namespace WindowsFormsApp1
 
                 if (ws == null)
                     return ProcResult.Fail("갑지 시트를 찾을 수 없습니다.");
+
+                // =====================================================
+                // A13 내용을 sample.xlsx 기준으로 교체
+                // =====================================================
+
+                //if (!string.IsNullOrEmpty(sampleFilePath))
+                //{
+                //    ReplaceA13FromSample(
+                //        ws,
+                //        sampleFilePath);
+                //}
 
 
                 // =====================================================
@@ -693,6 +932,8 @@ namespace WindowsFormsApp1
 
                 if (picture != null)
                 {
+                    // picture.Shadow.Visible = Microsoft.Office.Core.MsoTriState.msoFalse;
+
                     picture.Left =
                         (float)(
                             centerX -

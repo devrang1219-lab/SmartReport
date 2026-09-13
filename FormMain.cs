@@ -4602,155 +4602,6 @@ namespace SmartReport
         #endregion
 
         #region 갑지 이미지 중앙 정렬
-        //public void relocatePictures()
-        //{
-
-        //    var filePath = tbQuantityFile.Text?.Trim();
-        //    if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
-        //    {
-        //        MessageBox.Show("페이지 번호를 매길 엑셀 파일을 먼저 선택하세요.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-        //        return;
-        //    }
-
-        //    if (report == null) {
-        //        AddLog("Error", "report를 찾을 수 없습니다.");
-        //    }
-
-        //    Cursor = Cursors.WaitCursor;
-        //    Excel.Application xlApp = null;
-        //    Excel.Workbook wb = null;
-        //    Excel.Worksheet ws = null;
-
-        //    try
-        //    {
-        //        xlApp = new Excel.Application { Visible = false, DisplayAlerts = false };
-        //        // Open for write because we modify PageSetup
-        //        wb = xlApp.Workbooks.Open(filePath, ReadOnly: false);
-
-        //        ws = report.GetWorksheetByName(wb, "갑지");
-
-        //        if (ws == null)
-        //        {
-        //            AddLog("Error", "갑지 시트를 찾을 수 없습니다.");
-        //        }
-
-        //        //int quarterCount = GetQuarterCount(filePath);
-
-        //        Match match = Regex.Match(filePath, @"(\d{2})년(\d)분기");
-
-        //        if (match.Success)
-        //        {
-
-        //            string title =
-        //            $"{2000 + int.Parse(match.Groups[1].Value)}년 {match.Groups[2].Value}분기" +
-        //            (filePath.Contains("연차") ? " 연차" : "");
-
-        //            ws.Cells[11, 1].Value = title;
-        //        }
-
-
-        //        ws.PageSetup.LeftMargin = 28.35;   // 약 1cm
-        //        ws.PageSetup.RightMargin = 28.35;  // 약 1cm
-        //        ws.PageSetup.BottomMargin = 28.35;   // 약 1cm
-        //        ws.PageSetup.TopMargin = 28.35;  // 약 1cm
-        //        ws.PageSetup.CenterHorizontally = true;   // 좌우 가운데
-        //        ws.PageSetup.CenterVertically = true;     // 상하 가운데
-
-        //        // 인쇄 영역 기준
-        //        Excel.Range printRange = ws.Range[ws.PageSetup.PrintArea];
-        //        if (string.IsNullOrWhiteSpace(ws.PageSetup.PrintArea))
-        //            printRange = ws.UsedRange;
-        //        else
-        //            printRange = ws.Range[ws.PageSetup.PrintArea];
-
-        //        double pageLeft = (double)printRange.Left;
-        //        double pageWidth = (double)printRange.Width;
-
-        //        // 페이지 중앙
-        //        double centerX = pageLeft + pageWidth / 2;
-
-        //        double centerY = (double)printRange.Top + (double)printRange.Height / 2;
-
-        //        Excel.Shape picture = ws.Shapes.Cast<Excel.Shape>()
-        //            .Where(s => s.Type == Microsoft.Office.Core.MsoShapeType.msoPicture)
-        //            .OrderBy(s =>
-        //            {
-        //                double shapeCenterY = s.Top + s.Height / 2.0;
-        //                return Math.Abs(shapeCenterY - centerY);
-        //            })
-        //            .FirstOrDefault();
-
-        //        if (picture != null)
-        //        {
-        //            picture.Left = (float)(centerX - picture.Width / 2);
-        //        }
-
-        //        // 모서리 둥근 사각형 1개
-        //        Excel.Shape roundRect = ws.Shapes.Cast<Excel.Shape>()
-        //            .FirstOrDefault(s =>
-        //                s.Type == Microsoft.Office.Core.MsoShapeType.msoAutoShape &&
-        //                s.AutoShapeType == Microsoft.Office.Core.MsoAutoShapeType.msoShapeRoundedRectangle);
-
-        //        if (roundRect != null)
-        //        {
-        //            //roundRect.Left = (float)(centerX - roundRect.Width / 2);
-
-
-
-        //            Debug.WriteLine($"PrintArea={ws.PageSetup.PrintArea}");
-        //            Debug.WriteLine($"Print Left={printRange.Left}");
-        //            Debug.WriteLine($"Print Width={printRange.Width}");
-        //            Debug.WriteLine($"CenterX={centerX}");
-
-        //            Debug.WriteLine($"Before={roundRect.Left}");
-        //            roundRect.Left = (float)(centerX - roundRect.Width / 2);
-        //            Debug.WriteLine($"After={roundRect.Left}");
-        //        }
-
-
-        //        if (printRange != null)
-        //            Marshal.ReleaseComObject(printRange);
-
-
-
-        //        try { wb.Save(); } catch { }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        //MessageBox.Show($"갑지 시트 위치 조정 중 오류가 발생했습니다:\r\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        //        AddLog("Error", $"갑지 시트 위치 조정 중 오류가 발생했습니다: {ex.Message}");
-        //    }
-        //    finally
-        //    {
-
-        //        if (ws != null)
-        //            Marshal.ReleaseComObject(ws);
-        //        try
-        //        {
-        //            if (wb != null)
-        //            {
-        //                wb.Close(true);
-        //                Marshal.ReleaseComObject(wb);
-        //            }
-        //        }
-        //        catch { }
-
-        //        try
-        //        {
-        //            if (xlApp != null)
-        //            {
-        //                xlApp.Quit();
-        //                Marshal.ReleaseComObject(xlApp);
-        //            }
-        //        }
-        //        catch { }
-
-        //        GC.Collect();
-        //        GC.WaitForPendingFinalizers();
-        //        Cursor = Cursors.Default;
-        //    }
-        //}
-
 
         private void btnGapjiPictureRelocate_Click(object sender, EventArgs e)
         {
@@ -4778,7 +4629,7 @@ namespace SmartReport
             try
             {
                 ProcResult result =
-                    report.relocatePictures(filePath);
+                    report.relocatePictures(filePath, "D:\\전기보고서_수정_260818.xlsx");
 
                 if (result.Success)
                 {
@@ -5104,11 +4955,11 @@ namespace SmartReport
 
             SearchFolders = new List<SearchFolderOption>
             {
-                new SearchFolderOption
-                {
-                    Folder = downloadFolderSeasonReport,
-                    Recursive = false
-                },
+                //new SearchFolderOption
+                //{
+                //    Folder = downloadFolderSeasonReport,
+                //    Recursive = false
+                //},
                 new SearchFolderOption
                 {
                     Folder = downloadFolderAnuualReport,
@@ -6371,11 +6222,11 @@ namespace SmartReport
                                 string leftNo = Convert.ToString(wsSrc.Range[$"B{row}"].Value2)?.Trim();
 
                                 bool bRight = !string.IsNullOrEmpty(rightNo);
-                                SetIncorrectCell(wsSrc.Range[$"A{row}"], (bRight)?"좌":"",
+                                SetIncorrectCell(wsSrc.Range[$"A{row}"], (bRight) ? "좌" : "",
                                         $"좌측: A{row}에 '{Convert.ToString(wsSrc.Range[$"A{row}"].Value2)}' 대신 '좌' 채움");
                                 SetIncorrectCell(wsSrc.Range[$"K{row}"], (bRight) ? "우" : "",
                                         $"우측: K{row}에 '{Convert.ToString(wsSrc.Range[$"K{row}"].Value2)}' 대신 '우' 채움");
-                                
+
                             }
                         }
 
@@ -6386,6 +6237,7 @@ namespace SmartReport
                         Excel.Range rResult = wsSrc.Range[$"{resultCol}{row}"];
                         Excel.Range rRemark = wsSrc.Range[$"{remarkCol}{row}"];
                         Excel.Range rLimit = wsSrc.Range[$"{limitCol}{row}"];
+                        Excel.Range rBreaker = rLimit.Offset[0, -1];
 
                         if (string.IsNullOrWhiteSpace(no))
                         {
@@ -6393,7 +6245,8 @@ namespace SmartReport
                                 || Convert.ToString(rCurrent.Value2) != null
                                 || Convert.ToString(rResult.Value2) != null
                                 || Convert.ToString(rRemark.Value2) != null
-                                || Convert.ToString(rLimit.Value2) != null)    
+                                || Convert.ToString(rLimit.Value2) != null
+                                || Convert.ToString(rBreaker.Value2) != null)    
                             {
                                 if (bCorrect)
                                 {
@@ -6402,6 +6255,7 @@ namespace SmartReport
                                     rLimit?.ClearContents();
                                     rResult?.ClearContents();
                                     rLimit?.ClearContents();
+                                    rBreaker.ClearContents();
                                 }
                                 else
                                 {
@@ -6410,6 +6264,7 @@ namespace SmartReport
                                     rRemark.Interior.Color = ColorTranslator.ToOle(Color.Yellow);
                                     rLimit.Interior.Color = ColorTranslator.ToOle(Color.Yellow);
                                     rResult.Interior.Color = ColorTranslator.ToOle(Color.Yellow);
+                                    rBreaker.Interior.Color = ColorTranslator.ToOle(Color.Yellow);
                                 }
 
                                 AddLog("WARN", $"측정번호가 없는데 값이 있음");
@@ -6446,22 +6301,30 @@ namespace SmartReport
                             continue;
                         }
 
+                        string breakerInfo = Convert.ToString(rBreaker.Value2); // M열 (예: "MCCB 3P")
+                        bool isThreePhase = breakerInfo.Contains("3P") || breakerInfo.Contains("4P");
+                        // 1. 3상 여부 확인 (3P/4P 또는 380V 포함 시 1.5, 단상이면 1.0)
+                        double phaseFactor = isThreePhase ? 1.5 : 1.0;
+
+                        // 2. 주의 기준값 계산 (20A 단상 = 1.0mA, 20A 3상 = 1.5mA)
+                        double warningThreshold = (limit / 20.0) * phaseFactor;
+
                         // 4. 누설전류 판정
                         if (hasCurrent && limit > 0)
                         {
 
                             if (rResult.Value2 == null && rResult.Value == null)
                             {
-                                //AddLog("Info", $"{resultCol}{row} is null");
+                                AddLog("Info 1", $"{resultCol}{row} is null");
                                 continue;
                             }
                             string result = Convert.ToString(rResult.Value)?.Trim();
 
-                            if (current >= limit / 20.0)
+                            if (current >= warningThreshold)
                             {
                                 if (result != "주의")
                                 {
-                                    AddLog("Info", $"{resultCol}{row}에 누설전류 '점검요' 채움");
+                                    AddLog("Info", $"{resultCol}{row}에 누설전류 '주의' 채움");
                                     rResult.Value = "주의";
                                 }
                             }
@@ -7180,11 +7043,14 @@ namespace SmartReport
 
             string namePart = text.Substring(dashIndex + 1).Trim();
 
+            int commaIndex = namePart.IndexOf(',');
+            string strName = namePart.Substring(0, (commaIndex>0)?commaIndex:namePart.Length).Trim();
+
             foreach (string signPath in Directory.GetFiles(signFolder, "*.png"))
             {
                 string name = Path.GetFileNameWithoutExtension(signPath);
 
-                if (namePart.Contains(name))
+                if (strName.Contains(name))
                     return signPath;
             }
 
@@ -7346,7 +7212,7 @@ namespace SmartReport
                         double estimatedTextWidth =
                             text.Length * fontSize * 0.72;
 
-                        const double gap = 8.0;
+                        const double gap = 20.0;
 
                         double left =
                             (double)targetRange.Left +
