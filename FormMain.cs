@@ -2023,8 +2023,8 @@ namespace SmartReport
 
             try
             {
-                ProcResult result =
-                    report.SetPageNumbers(filePath);
+                ProcResult result = report.SetPageStartNumbers(filePath);
+                    //report.SetPageNumbers(filePath);
 
                 if (result.Success)
                 {
@@ -3962,22 +3962,107 @@ namespace SmartReport
             // 영코
             ProcVideoCoronaSheet(xlApp, wb, baseFolder, text);
         }
-        private void ProcVideoCoronaSheet(Excel.Application xlApp, Excel.Workbook wb, string baseFolder, object text)
+        //private void ProcVideoCoronaSheet(Excel.Application xlApp, Excel.Workbook wb, string baseFolder, object text)
+        //{
+        //    Excel.Worksheet ws = null;
+        //    if (report == null)
+        //    {
+        //        AddLog("Error", "report를 찾을 수 없습니다.");
+        //    }
+
+        //    try
+        //    {
+        //        string tmpFolder = Path.Combine(baseFolder, "05 영상코로나 또는 부분방전");
+        //        string pdfPath = Directory.GetFiles(tmpFolder, "*.pdf").FirstOrDefault();
+
+        //        if (pdfPath == null)
+        //        {
+        //            throw new FileNotFoundException("PDF 파일을 찾을 수 없습니다.", tmpFolder);
+        //        }
+
+        //        ws = report.GetWorksheetByName(wb, "영코");
+
+        //        if (ws == null)
+        //        {
+        //            throw new Exception("영코 시트를 찾을 수 없습니다.");
+        //        }
+
+        //        Excel.Range rng = ws.Range["A1:I1"];
+        //        RemovePicturesInRange(ws, rng, false);
+
+        //        using (ImageInserter inserter = new ImageInserter(ws, pdfPath))
+        //        {
+        //            ImageInsertOptions option = new ImageInsertOptions
+        //            {
+        //                CropLeft = 175,
+        //                CropTop = 195,
+        //                CropRight = 1200,
+        //                CropBottom = 195
+        //            };
+
+        //            inserter.InsertFit(0,
+        //                "A5",
+        //                "I24"
+        //                );
+
+        //            for (int i = 1; i < inserter.ImageCount; i++)
+        //            {
+        //                string cellFrom = $"A{25 + (i - 1) * 25}";
+        //                string cellTo = $"I{49 + (i - 1) * 25}";
+        //                inserter.InsertFit(i,
+        //                    cellFrom,
+        //                    cellTo
+        //                    );
+        //            }
+
+        //            ws.PageSetup.LeftMargin = xlApp.CentimetersToPoints(2.06);
+        //            wb.Save();
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        AddLog("Error", $"영상코로나 이미지 삽입 실패: {ex.Message}");
+        //    }
+        //    finally
+        //    {
+        //        try
+        //        {
+        //            if (ws != null) Marshal.ReleaseComObject(ws);
+        //        }
+        //        catch { }
+        //    }
+        //}
+        private void ProcVideoCoronaSheet(
+            Excel.Application xlApp,
+            Excel.Workbook wb,
+            string baseFolder,
+            object text)
         {
             Excel.Worksheet ws = null;
-            if (report == null)
-            {
-                AddLog("Error", "report를 찾을 수 없습니다.");
-            }
+            Excel.Range rng = null;
+            Excel.PageSetup pageSetup = null;
 
             try
             {
-                string tmpFolder = Path.Combine(baseFolder, "05 영상코로나 또는 부분방전");
-                string pdfPath = Directory.GetFiles(tmpFolder, "*.pdf").FirstOrDefault();
+                if (report == null)
+                {
+                    AddLog("Error", "report를 찾을 수 없습니다.");
+                    return;
+                }
+
+                string tmpFolder = Path.Combine(
+                    baseFolder,
+                    "05 영상코로나 또는 부분방전");
+
+                string pdfPath = Directory
+                    .GetFiles(tmpFolder, "*.pdf")
+                    .FirstOrDefault();
 
                 if (pdfPath == null)
                 {
-                    throw new FileNotFoundException("PDF 파일을 찾을 수 없습니다.", tmpFolder);
+                    throw new FileNotFoundException(
+                        "PDF 파일을 찾을 수 없습니다.",
+                        tmpFolder);
                 }
 
                 ws = report.GetWorksheetByName(wb, "영코");
@@ -3987,49 +4072,206 @@ namespace SmartReport
                     throw new Exception("영코 시트를 찾을 수 없습니다.");
                 }
 
-                Excel.Range rng = ws.Range["A1:I1"];
-                RemovePicturesInRange(ws, rng, false);
+                // =====================================================
+                // 기존 이미지 삭제
+                // =====================================================
+                rng = ws.Range["A1:I1"];
 
-                using (ImageInserter inserter = new ImageInserter(ws, pdfPath))
+                RemovePicturesInRange(
+                    ws,
+                    rng,
+                    false);
+
+                Marshal.ReleaseComObject(rng);
+                rng = null;
+
+
+                // =====================================================
+                // PDF 이미지 삽입
+                // =====================================================
+                int lastImageEndRow = 24;
+
+                using (ImageInserter inserter =
+                       new ImageInserter(ws, pdfPath))
                 {
-                    ImageInsertOptions option = new ImageInsertOptions
-                    {
-                        CropLeft = 175,
-                        CropTop = 195,
-                        CropRight = 1200,
-                        CropBottom = 195
-                    };
+                    ImageInsertOptions option =
+                        new ImageInsertOptions
+                        {
+                            CropLeft = 175,
+                            CropTop = 195,
+                            CropRight = 1200,
+                            CropBottom = 195
+                        };
 
-                    inserter.InsertFit(0,
+                    // 첫 번째 이미지
+                    inserter.InsertFit(
+                        0,
                         "A5",
-                        "I24"
-                        );
+                        "I24");
 
-                    for (int i = 1; i < inserter.ImageCount; i++)
+                    // 나머지 이미지
+                    for (int i = 1;
+                         i < inserter.ImageCount;
+                         i++)
                     {
-                        string cellFrom = $"A{25 + (i - 1) * 25}";
-                        string cellTo = $"I{49 + (i - 1) * 25}";
-                        inserter.InsertFit(i,
+                        int startRow =
+                            25 + (i - 1) * 25;
+
+                        int endRow =
+                            49 + (i - 1) * 25;
+
+                        string cellFrom =
+                            $"A{startRow}";
+
+                        string cellTo =
+                            $"I{endRow}";
+
+                        inserter.InsertFit(
+                            i,
                             cellFrom,
-                            cellTo
-                            );
+                            cellTo);
+
+                        lastImageEndRow = endRow;
                     }
 
-                    ws.PageSetup.LeftMargin = xlApp.CentimetersToPoints(2.06);
-                    wb.Save();
+                    // 이미지가 1개인 경우도 처리
+                    if (inserter.ImageCount > 0)
+                    {
+                        lastImageEndRow =
+                            24 +
+                            (inserter.ImageCount - 1) * 25;
+                    }
                 }
+
+
+                // =====================================================
+                // 페이지 설정
+                // =====================================================
+                pageSetup = ws.PageSetup;
+
+                pageSetup.LeftMargin =
+                    xlApp.CentimetersToPoints(2.06);
+
+                // 마지막 이미지까지 인쇄 영역 설정
+                pageSetup.PrintArea =
+                    $"$A$1:$I${lastImageEndRow}";
+
+
+                // 필요하다면 페이지 나누기 기준도 설정 가능
+                // 페이지당 25행 구조라면 마지막 이미지까지 자동으로 포함됨.
+
+                AddHorizontalPageBreaks(
+                    ws,
+                    offset: 24,
+                    pageRows: 25,
+                    lastRow: lastImageEndRow);
+
+
+                // =====================================================
+                // 저장
+                // =====================================================
+                wb.Save();
             }
             catch (Exception ex)
             {
-                AddLog("Error", $"영상코로나 이미지 삽입 실패: {ex.Message}");
+                AddLog(
+                    "Error",
+                    $"영상코로나 이미지 삽입 실패: {ex.Message}");
             }
             finally
             {
+                // Range
                 try
                 {
-                    if (ws != null) Marshal.ReleaseComObject(ws);
+                    if (rng != null)
+                        Marshal.ReleaseComObject(rng);
                 }
                 catch { }
+
+                // PageSetup
+                try
+                {
+                    if (pageSetup != null)
+                        Marshal.ReleaseComObject(pageSetup);
+                }
+                catch { }
+
+                // Worksheet
+                try
+                {
+                    if (ws != null)
+                        Marshal.ReleaseComObject(ws);
+                }
+                catch { }
+
+                ws = null;
+                rng = null;
+                pageSetup = null;
+            }
+        }
+        private void AddHorizontalPageBreaks(
+            Excel.Worksheet ws,
+            int offset,
+            int pageRows,
+            int lastRow)
+        {
+            if (ws == null)
+                throw new ArgumentNullException(nameof(ws));
+
+            if (offset < 1)
+                throw new ArgumentOutOfRangeException(nameof(offset));
+
+            if (pageRows < 1)
+                throw new ArgumentOutOfRangeException(nameof(pageRows));
+
+            if (lastRow <= offset)
+                return;
+
+            try
+            {
+                // 기존 수동 페이지 구분선 제거
+                ws.ResetAllPageBreaks();
+
+                // 첫 페이지 다음부터 페이지 구분
+                // 예:
+                // offset = 24
+                // pageRows = 25
+                //
+                // 25행
+                // 50행
+                // 75행
+                // ...
+                for (int breakRow = offset + 1;
+                     breakRow <= lastRow;
+                     breakRow += pageRows)
+                {
+                    Excel.Range breakRange = null;
+
+                    try
+                    {
+                        breakRange = ws.Range[$"A{breakRow}"];
+
+                        ws.HPageBreaks.Add(
+                            breakRange);
+                    }
+                    finally
+                    {
+                        if (breakRange != null)
+                        {
+                            try
+                            {
+                                Marshal.ReleaseComObject(breakRange);
+                            }
+                            catch { }
+
+                            breakRange = null;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                throw;
             }
         }
         #endregion
@@ -7676,31 +7918,31 @@ namespace SmartReport
         #endregion
 
         #region [측정자 서명 변경]
-        private string FindInspectorSign(string text, string signFolder)
-        {
-            if (string.IsNullOrWhiteSpace(text))
-                return null;
+        //private string FindInspectorSign(string text, string signFolder)
+        //{
+        //    if (string.IsNullOrWhiteSpace(text))
+        //        return null;
 
-            int dashIndex = text.IndexOf('-');
+        //    int dashIndex = text.IndexOf('-');
 
-            if (dashIndex < 0)
-                return null;
+        //    if (dashIndex < 0)
+        //        return null;
 
-            string namePart = text.Substring(dashIndex + 1).Trim();
+        //    string namePart = text.Substring(dashIndex + 1).Trim();
 
-            int commaIndex = namePart.IndexOf(',');
-            string strName = namePart.Substring(0, (commaIndex>0)?commaIndex:namePart.Length).Trim();
+        //    int commaIndex = namePart.IndexOf(',');
+        //    string strName = namePart.Substring(0, (commaIndex>0)?commaIndex:namePart.Length).Trim();
 
-            foreach (string signPath in Directory.GetFiles(signFolder, "*.png"))
-            {
-                string name = Path.GetFileNameWithoutExtension(signPath);
+        //    foreach (string signPath in Directory.GetFiles(signFolder, "*.png"))
+        //    {
+        //        string name = Path.GetFileNameWithoutExtension(signPath);
 
-                if (strName.Contains(name))
-                    return signPath;
-            }
+        //        if (strName.Contains(name))
+        //            return signPath;
+        //    }
 
-            return null;
-        }
+        //    return null;
+        //}
 
         private void btnInsertSign_Click(object sender, EventArgs e)
         {
@@ -7725,6 +7967,12 @@ namespace SmartReport
             try
             {
                 Cursor = Cursors.WaitCursor;
+
+                report.InsertInspectorSigns(
+                            filePath,
+                            signFolder,
+                            false);
+#if false
 
                 xlApp = new Excel.Application
                 {
@@ -7881,6 +8129,8 @@ namespace SmartReport
                             Height: -1
                         );
 
+                        
+
                         try
                         {
                             sign.Name =
@@ -7936,6 +8186,7 @@ namespace SmartReport
                 wb.Save();
 
                 AddLog("Info", "측정자 서명 삽입이 완료되었습니다.");
+#endif
             }
             catch (Exception ex)
             {
@@ -7960,6 +8211,7 @@ namespace SmartReport
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
             }
+
         }
         #endregion
     }

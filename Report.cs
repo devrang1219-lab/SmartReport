@@ -2434,6 +2434,217 @@ namespace WindowsFormsApp1
                 ExcelComHelper.Cleanup();
             }
         }
+        public ProcResult SetPageStartNumbers(
+            string filePath,
+            Excel.Workbook wb = null,
+            string firstSheetName = "갑지",
+            string startSheetName = "제출문")
+        {
+            Excel.Application xlApp = null;
+            Excel.Workbook workBook = null;
+            Excel.Worksheet ws = null;
+            Excel.PageSetup pageSetup = null;
+
+            bool openedHere = false;
+            bool createdExcelHere = false;
+
+            const int xlAutomatic = -4105;
+
+            try
+            {
+                // =====================================================
+                // Workbook 준비
+                // =====================================================
+                if (wb != null)
+                {
+                    // 이미 열려 있는 Workbook 사용
+                    workBook = wb;
+                }
+                else
+                {
+                    if (string.IsNullOrWhiteSpace(filePath))
+                        throw new ArgumentException(
+                            "filePath가 없습니다.",
+                            nameof(filePath));
+
+                    if (!File.Exists(filePath))
+                        throw new FileNotFoundException(
+                            "엑셀 파일을 찾을 수 없습니다.",
+                            filePath);
+
+                    // =================================================
+                    // Excel 실행
+                    // =================================================
+                    xlApp = new Excel.Application
+                    {
+                        Visible = false,
+                        DisplayAlerts = false
+                    };
+
+                    createdExcelHere = true;
+
+                    // =================================================
+                    // 파일 열기
+                    // =================================================
+                    workBook = xlApp.Workbooks.Open(
+                        filePath,
+                        ReadOnly: false);
+
+                    openedHere = true;
+                }
+
+
+                // =====================================================
+                // 시트별 페이지 시작 번호 설정
+                // =====================================================
+                bool startFound = false;
+
+                for (int i = 1;
+                     i <= workBook.Worksheets.Count;
+                     i++)
+                {
+                    try
+                    {
+                        ws = (Excel.Worksheet)workBook.Worksheets[i];
+                        pageSetup = ws.PageSetup;
+
+                        string sheetName = ws.Name;
+
+
+                        // =================================================
+                        // 갑지
+                        // 페이지 번호 없음
+                        // =================================================
+                        if (sheetName == firstSheetName)
+                        {
+                            pageSetup.LeftFooter = "";
+                            pageSetup.CenterFooter = "";
+                            pageSetup.RightFooter = "";
+
+                            continue;
+                        }
+
+
+                        // =================================================
+                        // 제출문
+                        // 시작 페이지 = 1
+                        // =================================================
+                        if (sheetName == startSheetName)
+                        {
+                            startFound = true;
+
+                            pageSetup.FirstPageNumber = 1;
+
+                            continue;
+                        }
+
+
+                        // =================================================
+                        // 제출문 이후
+                        // Excel의 "자동"
+                        // =================================================
+                        if (startFound)
+                        {
+                            pageSetup.FirstPageNumber =
+                                xlAutomatic;
+                        }
+                    }
+                    finally
+                    {
+                        if (pageSetup != null)
+                        {
+                            try
+                            {
+                                Marshal.ReleaseComObject(pageSetup);
+                            }
+                            catch { }
+
+                            pageSetup = null;
+                        }
+
+                        if (ws != null)
+                        {
+                            try
+                            {
+                                Marshal.ReleaseComObject(ws);
+                            }
+                            catch { }
+
+                            ws = null;
+                        }
+                    }
+                }
+
+
+                // =====================================================
+                // 저장
+                // =====================================================
+                workBook.Save();
+                return ProcResult.Ok(
+                    "페이지 번호 매기기가 완료되었습니다.");
+            }
+            catch (Exception ex)
+            {
+                //AddLog(
+                //    "Error",
+                //    $"페이지 시작 번호 설정 실패: {ex.Message}");
+
+                //throw;
+                return ProcResult.Fail(
+                    $"페이지 번호 매기기 중 오류가 발생했습니다.\r\n{ex.Message}");
+            }
+            finally
+            {
+                // =====================================================
+                // 이 함수에서 직접 연 Workbook만 닫음
+                // =====================================================
+                if (openedHere && workBook != null)
+                {
+                    try
+                    {
+                        workBook.Close(
+                            SaveChanges: true);
+                    }
+                    catch { }
+                }
+
+                // =====================================================
+                // Workbook COM 해제
+                // =====================================================
+                if (workBook != null)
+                {
+                    try
+                    {
+                        Marshal.ReleaseComObject(workBook);
+                    }
+                    catch { }
+
+                    workBook = null;
+                }
+
+                // =====================================================
+                // 이 함수에서 만든 Excel만 종료
+                // =====================================================
+                if (createdExcelHere && xlApp != null)
+                {
+                    try
+                    {
+                        xlApp.Quit();
+                    }
+                    catch { }
+
+                    try
+                    {
+                        Marshal.ReleaseComObject(xlApp);
+                    }
+                    catch { }
+
+                    xlApp = null;
+                }
+            }
+        }
+
+
         #endregion
 
         #region [log]
@@ -2449,6 +2660,487 @@ namespace WindowsFormsApp1
             catch (Exception ex)
             {
                 MessageBox.Show(msg, part, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        #endregion
+
+        #region [서명 삽입]
+
+        private string FindInspectorSign(string text, string signFolder)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return null;
+
+            int dashIndex = text.IndexOf('-');
+
+            if (dashIndex < 0)
+                return null;
+
+            string namePart = text.Substring(dashIndex + 1).Trim();
+
+            int commaIndex = namePart.IndexOf(',');
+            string strName = namePart.Substring(0, (commaIndex > 0) ? commaIndex : namePart.Length).Trim();
+
+            foreach (string signPath in Directory.GetFiles(signFolder, "*.png"))
+            {
+                string name = Path.GetFileNameWithoutExtension(signPath);
+
+                if (strName.Contains(name))
+                    return signPath;
+            }
+
+            return null;
+        }
+
+        public void InsertInspectorSigns(
+            string filePath,
+            string signFolder,
+            bool fitToCell = false)
+        {
+            Excel.Application xlApp = null;
+            Excel.Workbook wb = null;
+
+            try
+            {
+                if (string.IsNullOrWhiteSpace(filePath) ||
+                    !File.Exists(filePath))
+                {
+                    throw new FileNotFoundException(
+                        "엑셀 파일을 찾을 수 없습니다.",
+                        filePath);
+                }
+
+                if (string.IsNullOrWhiteSpace(signFolder) ||
+                    !Directory.Exists(signFolder))
+                {
+                    throw new DirectoryNotFoundException(
+                        $"서명 폴더가 없습니다: {signFolder}");
+                }
+
+                // =====================================================
+                // Excel 열기
+                // =====================================================
+                xlApp = new Excel.Application
+                {
+                    Visible = false,
+                    DisplayAlerts = false
+                };
+
+                wb = xlApp.Workbooks.Open(
+                    filePath,
+                    ReadOnly: false);
+
+                const string signPrefix = "SIGN_";
+
+
+                // =====================================================
+                // 전체 시트 처리
+                // =====================================================
+                for (int sheetIndex = 1;
+                     sheetIndex <= wb.Worksheets.Count;
+                     sheetIndex++)
+                {
+                    Excel.Worksheet ws = null;
+                    Excel.Range usedRange = null;
+                    Excel.Range found = null;
+                    Excel.Range targetRange = null;
+
+                    try
+                    {
+                        ws = (Excel.Worksheet)wb.Worksheets[sheetIndex];
+
+                        usedRange = ws.UsedRange;
+
+                        found = usedRange.Find(
+                            What: "▣ 측정자 :",
+                            LookAt: Excel.XlLookAt.xlPart,
+                            LookIn: Excel.XlFindLookIn.xlValues,
+                            MatchCase: false
+                        );
+
+                        if (found == null)
+                            continue;
+
+                        string text =
+                            Convert.ToString(found.Value2)?.Trim();
+
+                        if (string.IsNullOrWhiteSpace(text))
+                            continue;
+
+                        // ---------------------------------------------
+                        // 측정자 문자열에서 서명 찾기
+                        // ---------------------------------------------
+                        int dashIndex = text.IndexOf('-');
+
+                        if (dashIndex < 0)
+                            continue;
+
+                        string signPath =
+                            FindInspectorSign(
+                                text,
+                                signFolder);
+
+                        if (string.IsNullOrWhiteSpace(signPath))
+                        {
+                            AddLog(
+                                "WARN",
+                                $"[{ws.Name}] 측정자 서명을 찾을 수 없습니다: {text}");
+
+                            continue;
+                        }
+
+                        if (!File.Exists(signPath))
+                        {
+                            AddLog(
+                                "WARN",
+                                $"[{ws.Name}] 서명 파일 없음: {signPath}");
+
+                            continue;
+                        }
+
+                        string firstName =
+                            Path.GetFileNameWithoutExtension(signPath);
+
+                        if (string.IsNullOrWhiteSpace(firstName))
+                            continue;
+
+
+                        // ---------------------------------------------
+                        // 병합 영역
+                        // ---------------------------------------------
+                        if (found.MergeCells)
+                        {
+                            targetRange = found.MergeArea;
+                        }
+                        else
+                        {
+                            targetRange = found;
+                        }
+
+
+                        // ---------------------------------------------
+                        // 기존 서명 삭제
+                        // ---------------------------------------------
+                        Excel.Shapes shapes = null;
+
+                        try
+                        {
+                            shapes = ws.Shapes;
+
+                            for (int shapeIndex = shapes.Count;
+                                 shapeIndex >= 1;
+                                 shapeIndex--)
+                            {
+                                Excel.Shape shape = null;
+
+                                try
+                                {
+                                    shape = shapes.Item(shapeIndex);
+
+                                    string shapeName = shape.Name;
+
+                                    if (!shapeName.StartsWith(
+                                        signPrefix,
+                                        StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        continue;
+                                    }
+
+                                    // Shape 중심점
+                                    float centerX =
+                                        shape.Left +
+                                        shape.Width / 2;
+
+                                    float centerY =
+                                        shape.Top +
+                                        shape.Height / 2;
+
+                                    double rangeLeft =
+                                        targetRange.Left;
+
+                                    double rangeTop =
+                                        targetRange.Top;
+
+                                    double rangeRight =
+                                        rangeLeft +
+                                        targetRange.Width;
+
+                                    double rangeBottom =
+                                        rangeTop +
+                                        targetRange.Height;
+
+                                    if (centerX >= rangeLeft &&
+                                        centerX <= rangeRight &&
+                                        centerY >= rangeTop &&
+                                        centerY <= rangeBottom)
+                                    {
+                                        shape.Delete();
+                                    }
+                                }
+                                finally
+                                {
+                                    if (shape != null)
+                                    {
+                                        try
+                                        {
+                                            Marshal.ReleaseComObject(shape);
+                                        }
+                                        catch { }
+                                    }
+                                }
+                            }
+                        }
+                        finally
+                        {
+                            if (shapes != null)
+                            {
+                                try
+                                {
+                                    Marshal.ReleaseComObject(shapes);
+                                }
+                                catch { }
+                            }
+                        }
+
+
+                        // ---------------------------------------------
+                        // 문자열 끝 위치 계산
+                        // ---------------------------------------------
+                        double fontSize =
+                            Convert.ToDouble(found.Font.Size);
+
+                        double estimatedTextWidth =
+                            text.Length *
+                            fontSize *
+                            0.72;
+
+                        const double gap = 20.0;
+
+                        double left =
+                            targetRange.Left +
+                            estimatedTextWidth +
+                            gap;
+
+                        double top =
+                            targetRange.Top + 2;
+
+
+                        // ---------------------------------------------
+                        // 서명 삽입
+                        // ---------------------------------------------
+                        Excel.Shape sign = null;
+
+                        try
+                        {
+                            if (fitToCell)
+                            {
+                                // =====================================
+                                // 셀 크기에 맞춤
+                                // =====================================
+                                sign = ws.Shapes.AddPicture(
+                                    Filename: signPath,
+                                    LinkToFile:
+                                        Microsoft.Office.Core.MsoTriState.msoFalse,
+                                    SaveWithDocument:
+                                        Microsoft.Office.Core.MsoTriState.msoTrue,
+                                    Left: (float)left,
+                                    Top: (float)top,
+                                    Width: -1,
+                                    Height: -1
+                                );
+
+                                sign.LockAspectRatio =
+                                    Microsoft.Office.Core.MsoTriState.msoTrue;
+
+                                double maxWidth =
+                                    targetRange.Width -
+                                    estimatedTextWidth -
+                                    gap -
+                                    4;
+
+                                double maxHeight =
+                                    targetRange.Height - 4;
+
+                                if (maxWidth > 0 &&
+                                    maxHeight > 0)
+                                {
+                                    double scaleX =
+                                        maxWidth / sign.Width;
+
+                                    double scaleY =
+                                        maxHeight / sign.Height;
+
+                                    double scale =
+                                        Math.Min(
+                                            scaleX,
+                                            scaleY);
+
+                                    if (scale < 1.0)
+                                    {
+                                        sign.Width =
+                                            (float)(
+                                                sign.Width *
+                                                scale);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                // =====================================
+                                // 원본 크기 그대로
+                                // =====================================
+                                sign = ws.Shapes.AddPicture(
+                                    Filename: signPath,
+                                    LinkToFile:
+                                        Microsoft.Office.Core.MsoTriState.msoFalse,
+                                    SaveWithDocument:
+                                        Microsoft.Office.Core.MsoTriState.msoTrue,
+                                    Left: (float)left,
+                                    Top: (float)top,
+                                    Width: -1,
+                                    Height: -1
+                                );
+                            }
+
+
+                            // -----------------------------------------
+                            // 공통 설정
+                            // -----------------------------------------
+                            sign.Name =
+                                $"{signPrefix}{found.Row}_{found.Column}";
+
+                            sign.Placement =
+                                Excel.XlPlacement.xlMove;
+
+                            AddLog(
+                                "INFO",
+                                $"[{ws.Name}] 측정자 {firstName} 서명 삽입 " +
+                                $"(크기: {(fitToCell ? "셀 맞춤" : "원본")})");
+                        }
+                        finally
+                        {
+                            if (sign != null)
+                            {
+                                try
+                                {
+                                    Marshal.ReleaseComObject(sign);
+                                }
+                                catch { }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        AddLog(
+                            "ERROR",
+                            $"[{ws?.Name}] 서명 처리 실패: {ex.Message}");
+                    }
+                    finally
+                    {
+                        if (targetRange != null &&
+                            targetRange != found)
+                        {
+                            try
+                            {
+                                Marshal.ReleaseComObject(targetRange);
+                            }
+                            catch { }
+
+                            targetRange = null;
+                        }
+
+                        if (found != null)
+                        {
+                            try
+                            {
+                                Marshal.ReleaseComObject(found);
+                            }
+                            catch { }
+
+                            found = null;
+                        }
+
+                        if (usedRange != null)
+                        {
+                            try
+                            {
+                                Marshal.ReleaseComObject(usedRange);
+                            }
+                            catch { }
+
+                            usedRange = null;
+                        }
+
+                        if (ws != null)
+                        {
+                            try
+                            {
+                                Marshal.ReleaseComObject(ws);
+                            }
+                            catch { }
+
+                            ws = null;
+                        }
+                    }
+                }
+
+
+                // =====================================================
+                // 저장
+                // =====================================================
+                wb.Save();
+
+                AddLog(
+                    "INFO",
+                    "측정자 서명 삽입이 완료되었습니다.");
+            }
+            catch (Exception ex)
+            {
+                AddLog(
+                    "ERROR",
+                    $"측정자 서명 삽입 실패: {ex.Message}");
+
+                throw;
+            }
+            finally
+            {
+                if (wb != null)
+                {
+                    try
+                    {
+                        wb.Close(
+                            SaveChanges: false);
+                    }
+                    catch { }
+
+                    try
+                    {
+                        Marshal.ReleaseComObject(wb);
+                    }
+                    catch { }
+
+                    wb = null;
+                }
+
+                if (xlApp != null)
+                {
+                    try
+                    {
+                        xlApp.Quit();
+                    }
+                    catch { }
+
+                    try
+                    {
+                        Marshal.ReleaseComObject(xlApp);
+                    }
+                    catch { }
+
+                    xlApp = null;
+                }
+
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
             }
         }
         #endregion
