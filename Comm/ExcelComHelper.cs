@@ -82,6 +82,106 @@ namespace WindowsFormsApp1.Comm
             }
         }
 
+        static public bool HasYebiSheet(Excel.Workbook wb)
+        {
+            foreach (Excel.Worksheet ws in wb.Worksheets)
+            {
+                try
+                {
+                    if (ws.Name.Contains("예비"))
+                        return true;
+                }
+                finally
+                {
+                    Marshal.ReleaseComObject(ws);
+                }
+            }
+
+            return false;
+        }
+
+        static public bool HasCoronaSheet(Excel.Workbook wb)
+        {
+            foreach (Excel.Worksheet ws in wb.Worksheets)
+            {
+                try
+                {
+                    if (ws.Name.Contains("영코") || ws.Name.Contains("PD부분방전"))
+                        return true;
+                }
+                finally
+                {
+                    Marshal.ReleaseComObject(ws);
+                }
+            }
+
+            return false;
+        }
+
+        static public bool HasNaeryuckSheet(Excel.Workbook wb)
+        {
+            foreach (Excel.Worksheet ws in wb.Worksheets)
+            {
+                try
+                {
+                    if (ws.Name.Contains("내력"))
+                        return true;
+                }
+                finally
+                {
+                    Marshal.ReleaseComObject(ws);
+                }
+            }
+
+            return false;
+        }
+
+
+        public static Excel.Worksheet GetWorksheetByLastName(Excel.Workbook wb, string sheetName)
+        {
+            Excel.Sheets sheets = null;
+
+            try
+            {
+                sheets = wb.Worksheets;
+
+                int count = sheets.Count;
+
+                for (int i = 1; i <= count; i++)
+                {
+                    Excel.Worksheet sheet = null;
+
+                    try
+                    {
+                        sheet = (Excel.Worksheet)sheets[i];
+
+                        string name = sheet.Name;
+
+                        if (name.Trim().EndsWith(
+                                sheetName,
+                                StringComparison.OrdinalIgnoreCase))
+                        {
+                            // 호출자에게 소유권 넘김
+                            Excel.Worksheet result = sheet;
+                            sheet = null;
+
+                            return result;
+                        }
+                    }
+                    finally
+                    {
+                        Release(sheet);
+                    }
+                }
+
+                return null;
+            }
+            finally
+            {
+                Release(sheets);
+            }
+        }
+
 
         // ============================================================
         // Cell

@@ -6,6 +6,8 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
+
 
 
 //using Tesseract;
@@ -174,12 +176,12 @@ namespace SmartReport
         }
 
 
-        public Excel.Shape InsertFit(
+        public void InsertFit(
             string cellFrom,
             string cellTo,
             ImageInsertOptions option = null)
         {
-            return InsertFit(0, cellFrom, cellTo, option);
+            InsertFit(0, cellFrom, cellTo, option);
         }
 
         public string ResizeImage(string path, int maxWidth, int maxHeight)
@@ -317,152 +319,393 @@ namespace SmartReport
             }
         }
 
-        public Excel.Shape InsertFit(
+        public void InsertFit(
             int page,
             string cellFrom,
             string cellTo,
             ImageInsertOptions option = null)
         {
-            if(option == null)
+            if (option == null)
                 option = new ImageInsertOptions();
 
             if (page < 0 || page >= _imagePaths.Count)
-                throw new ArgumentOutOfRangeException(nameof(page));
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(page));
+            }
 
             Excel.Shape pic = null;
+
+            Excel.Shapes shapes = null;
+
+            Excel.Range area = null;
+            Excel.Range fromCell = null;
+            Excel.Range toCell = null;
+
             string tempFixed = null;
             string tempResized = null;
             string imagePath = null;
 
             try
             {
+                // =====================================================
+                // 1. 이미지 경로
+                // =====================================================
+                imagePath =
+                    GetImagePath(
+                        page,
+                        option);
 
-                imagePath = GetImagePath(page, option);
+                tempFixed =
+                    FixImageOrientation(
+                        imagePath);
 
-                tempFixed = FixImageOrientation(imagePath);
+                // =====================================================
+                // 2. 셀 영역
+                // =====================================================
+                area =
+                    _ws.Range[
+                        cellFrom,
+                        cellTo];
 
-                //tempResized = ResizeImage(
-                //    tempFixed,
-                //    1024);
+                fromCell =
+                    _ws.Range[cellFrom];
 
-                Excel.Range area = _ws.Range[cellFrom, cellTo];
-                Debug.WriteLine($"cell from: {cellFrom}, to: {cellTo}");
+                toCell =
+                    _ws.Range[cellTo];
 
-                Excel.Range fromCell = _ws.Range[cellFrom];
-                Excel.Range toCell = _ws.Range[cellTo];
+                Debug.WriteLine(
+                    $"cell from: {cellFrom}, " +
+                    $"to: {cellTo}");
 
-                Debug.WriteLine($"image name: {imagePath}");
-                Debug.WriteLine($"area: {area.Left}, {area.Top}, {area.Width}, {area.Height}");
+                Debug.WriteLine(
+                    $"image name: {imagePath}");
 
-                //float left = (float)area.Left;
-                //float top = (float)area.Top;
-                //float width = (float)area.Width;
-                //float height = (float)area.Height;
+                Debug.WriteLine(
+                    $"area: {area.Left}, " +
+                    $"{area.Top}, " +
+                    $"{area.Width}, " +
+                    $"{area.Height}");
 
-                float left = (float)fromCell.Left;
-                float top = (float)fromCell.Top;
+                // =====================================================
+                // 3. 이미지 위치 / 크기
+                // =====================================================
+                float left =
+                    (float)fromCell.Left;
+
+                float top =
+                    (float)fromCell.Top;
 
                 float width =
-                    (float)(toCell.Left + toCell.Width - left);
+                    (float)(
+                        toCell.Left +
+                        toCell.Width -
+                        left);
 
                 float height =
-                    (float)(toCell.Top + toCell.Height - top);
+                    (float)(
+                        toCell.Top +
+                        toCell.Height -
+                        top);
 
-                // 셀 테두리 보정
+                // =====================================================
+                // 4. 테두리 보정
+                // =====================================================
                 float borderLeftGap =
-                    GetBorderGap(fromCell, Excel.XlBordersIndex.xlEdgeLeft);
+                    GetBorderGap(
+                        fromCell,
+                        Excel.XlBordersIndex.xlEdgeLeft);
 
                 float borderTopGap =
-                    GetBorderGap(fromCell, Excel.XlBordersIndex.xlEdgeTop);
+                    GetBorderGap(
+                        fromCell,
+                        Excel.XlBordersIndex.xlEdgeTop);
 
-                //Point(1/72인치)를 사용하고 일반적인 화면은 96dpi이므로 pixel = point × 96 / 72 정도로 계산
-                //화질을 위해 조금 더 크게 계산 1.3배 정도로 계산
-                int pixelWidth = (int)Math.Ceiling(width * 96.0 / 72.0 * 1.3);
-                int pixelHeight = (int)Math.Ceiling(height * 96.0 / 72.0 * 1.3);
+                // =====================================================
+                // 5. 이미지 Resize
+                // =====================================================
+                int pixelWidth =
+                    (int)Math.Ceiling(
+                        width *
+                        96.0 /
+                        72.0 *
+                        1.3);
 
-                tempResized = ResizeImage(
-                                tempFixed,
-                                pixelWidth,
-                                pixelHeight);
+                int pixelHeight =
+                    (int)Math.Ceiling(
+                        height *
+                        96.0 /
+                        72.0 *
+                        1.3);
 
-                pic = _ws.Shapes.AddPicture(
-                tempResized,
-                Office.MsoTriState.msoFalse,
-                Office.MsoTriState.msoTrue,
-                left,
-                top,
-                -1,
-                -1);
+                tempResized =
+                    ResizeImage(
+                        tempFixed,
+                        pixelWidth,
+                        pixelHeight);
 
-                Debug.WriteLine($"After AddPicture");
-                Debug.WriteLine($"Left={pic.Left}");
-                Debug.WriteLine($"Top={pic.Top}");
-                Debug.WriteLine($"Width={pic.Width}");
-                Debug.WriteLine($"Height={pic.Height}");
-                Debug.WriteLine($"Rotation={pic.Rotation}");
+                // =====================================================
+                // 6. Shapes 컬렉션 확보
+                // =====================================================
+                shapes =
+                    _ws.Shapes;
 
-                Debug.WriteLine($"image left: {left}, top: {top}, width: {width}, height: {height}");
-                Debug.WriteLine($"area left : {_ws.Range[cellFrom].Left}, top: {_ws.Range[cellFrom].Top}," +
-                    $"width: {_ws.Range[cellTo].Width}, height: {_ws.Range[cellTo].Height}");
+                // =====================================================
+                // 7. 이미지 삽입
+                // =====================================================
+                pic =
+                    shapes.AddPicture(
+                        tempResized,
+                        Office.MsoTriState.msoFalse,
+                        Office.MsoTriState.msoTrue,
+                        left,
+                        top,
+                        -1,
+                        -1);
 
-                Debug.WriteLine($"option.KeepAspectRatio: {option.KeepAspectRatio}");
+                Debug.WriteLine(
+                    "After AddPicture");
 
+                Debug.WriteLine(
+                    $"Left={pic.Left}");
+
+                Debug.WriteLine(
+                    $"Top={pic.Top}");
+
+                Debug.WriteLine(
+                    $"Width={pic.Width}");
+
+                Debug.WriteLine(
+                    $"Height={pic.Height}");
+
+                Debug.WriteLine(
+                    $"Rotation={pic.Rotation}");
+
+                // =====================================================
+                // 8. 이미지 크기 조정
+                // =====================================================
                 if (option.KeepAspectRatio)
                 {
-                    pic.LockAspectRatio = Office.MsoTriState.msoTrue;
+                    pic.LockAspectRatio =
+                        Office.MsoTriState.msoTrue;
 
-                    double scaleX = width / pic.Width;
-                    double scaleY = height / pic.Height;
-                    double scale = Math.Min(scaleX, scaleY);
+                    double scaleX =
+                        width /
+                        pic.Width;
 
-                    pic.ScaleWidth((float)scale, Office.MsoTriState.msoTrue);
-                    pic.ScaleHeight((float)scale, Office.MsoTriState.msoTrue);
+                    double scaleY =
+                        height /
+                        pic.Height;
+
+                    double scale =
+                        Math.Min(
+                            scaleX,
+                            scaleY);
+
+                    pic.ScaleWidth(
+                        (float)scale,
+                        Office.MsoTriState.msoTrue);
+
+                    pic.ScaleHeight(
+                        (float)scale,
+                        Office.MsoTriState.msoTrue);
 
                     // 가운데 정렬
-                    pic.Left = left + (width - pic.Width) / 2f + option.GapLeft;
-                    pic.Top = top + (height - pic.Height) / 2f + option.GapTop;
-                    pic.Width -= option.GapLeft + option.GapRight;
-                    pic.Height -= option.GapTop + option.GapBottom;
+                    pic.Left =
+                        left +
+                        (width - pic.Width) / 2f +
+                        option.GapLeft;
+
+                    pic.Top =
+                        top +
+                        (height - pic.Height) / 2f +
+                        option.GapTop;
+
+                    pic.Width -=
+                        option.GapLeft +
+                        option.GapRight;
+
+                    pic.Height -=
+                        option.GapTop +
+                        option.GapBottom;
                 }
                 else
                 {
-                    pic.LockAspectRatio = Office.MsoTriState.msoFalse;
-                    pic.Left = left + option.GapLeft;
-                    pic.Top = top + option.GapTop;
-                    pic.Width = width - option.GapLeft - option.GapRight;
-                    pic.Height = height - option.GapTop - option.GapBottom;
+                    pic.LockAspectRatio =
+                        Office.MsoTriState.msoFalse;
 
+                    pic.Left =
+                        left +
+                        option.GapLeft;
+
+                    pic.Top =
+                        top +
+                        option.GapTop;
+
+                    pic.Width =
+                        width -
+                        option.GapLeft -
+                        option.GapRight;
+
+                    pic.Height =
+                        height -
+                        option.GapTop -
+                        option.GapBottom;
+
+                    // =================================================
+                    // 회전 이미지
+                    // =================================================
                     if (IsRotatedImage(pic))
                     {
+                        Debug.WriteLine(
+                            $"Rotated Image: " +
+                            $"{pic.Name}, " +
+                            $"Rotation: {pic.Rotation}");
 
-                        Debug.WriteLine($"Rotated Image: {pic.Name}, Rotation: {pic.Rotation}");
-                        pic.Width = height - option.GapLeft - option.GapRight;
-                        pic.Height = width - option.GapTop - option.GapBottom;
+                        pic.Width =
+                            height -
+                            option.GapLeft -
+                            option.GapRight;
+
+                        pic.Height =
+                            width -
+                            option.GapTop -
+                            option.GapBottom;
                     }
                 }
 
-                // 테두리 보정
-                pic.Left += borderLeftGap;
-                pic.Top += borderTopGap;
-                pic.Width -= borderLeftGap;
-                pic.Height -= borderTopGap;
+                // =====================================================
+                // 9. 테두리 보정
+                // =====================================================
+                pic.Left +=
+                    borderLeftGap;
 
-                Debug.WriteLine($"pic left: {pic.Left}, top: {pic.Top}, width: {pic.Width}, height: {pic.Height}");
+                pic.Top +=
+                    borderTopGap;
 
+                pic.Width -=
+                    borderLeftGap;
+
+                pic.Height -=
+                    borderTopGap;
+
+                Debug.WriteLine(
+                    $"pic left: {pic.Left}, " +
+                    $"top: {pic.Top}, " +
+                    $"width: {pic.Width}, " +
+                    $"height: {pic.Height}");
             }
-            catch
+            catch (Exception ex)
             {
+                Debug.WriteLine(
+                    $"InsertFit 오류: {ex.Message}");
 
+                // 이미지가 생성된 상태에서 오류가 난 경우
+                if (pic != null)
+                {
+                    try
+                    {
+                        pic.Delete();
+                    }
+                    catch
+                    {
+                    }
+                }
+
+                throw;
             }
             finally
             {
+                // =====================================================
+                // Shape
+                // =====================================================
+                if (pic != null)
+                {
+                    try
+                    {
+                        Marshal.FinalReleaseComObject(
+                            pic);
+                    }
+                    catch
+                    {
+                    }
 
-                DeleteTempFile(tempFixed, imagePath);
-                DeleteTempFile(tempResized, imagePath);
+                    pic = null;
+                }
+
+                // =====================================================
+                // Shapes
+                // =====================================================
+                if (shapes != null)
+                {
+                    try
+                    {
+                        Marshal.FinalReleaseComObject(
+                            shapes);
+                    }
+                    catch
+                    {
+                    }
+
+                    shapes = null;
+                }
+
+                // =====================================================
+                // Range
+                // =====================================================
+                if (area != null)
+                {
+                    try
+                    {
+                        Marshal.FinalReleaseComObject(
+                            area);
+                    }
+                    catch
+                    {
+                    }
+
+                    area = null;
+                }
+
+                if (fromCell != null)
+                {
+                    try
+                    {
+                        Marshal.FinalReleaseComObject(
+                            fromCell);
+                    }
+                    catch
+                    {
+                    }
+
+                    fromCell = null;
+                }
+
+                if (toCell != null)
+                {
+                    try
+                    {
+                        Marshal.FinalReleaseComObject(
+                            toCell);
+                    }
+                    catch
+                    {
+                    }
+
+                    toCell = null;
+                }
+
+                // =====================================================
+                // 임시 파일
+                // =====================================================
+                DeleteTempFile(
+                    tempFixed,
+                    imagePath);
+
+                DeleteTempFile(
+                    tempResized,
+                    imagePath);
             }
-
-
-            return pic;
         }
 
         private float GetBorderGap(Excel.Range cell, Excel.XlBordersIndex borderIndex)

@@ -1,6 +1,8 @@
-﻿using OpenCvSharp;
+﻿using Microsoft.Office.Interop.Excel;
+using OpenCvSharp;
 using SmartReport;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.Composition.Primitives;
 using System.Diagnostics;
 using System.IO;
@@ -72,7 +74,7 @@ namespace WindowsFormsApp1
 
             report.quaterCount = report.GetQuarterCount(filePath);
 
-            mainForm = Application.OpenForms.OfType<SmartReport.FormMain>().FirstOrDefault();
+            mainForm = System.Windows.Forms.Application.OpenForms.OfType<SmartReport.FormMain>().FirstOrDefault();
             return report;
         }
 
@@ -245,50 +247,372 @@ namespace WindowsFormsApp1
 
         }
 
-        public void CopySheetToXlsxAndProcess(string sheetName, float gapLeft, float gapTop, float gapRight, float gapBottom)
+        //public void CopySheetToXlsxAndProcess(string sheetName, float gapLeft, float gapTop, float gapRight, float gapBottom)
+        //{
+        //    Excel.Application xlApp = null;
+        //    Excel.Workbook srcWb = null;
+        //    Excel.Workbook newWb = null;
+
+        //    try
+        //    {
+        //        xlApp = new Excel.Application { Visible = false, DisplayAlerts = false };
+        //        srcWb = xlApp.Workbooks.Open(xlsFilePath, ReadOnly: false);
+
+        //        Excel.Worksheet srcWs = GetWorksheetByName(srcWb, sheetName);
+        //        if (srcWs == null)
+        //            throw new InvalidOperationException($"원본 파일에 '{sheetName}' 시트가 없습니다.");
+
+        //        // 시트 복사(새 워크북으로)
+        //        srcWs.Copy(Type.Missing, Type.Missing);
+        //        newWb = xlApp.ActiveWorkbook;
+
+        //        // destPath를 xlsFilePath와 같은 폴더로 설정 (xlsFilePath 필드가 있으면 우선 사용)
+        //        string destFolder = Path.GetDirectoryName(this.xlsFilePath);
+
+        //        //string destFileName = Path.GetFileNameWithoutExtension(xlsFilePath) + "_" + sheetName + ".xlsx";
+        //        string destFileName = sheetName + ".xlsx";
+        //        string destPath = Path.Combine(destFolder, destFileName);
+
+        //        if (File.Exists(destPath))
+        //            File.Delete(destPath); // 덮어쓰기
+
+        //        // .xlsx 형식으로 저장
+        //        newWb.SaveAs(destPath, Excel.XlFileFormat.xlOpenXMLWorkbook);
+
+        //        // 새 워크북의 첫 시트에서 처리
+        //        Excel.Worksheet newWs = (Excel.Worksheet)newWb.Sheets[1];
+        //        SnapImageMergedCell(srcWs, sheetName);
+        //        SnapImageMergedCell(newWs, sheetName);
+        //    }
+        //    finally
+        //    {
+        //        if (srcWb != null) { srcWb.Save(); srcWb.Close(false); Marshal.ReleaseComObject(srcWb); }
+        //        if (newWb != null) { newWb.Save(); newWb.Close(false); Marshal.ReleaseComObject(newWb); }
+        //        if (xlApp != null) { xlApp.Quit(); Marshal.ReleaseComObject(xlApp); }
+        //        GC.Collect();
+        //        GC.WaitForPendingFinalizers();
+
+        //        Cursor.Current = Cursors.Default;
+        //    }
+        //}
+        public void CopySheetToXlsxAndProcess(
+            string sheetName,
+            float gapLeft,
+            float gapTop,
+            float gapRight,
+            float gapBottom)
         {
             Excel.Application xlApp = null;
+            Excel.Workbooks workbooks = null;
             Excel.Workbook srcWb = null;
             Excel.Workbook newWb = null;
 
+            Excel.Worksheet srcWs = null;
+            Excel.Worksheet newWs = null;
+
+            Excel.Sheets newSheets = null;
+
             try
             {
-                xlApp = new Excel.Application { Visible = false, DisplayAlerts = false };
-                srcWb = xlApp.Workbooks.Open(xlsFilePath, ReadOnly: true);
+                // =====================================================
+                // 1. Excel Application
+                // =====================================================
+                xlApp = new Excel.Application
+                {
+                    Visible = false,
+                    DisplayAlerts = false
+                };
 
-                Excel.Worksheet srcWs = GetWorksheetByName(srcWb, sheetName);
+                // =====================================================
+                // 2. Workbooks COM 객체를 명시적으로 보관
+                // =====================================================
+                workbooks = xlApp.Workbooks;
+
+
+                // =====================================================
+                // 2. 원본 Workbook 열기
+                // =====================================================
+                srcWb = workbooks.Open(
+                    xlsFilePath,
+                    ReadOnly: false);
+
+
+                // =====================================================
+                // 3. 원본 Sheet 가져오기
+                // =====================================================
+                srcWs = GetWorksheetByName(
+                    srcWb,
+                    sheetName);
+
                 if (srcWs == null)
-                    throw new InvalidOperationException($"원본 파일에 '{sheetName}' 시트가 없습니다.");
+                {
+                    throw new InvalidOperationException(
+                        $"원본 파일에 '{sheetName}' 시트가 없습니다.");
+                }
 
-                // 시트 복사(새 워크북으로)
-                srcWs.Copy(Type.Missing, Type.Missing);
+
+                // =====================================================
+                // 4. Sheet를 새로운 Workbook으로 복사
+                // =====================================================
+                srcWs.Copy(
+                    Type.Missing,
+                    Type.Missing);
+
+
+                // Copy 후 ActiveWorkbook = 새 Workbook
                 newWb = xlApp.ActiveWorkbook;
 
-                // destPath를 xlsFilePath와 같은 폴더로 설정 (xlsFilePath 필드가 있으면 우선 사용)
-                string destFolder = Path.GetDirectoryName(this.xlsFilePath);
+                if (newWb == null)
+                {
+                    throw new InvalidOperationException(
+                        "시트 복사 후 새 Workbook을 가져오지 못했습니다.");
+                }
 
-                //string destFileName = Path.GetFileNameWithoutExtension(xlsFilePath) + "_" + sheetName + ".xlsx";
-                string destFileName = sheetName + ".xlsx";
-                string destPath = Path.Combine(destFolder, destFileName);
 
+                //// =====================================================
+                //// 5. 저장 경로
+                //// =====================================================
+                string destFolder =
+                    Path.GetDirectoryName(xlsFilePath);
+
+                string destFileName =
+                    sheetName + ".xlsx";
+
+                string destPath =
+                    Path.Combine(
+                        destFolder,
+                        destFileName);
+
+
+                //// =====================================================
+                //// 6. 기존 파일 삭제
+                //// =====================================================
                 if (File.Exists(destPath))
-                    File.Delete(destPath); // 덮어쓰기
+                {
+                    File.Delete(destPath);
+                }
 
-                // .xlsx 형식으로 저장
-                newWb.SaveAs(destPath, Excel.XlFileFormat.xlOpenXMLWorkbook);
 
-                // 새 워크북의 첫 시트에서 처리
-                Excel.Worksheet newWs = (Excel.Worksheet)newWb.Sheets[1];
-                SnapImageMergedCell(srcWs, sheetName);
-                SnapImageMergedCell(newWs, sheetName);
+                //// =====================================================
+                //// 7. 새 Workbook을 XLSX로 저장
+                //// =====================================================
+                newWb.SaveAs(
+                    destPath,
+                    Excel.XlFileFormat.xlOpenXMLWorkbook);
+
+                // =====================================================
+                // 10. Sheets COM 객체를 별도로 관리
+                // =====================================================
+                newSheets = newWb.Sheets;
+
+
+                //// =====================================================
+                //// 8. 새 Workbook의 첫 번째 Sheet 가져오기
+                //// =====================================================
+                newWs =
+                 (Excel.Worksheet)newSheets[1];
+
+
+                if (newWs == null)
+                {
+                    throw new InvalidOperationException(
+                        "새 Workbook의 Sheet를 가져오지 못했습니다.");
+                }
+
+
+                // =====================================================
+                // 9. 새 Sheet의 이미지 위치/크기 조정
+                // =====================================================
+                SnapImageMergedCell(
+                    newWs,
+                    sheetName,
+                    gapLeft,
+                    gapTop,
+                    gapRight,
+                    gapBottom);
+                SnapImageMergedCell(
+                    srcWs,
+                    sheetName,
+                    gapLeft,
+                    gapTop,
+                    gapRight,
+                    gapBottom);
+
+
+                // =====================================================
+                // 10. 처리 결과 저장
+                // =====================================================
+
+                srcWb.Save();
+                newWb.Save();
+            }
+            catch (Exception ex)
+            {
+                AddLog(
+                    $"시트 복사 및 이미지 처리 중 오류 발생: {ex.Message}");
+
+                MessageBox.Show(
+                    $"시트 복사 및 처리 중 오류가 발생했습니다.\r\n\r\n{ex.Message}",
+                    "오류",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
             finally
             {
-                if (srcWb != null) { srcWb.Save(); srcWb.Close(false); Marshal.ReleaseComObject(srcWb); }
-                if (newWb != null) { newWb.Save(); newWb.Close(false); Marshal.ReleaseComObject(newWb); }
-                if (xlApp != null) { xlApp.Quit(); Marshal.ReleaseComObject(xlApp); }
+                // =====================================================
+                // 11. Worksheet COM 해제
+                // =====================================================
+                if (newWs != null)
+                {
+                    try
+                    {
+                        Marshal.ReleaseComObject(newWs);
+                    }
+                    catch
+                    {
+                    }
+
+                    newWs = null;
+                }
+
+                if (srcWs != null)
+                {
+                    try
+                    {
+                        Marshal.ReleaseComObject(srcWs);
+                    }
+                    catch
+                    {
+                    }
+
+                    srcWs = null;
+                }
+
+                if (newSheets != null)
+                {
+                    try
+                    {
+                        Marshal.FinalReleaseComObject(newSheets);
+                    }
+                    catch
+                    {
+                    }
+
+                    newSheets = null;
+                }
+
+
+
+                // =====================================================
+                // 12. 새 Workbook 저장 및 종료
+                // =====================================================
+                if (newWb != null)
+                {
+                    try
+                    {
+                        newWb.Save();
+                    }
+                    catch
+                    {
+                    }
+
+                    try
+                    {
+                        newWb.Close(
+                            SaveChanges: false);
+                    }
+                    catch
+                    {
+                    }
+
+                    try
+                    {
+                        Marshal.ReleaseComObject(newWb);
+                    }
+                    catch
+                    {
+                    }
+
+                    newWb = null;
+                }
+
+
+                // =====================================================
+                // 13. 원본 Workbook 종료
+                // =====================================================
+                if (srcWb != null)
+                {
+                    try
+                    {
+                        srcWb.Close(
+                            SaveChanges: false);
+                    }
+                    catch
+                    {
+                    }
+
+                    try
+                    {
+                        Marshal.ReleaseComObject(srcWb);
+                    }
+                    catch
+                    {
+                    }
+
+                    srcWb = null;
+                }
+
+                // =====================================================
+                // 2. Workbooks 컬렉션 해제
+                // =====================================================
+                if (workbooks != null)
+                {
+                    try
+                    {
+                        Marshal.FinalReleaseComObject(workbooks);
+                    }
+                    catch
+                    {
+                    }
+
+                    workbooks = null;
+                }
+
+
+                // =====================================================
+                // 14. Excel 종료
+                // =====================================================
+                if (xlApp != null)
+                {
+                    try
+                    {
+                        xlApp.Quit();
+                    }
+                    catch
+                    {
+                    }
+
+                    try
+                    {
+                        Marshal.ReleaseComObject(xlApp);
+                    }
+                    catch
+                    {
+                    }
+
+                    xlApp = null;
+                }
+
+
+                // =====================================================
+                // 15. 남아 있는 COM RCW 정리
+                // =====================================================
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
+
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+
 
                 Cursor.Current = Cursors.Default;
             }
@@ -310,176 +634,951 @@ namespace WindowsFormsApp1
             return gap;
         }
 
-        public void SnapImageMergedCell(Excel.Worksheet ws, string sheetName,
-            float gapLeft = 1.5f, float gapTop = 1.5f, float gapRight = 0f, float gapBottom = 0.5f)
+        public void SnapImageMergedCell(
+            Excel.Worksheet ws,
+            string sheetName,
+            float gapLeft = 1.5f,
+            float gapTop = 1.5f,
+            float gapRight = 0f,
+            float gapBottom = 0.5f)
         {
             Excel.Application xlApp = null;
             Excel.Workbook wb = null;
+            Excel.Worksheet targetWs = null;
+            Excel.Shapes shapes = null;
+
             bool openedHere = false;
-            int i = 0;
 
             try
             {
-                // ws가 null이면 xlsFilePath로 파일을 열고 "장비" 시트를 가져옴
+                // =====================================================
+                // 1. Worksheet 준비
+                // =====================================================
                 if (ws == null)
                 {
-                    if (string.IsNullOrEmpty(xlsFilePath) || !File.Exists(xlsFilePath))
+                    if (string.IsNullOrEmpty(xlsFilePath) ||
+                        !File.Exists(xlsFilePath))
                     {
-                        MessageBox.Show("엑셀 파일 경로가 없습니다. xlsFilePath를 설정하세요.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        MessageBox.Show(
+                            "엑셀 파일 경로가 없습니다. xlsFilePath를 설정하세요.",
+                            "오류",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning);
+
                         return;
                     }
 
-                    xlApp = new Excel.Application { Visible = false, DisplayAlerts = false };
-                    wb = xlApp.Workbooks.Open(xlsFilePath, ReadOnly: false);
-                    ws = GetWorksheetByName(wb, sheetName);
-                    if (ws == null)
+                    xlApp = new Excel.Application
                     {
-                        MessageBox.Show($"'{sheetName}' 시트를 찾을 수 없습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        // 열었던 워크북 닫기
-                        wb.Close(false);
-                        Marshal.ReleaseComObject(wb);
-                        xlApp.Quit();
-                        Marshal.ReleaseComObject(xlApp);
+                        Visible = false,
+                        DisplayAlerts = false
+                    };
+
+                    wb = xlApp.Workbooks.Open(
+                        xlsFilePath,
+                        ReadOnly: false);
+
+                    targetWs = GetWorksheetByName(
+                        wb,
+                        sheetName);
+
+                    if (targetWs == null)
+                    {
+                        MessageBox.Show(
+                            $"'{sheetName}' 시트를 찾을 수 없습니다.",
+                            "오류",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning);
+
                         return;
                     }
+
                     openedHere = true;
                 }
-
-                foreach (Excel.Shape shape in ws.Shapes)
+                else
                 {
-                    // 도형이 걸치는 셀 범위(왼쪽상단~오른쪽하단)를 사용
-                    Excel.Range topLeft = shape.TopLeftCell;
-                    Excel.Range bottomRight = shape.BottomRightCell;
-                    Excel.Range cellRange = ws.Range[topLeft, bottomRight];
-
-                    // 병합 셀이면 병합영역 사용 (COM에서 DBNull 반환 가능하므로 방어적 검사)
-                    object mergeObj = null;
-                    try { mergeObj = cellRange.MergeCells; } catch { mergeObj = null; }
-                    bool isMerged = (mergeObj is bool b && b);
+                    targetWs = ws;
+                }
 
 
-                    //Excel.Range area = shape.TopLeftCell;
-                    //Excel.Range area = ws.Range[
-                    //                        shape.TopLeftCell,
-                    //                        shape.BottomRightCell];
+                // =====================================================
+                // 2. Shapes 가져오기
+                // =====================================================
+                shapes = targetWs.Shapes;
 
-                    //if ((bool)area.MergeCells)
-                    //{
-                    //    area = area.MergeArea;
-                    //}
+                int shapeCount = shapes.Count;
 
-                    Excel.Range area = shape.TopLeftCell;
+
+                // =====================================================
+                // 3. 모든 도형 처리
+                // =====================================================
+                for (int i = 1; i <= shapeCount; i++)
+                {
+                    Excel.Shape shape = null;
+                    Excel.Range topLeft = null;
+                    Excel.Range bottomRight = null;
+                    Excel.Range area = null;
 
                     try
                     {
-                        if ((bool)area.MergeCells)
-                            area = area.MergeArea;
+                        // -------------------------------------------------
+                        // Shape
+                        // -------------------------------------------------
+                        shape = shapes.Item(i);
+
+                        // -------------------------------------------------
+                        // 왼쪽 위 셀
+                        // -------------------------------------------------
+                        topLeft = shape.TopLeftCell;
+
+
+                        // =================================================
+                        // 4. 병합셀 확인
+                        // =================================================
+                        bool isMerged = false;
+
+                        try
+                        {
+                            object mergeCells = topLeft.MergeCells;
+
+                            if (mergeCells is bool b)
+                                isMerged = b;
+                        }
+                        catch
+                        {
+                            isMerged = false;
+                        }
+
+
+                        // =================================================
+                        // 5. 실제 기준 영역 결정
+                        // =================================================
+                        if (isMerged)
+                        {
+                            // 병합셀인 경우
+                            // TopLeftCell의 MergeArea 전체를 기준으로 사용
+                            area = topLeft.MergeArea;
+                        }
+                        else
+                        {
+                            // 일반 셀인 경우
+                            bottomRight = shape.BottomRightCell;
+
+                            area = targetWs.Range[
+                                topLeft,
+                                bottomRight];
+                        }
+
+
+                        // =================================================
+                        // 6. 회전 확인
+                        // =================================================
+                        double rot = 0;
+
+                        try
+                        {
+                            rot = shape.Rotation % 360;
+
+                            if (rot < 0)
+                                rot += 360;
+                        }
+                        catch
+                        {
+                            rot = 0;
+                        }
+
+                        bool rotated90 =
+                            Math.Abs(rot - 90) < 1.0 ||
+                            Math.Abs(rot - 270) < 1.0;
+
+
+                        // =================================================
+                        // 7. 사진 위치 및 크기 조정
+                        // =================================================
+                        if (rotated90)
+                        {
+                            // -------------------------------------------------
+                            // 90 / 270도 회전된 이미지
+                            // Width / Height 교체
+                            // -------------------------------------------------
+                            float targetW =
+                                (float)area.Height;
+
+                            float targetH =
+                                (float)area.Width;
+
+
+                            float newWidth =
+                                targetW -
+                                gapLeft -
+                                gapRight;
+
+                            float newHeight =
+                                targetH -
+                                gapTop -
+                                gapBottom;
+
+
+                            // 음수 방지
+                            if (newWidth < 0)
+                                newWidth = 0;
+
+                            if (newHeight < 0)
+                                newHeight = 0;
+
+
+                            shape.Width = newWidth;
+                            shape.Height = newHeight;
+
+
+                            shape.Left =
+                                (float)area.Left +
+                                ((float)area.Width - targetW) / 2f +
+                                gapLeft;
+
+                            shape.Top =
+                                (float)area.Top +
+                                ((float)area.Height - targetH) / 2f +
+                                gapTop;
+                        }
+                        else
+                        {
+                            // -------------------------------------------------
+                            // 일반 이미지
+                            // -------------------------------------------------
+                            float newWidth =
+                                (float)area.Width -
+                                gapLeft -
+                                gapRight;
+
+                            float newHeight =
+                                (float)area.Height -
+                                gapTop -
+                                gapBottom;
+
+
+                            // 음수 방지
+                            if (newWidth < 0)
+                                newWidth = 0;
+
+                            if (newHeight < 0)
+                                newHeight = 0;
+
+
+                            shape.Left =
+                                (float)area.Left +
+                                gapLeft;
+
+                            shape.Top =
+                                (float)area.Top +
+                                gapTop;
+
+                            shape.Width =
+                                newWidth;
+
+                            shape.Height =
+                                newHeight;
+                        }
+
+
+                        // =================================================
+                        // 8. 비율 고정 해제
+                        // =================================================
+                        shape.LockAspectRatio =
+                            Microsoft.Office.Core.MsoTriState.msoFalse;
+
+
+                        // =================================================
+                        // 9. 셀 크기/위치 변경 시 이미지도 같이 이동
+                        // =================================================
+                        shape.Placement =
+                            Excel.XlPlacement.xlMoveAndSize;
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        area = ws.Range[
-                                            shape.TopLeftCell,
-                                            shape.BottomRightCell];
+                        AddLog(
+                            $"이미지 스냅 처리 중 오류 발생 ({i}): {ex.Message}");
                     }
-
-                    double rot = shape.Rotation % 360;
-                    if (rot < 0) rot += 360;
-
-                    bool rotated90 =
-                        Math.Abs(rot - 90) < 1 ||
-                        Math.Abs(rot - 270) < 1;
-
-                    //float gapLeft = 1f;
-                    //float gapTop = 1f;
-                    //float gapRight = 0f;
-                    //float gapBottom = 0f;
-
-                    //var borders = area.Borders;
-
-                    //gapLeft =
-                    //    GetGap(borders[Excel.XlBordersIndex.xlEdgeLeft]);
-
-                    //gapTop =
-                    //    GetGap(borders[Excel.XlBordersIndex.xlEdgeTop]);
-
-                    //gapRight =
-                    //    GetGap(borders[Excel.XlBordersIndex.xlEdgeRight]);
-
-                    //gapRight =
-                    //    GetGap(borders[Excel.XlBordersIndex.xlEdgeBottom]);
-
-                    if (rotated90)
+                    finally
                     {
-                        float targetW = (float)area.Height;
-                        float targetH = (float)area.Width;
+                        // =================================================
+                        // COM 객체 해제
+                        // =================================================
 
-                        shape.Width = targetW - gapLeft - gapRight;
-                        shape.Height = targetH - gapTop - gapBottom;
+                        if (area != null)
+                        {
+                            Marshal.ReleaseComObject(area);
+                            area = null;
+                        }
 
-                        shape.Left = (float)area.Left +
-                                     ((float)area.Width - targetW) / 2f + gapLeft;
+                        if (bottomRight != null)
+                        {
+                            Marshal.ReleaseComObject(bottomRight);
+                            bottomRight = null;
+                        }
 
-                        shape.Top = (float)area.Top +
-                                    ((float)area.Height - targetH) / 2f + gapTop;
+                        if (topLeft != null)
+                        {
+                            Marshal.ReleaseComObject(topLeft);
+                            topLeft = null;
+                        }
+
+                        if (shape != null)
+                        {
+                            Marshal.ReleaseComObject(shape);
+                            shape = null;
+                        }
                     }
-                    else
-                    {
-                        shape.Left = (float)area.Left + gapLeft;
-                        shape.Top = (float)area.Top + gapTop;
-                        shape.Width = (float)area.Width - gapLeft - gapRight;
-                        shape.Height = (float)area.Height - gapTop - gapRight;
-                    }
-                    i++;
-
-                    //shape.Left = (float)area.Left;
-                    //shape.Top = (float)area.Top;
-
-                    // 90/270도 회전된 도형은 너비/높이 값을 교체
-                    //double rot = 0;
-                    //try { rot = shape.Rotation; } catch { rot = 0; }
-                    //rot = rot % 360;
-                    //if (rot < 0) rot += 360;
-                    //bool rotated90 = Math.Abs(rot - 90) < 1.0 || Math.Abs(rot - 270) < 1.0;
-
-                    //if (rotated90)
-                    //{
-                    //    shape.Width = (float)area.Height;
-                    //    shape.Height = (float)area.Width;
-                    //}
-                    //else
-                    //{
-                    //    shape.Width = (float)area.Width;
-                    //    shape.Height = (float)area.Height;
-                    //}
-                    shape.LockAspectRatio =
-                        Microsoft.Office.Core.MsoTriState.msoFalse;
-                    shape.Placement = Excel.XlPlacement.xlMoveAndSize;
                 }
             }
             catch (Exception ex)
             {
-                AddLog($"이미지 스냅 처리 중 오류 발생: {ex.Message}");
+                AddLog(
+                    $"이미지 스냅 처리 중 오류 발생: {ex.Message}");
             }
             finally
             {
+                // =====================================================
+                // Shapes 해제
+                // =====================================================
+                if (shapes != null)
+                {
+                    Marshal.ReleaseComObject(shapes);
+                    shapes = null;
+                }
+
+
+                // =====================================================
+                // 이 함수에서 직접 Excel을 열었다면 여기서 종료
+                // =====================================================
                 if (openedHere)
                 {
+                    // -------------------------------------------------
+                    // Worksheet
+                    // -------------------------------------------------
+                    if (targetWs != null)
+                    {
+                        Marshal.ReleaseComObject(targetWs);
+                        targetWs = null;
+                    }
+
+
+                    // -------------------------------------------------
+                    // Workbook
+                    // -------------------------------------------------
                     if (wb != null)
                     {
-                        wb.Save();
-                        wb.Close(true);
+                        try
+                        {
+                            wb.Save();
+                        }
+                        catch
+                        {
+                        }
+
+                        try
+                        {
+                            wb.Close(
+                                SaveChanges: false);
+                        }
+                        catch
+                        {
+                        }
+
                         Marshal.ReleaseComObject(wb);
+                        wb = null;
                     }
+
+
+                    // -------------------------------------------------
+                    // Excel Application
+                    // -------------------------------------------------
                     if (xlApp != null)
                     {
-                        xlApp.Quit();
+                        try
+                        {
+                            xlApp.Quit();
+                        }
+                        catch
+                        {
+                        }
+
                         Marshal.ReleaseComObject(xlApp);
+                        xlApp = null;
                     }
+
+
+                    // -------------------------------------------------
+                    // COM RCW 최종 정리
+                    // -------------------------------------------------
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+
                     GC.Collect();
                     GC.WaitForPendingFinalizers();
                 }
             }
         }
+
+        #region [엑셀 시트에서 그림 삭제]
+        public void RemovePictures(Excel.Worksheet ws)
+        {
+            Excel.Shapes shapes = null;
+
+            try
+            {
+                shapes = ws.Shapes;
+
+                for (int i = shapes.Count; i >= 1; i--)
+                {
+                    Excel.Shape shape = null;
+
+                    try
+                    {
+                        shape = shapes.Item(i);
+
+                        if (shape.Type == Office.MsoShapeType.msoPicture ||
+                            shape.Type == Office.MsoShapeType.msoLinkedPicture)
+                        {
+                            shape.Delete();
+                        }
+                    }
+                    finally
+                    {
+                        if (shape != null)
+                        {
+                            Marshal.ReleaseComObject(shape);
+                            shape = null;
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                if (shapes != null)
+                {
+                    Marshal.ReleaseComObject(shapes);
+                    shapes = null;
+                }
+            }
+        }
+
+        public void RemovePictures(Excel.Worksheet ws, int? keepPictureIndex = null)
+        {
+            var pictureNames = new List<string>();
+            Excel.Shapes shapes = ws.Shapes;
+
+            if (keepPictureIndex == null) return;
+            if (keepPictureIndex < 2) return;
+
+            // 이미지 이름 수집
+            for (int i = 1; i <= ws.Shapes.Count; i++)
+            {
+                Excel.Shape shape = null;
+
+                try
+                {
+                    shape = shapes.Item(i);
+                    if (shape.Type == Office.MsoShapeType.msoPicture ||
+                        shape.Type == Office.MsoShapeType.msoLinkedPicture)
+                    {
+                        pictureNames.Add(shape.Name);
+                    }
+                }
+                finally
+                {
+                    if (shape != null) Marshal.ReleaseComObject(shape);
+                }
+            }
+
+            string keepName = null;
+
+            if (keepPictureIndex.HasValue &&
+                keepPictureIndex.Value >= 1 &&
+                keepPictureIndex.Value <= pictureNames.Count)
+            {
+                keepName = pictureNames[keepPictureIndex.Value - 1];
+            }
+
+            // 삭제
+            for (int i = ws.Shapes.Count; i >= 1; i--)
+            {
+                Excel.Shape shape = ws.Shapes.Item(i);
+
+                try
+                {
+                    if ((shape.Type == Office.MsoShapeType.msoPicture ||
+                         shape.Type == Office.MsoShapeType.msoLinkedPicture) &&
+                        shape.Name != keepName)
+                    {
+                        shape.Delete();
+                    }
+                }
+                finally
+                {
+                    Marshal.ReleaseComObject(shape);
+                }
+            }
+        }
+
+        public void RemovePicturesInRange(
+            Excel.Worksheet ws,
+            Excel.Range targetRange,
+            bool removeInside = true)
+        {
+            double left = (double)targetRange.Left;
+            double top = (double)targetRange.Top;
+            double right = left + (double)targetRange.Width;
+            double bottom = top + (double)targetRange.Height;
+
+            for (int i = ws.Shapes.Count; i >= 1; i--)
+            {
+                Excel.Shape shape = ws.Shapes.Item(i);
+
+                if (shape.Type != Office.MsoShapeType.msoPicture &&
+                    shape.Type != Office.MsoShapeType.msoLinkedPicture)
+                    continue;
+
+                double sLeft = shape.Left;
+                double sTop = shape.Top;
+                double sRight = sLeft + shape.Width;
+                double sBottom = sTop + shape.Height;
+
+                bool overlap =
+                    sLeft < right &&
+                    sRight > left &&
+                    sTop < bottom &&
+                    sBottom > top;
+
+                if ((removeInside && overlap) ||
+                    (!removeInside && !overlap))
+                {
+                    shape.Delete();
+                }
+            }
+        }
+        #endregion
+
+        #region [열화상 이미지 분기 시트 삽입]
+        private void EnsureFeverPicturePages(
+            Excel.Worksheet ws,
+            int imageCount)
+        {
+            if (ws == null || imageCount <= 0)
+                return;
+
+            const int PAGE_ROW_OFFSET = 56;
+
+            // 한 페이지의 사진 위치
+            const int IMAGE_START_ROW = 27;
+            const int IMAGE_END_ROW = 43;
+
+            // 보고서 마지막 열
+            const string LAST_COLUMN = "AD";
+
+            Excel.Range printAreaRange = null;
+
+            try
+            {
+                //----------------------------------------------------------
+                // 1. 사진이 들어가야 하는 마지막 행 계산
+                //----------------------------------------------------------
+
+                // 페이지당 사진 2장
+                int requiredPages =
+                    (int)Math.Ceiling(imageCount / 2.0);
+
+                // 예:
+                // 1 page -> 43
+                // 2 page -> 99
+                // 3 page -> 155
+                // 4 page -> 211
+                int requiredImageLastRow =
+                    IMAGE_END_ROW +
+                    ((requiredPages - 1) * PAGE_ROW_OFFSET);
+
+
+                //----------------------------------------------------------
+                // 2. 현재 PrintArea의 마지막 행 확인
+                //----------------------------------------------------------
+
+                string printArea = ws.PageSetup.PrintArea;
+
+                if (string.IsNullOrWhiteSpace(printArea))
+                {
+                    throw new Exception(
+                        $"[{ws.Name}] 인쇄영역(PrintArea)이 설정되어 있지 않습니다.");
+                }
+
+                printAreaRange = ws.Range[printArea];
+
+                int printStartRow = printAreaRange.Row;
+
+                int currentPrintLastRow =
+                    printAreaRange.Row +
+                    printAreaRange.Rows.Count - 1;
+
+
+                Debug.WriteLine(
+                    $"[{ws.Name}] " +
+                    $"현재 PrintArea 마지막 행={currentPrintLastRow}, " +
+                    $"사진 필요 마지막 행={requiredImageLastRow}");
+
+
+                //----------------------------------------------------------
+                // 3. 이미 충분하면 아무것도 하지 않음
+                //----------------------------------------------------------
+
+                if (requiredImageLastRow <= currentPrintLastRow)
+                {
+                    Debug.WriteLine(
+                        $"[{ws.Name}] 페이지 추가 필요 없음.");
+
+                    return;
+                }
+
+
+                //----------------------------------------------------------
+                // 4. 필요한 만큼 페이지 추가
+                //----------------------------------------------------------
+
+                while (requiredImageLastRow > currentPrintLastRow)
+                {
+                    Excel.Range sourceRange = null;
+                    Excel.Range destRange = null;
+                    Excel.Range breakCell = null;
+
+                    try
+                    {
+                        /*
+                         * 현재 마지막 페이지 56행을 복사
+                         *
+                         * 예:
+                         *
+                         * PrintArea가 A1:AD168 이라면
+                         *
+                         * 마지막 페이지:
+                         * 113 ~ 168
+                         *
+                         * 복사 위치:
+                         * 169 ~ 224
+                         */
+
+                        int sourceStartRow =
+                            currentPrintLastRow -
+                            PAGE_ROW_OFFSET + 1;
+
+                        int sourceEndRow =
+                            currentPrintLastRow;
+
+                        int destStartRow =
+                            currentPrintLastRow + 1;
+
+                        int destEndRow =
+                            currentPrintLastRow +
+                            PAGE_ROW_OFFSET;
+
+
+                        Debug.WriteLine(
+                            $"[{ws.Name}] 페이지 복사: " +
+                            $"{sourceStartRow}~{sourceEndRow} " +
+                            $"→ {destStartRow}~{destEndRow}");
+
+
+                        //--------------------------------------------------
+                        // 마지막 페이지 복사
+                        //--------------------------------------------------
+
+                        sourceRange = ws.Range[
+                            $"A{sourceStartRow}",
+                            $"{LAST_COLUMN}{sourceEndRow}"
+                        ];
+
+                        destRange = ws.Range[
+                            $"A{destStartRow}",
+                            $"{LAST_COLUMN}{destEndRow}"
+                        ];
+
+                        sourceRange.Copy(destRange);
+
+
+                        //--------------------------------------------------
+                        // 행 높이 복사
+                        //
+                        // Range.Copy만으로 행 높이가 정확히 복사되지
+                        // 않는 경우가 있어서 별도로 맞춤
+                        //--------------------------------------------------
+
+                        for (int i = 0; i < PAGE_ROW_OFFSET; i++)
+                        {
+                            Excel.Range srcRow = null;
+                            Excel.Range dstRow = null;
+
+                            try
+                            {
+                                srcRow = ws.Rows[sourceStartRow + i];
+                                dstRow = ws.Rows[destStartRow + i];
+
+                                dstRow.RowHeight = srcRow.RowHeight;
+                            }
+                            finally
+                            {
+                                if (dstRow != null)
+                                    Marshal.ReleaseComObject(dstRow);
+
+                                if (srcRow != null)
+                                    Marshal.ReleaseComObject(srcRow);
+                            }
+                        }
+
+
+                        //--------------------------------------------------
+                        // 새 페이지 시작 위치에 페이지 나누기
+                        //--------------------------------------------------
+
+                        breakCell = ws.Cells[destStartRow, 1];
+
+                        bool breakExists = false;
+
+                        int breakCount = ws.HPageBreaks.Count;
+
+                        for (int i = 1; i <= breakCount; i++)
+                        {
+                            Excel.HPageBreak hp = null;
+                            Excel.Range location = null;
+
+                            try
+                            {
+                                hp = ws.HPageBreaks[i];
+
+                                location = hp.Location;
+
+                                if (location.Row == destStartRow)
+                                {
+                                    breakExists = true;
+                                    break;
+                                }
+                            }
+                            finally
+                            {
+                                if (location != null)
+                                    Marshal.ReleaseComObject(location);
+
+                                if (hp != null)
+                                    Marshal.ReleaseComObject(hp);
+                            }
+                        }
+
+                        if (!breakExists)
+                        {
+                            ws.HPageBreaks.Add(
+                                Before: breakCell);
+                        }
+
+
+                        //--------------------------------------------------
+                        // PrintArea 확장
+                        //--------------------------------------------------
+
+                        currentPrintLastRow = destEndRow;
+
+                        ws.PageSetup.PrintArea =
+                            $"$A${printStartRow}:${LAST_COLUMN}${currentPrintLastRow}";
+
+
+                        Debug.WriteLine(
+                            $"[{ws.Name}] PrintArea 확장 → " +
+                            $"A{printStartRow}:{LAST_COLUMN}{currentPrintLastRow}");
+                    }
+                    finally
+                    {
+                        if (breakCell != null)
+                            Marshal.ReleaseComObject(breakCell);
+
+                        if (destRange != null)
+                            Marshal.ReleaseComObject(destRange);
+
+                        if (sourceRange != null)
+                            Marshal.ReleaseComObject(sourceRange);
+                    }
+                }
+
+
+                //----------------------------------------------------------
+                // 5. 최종 상태
+                //----------------------------------------------------------
+
+                Debug.WriteLine(
+                    $"[{ws.Name}] 페이지 확장 완료. " +
+                    $"최종 마지막 행={currentPrintLastRow}");
+            }
+            finally
+            {
+                if (printAreaRange != null)
+                    Marshal.ReleaseComObject(printAreaRange);
+            }
+        }
+
+        public void ProcFeverPicture(
+            string sheetName, 
+            bool bCheckBoxOcr,
+            Excel.Application xlApp,
+            Excel.Workbook wb,
+            string baseFolder,
+            string pictureFolder)
+        {
+            Excel.Worksheet sourceWs = null;
+
+            try
+            {
+                sourceWs = ExcelComHelper.GetWorksheetByLastName(wb, sheetName);
+
+                if (sourceWs == null)
+                {
+                    throw new Exception("분기 시트를 찾을 수 없습니다.");
+                }
+
+                // =====================================================
+                // 기존 그림 제거
+                // =====================================================
+                RemovePictures(sourceWs);
+
+                // =====================================================
+                // 이미지 파일
+                // =====================================================
+                string picturePath =
+                    Path.Combine(baseFolder, pictureFolder);
+
+                string[] files = Directory
+                    .GetFiles(picturePath, "*.jpg")
+                    .OrderBy(f =>
+                    {
+                        return int.TryParse(
+                            Path.GetFileNameWithoutExtension(f),
+                            out int n)
+                            ? n
+                            : int.MaxValue;
+                    })
+                    .ToArray();
+
+                // =====================================================
+                // 필요한 페이지 생성
+                // =====================================================
+                EnsureFeverPicturePages(sourceWs, files.Length);
+
+                // =====================================================
+                // 이미지 삽입
+                // =====================================================
+                int imageIndex = 0;
+
+                for (int page = 0;
+                     imageIndex < files.Length;
+                     page++)
+                {
+                    int startRow = 27 + (page * 56);
+                    int endRow = 43 + (page * 56);
+
+                    string[] fromCols = { "A", "R" };
+                    string[] toCols = { "Q", "AC" };
+
+                    for (int i = 0;
+                         i < fromCols.Length;
+                         i++)
+                    {
+                        if (imageIndex >= files.Length)
+                            break;
+
+                        string fromCell =
+                            $"{fromCols[i]}{startRow}";
+
+                        string toCell =
+                            $"{toCols[i]}{endRow}";
+
+                        // =================================================
+                        // 원본 통합문서
+                        // =================================================
+                        using (var inserter =
+                            new ImageInserter(
+                                sourceWs,
+                                files[imageIndex]))
+                        {
+                            inserter.InsertFit(
+                                fromCell,
+                                toCell,
+                                new ImageInsertOptions
+                                {
+                                    KeepAspectRatio = false
+                                });
+                        }
+
+                        imageIndex++;
+                    }
+                }
+
+                // =====================================================
+                // OCR
+                // =====================================================
+                if (bCheckBoxOcr)
+                {
+                    using (var reader = new FlirOcrReader())
+                    {
+                        OcrExcelMap map = new OcrExcelMap
+                        {
+                            ValueCells = new[]
+                                    {
+                                "H49",
+                                "P49",
+                                "W49",
+                                "H52",
+                                "P52",
+                                "W52"
+                            },
+                            MinTemperatureCell = "AD6",
+                            RowOffset = 56
+                        };
+
+                        string[] evenFiles = files
+                            .Where((file, index) => index % 2 == 0)
+                            .ToArray();
+
+                        OcrDataToExcel.ProcessAll(
+                            sourceWs,
+                            evenFiles,
+                            reader,
+                            map);
+                    }
+                }
+
+                // =====================================================
+                // 저장
+                // =====================================================
+                wb.Save();
+            }
+            catch (Exception ex)
+            {
+                AddLog(
+                    $"분기 이미지 삽입 실패: {ex.Message}");
+            }
+            finally
+            {
+                AddLog(
+                    "분기 이미지 삽입 완료", "Info");
+                // -----------------------------------------------------
+                // sourceWs
+                // -----------------------------------------------------
+                if (sourceWs != null)
+                {
+                    try
+                    {
+                        Marshal.FinalReleaseComObject(sourceWs);
+                    }
+                    catch { }
+
+                    sourceWs = null;
+                }
+            }
+        }
+        #endregion
 
 
         #region 바닥글 이미지 교체
@@ -1338,18 +2437,18 @@ namespace WindowsFormsApp1
         #endregion
 
         #region [log]
-        private void AddLog(string msg)
+        private void AddLog(string msg, string part = "Error")
         {
             try
             {
                 if (mainForm != null)
-                    mainForm.AddLog("Error", msg);
+                    mainForm.AddLog(part, msg);
                 else
-                    MessageBox.Show(msg, "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(msg, part, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(msg, "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(msg, part, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
         #endregion

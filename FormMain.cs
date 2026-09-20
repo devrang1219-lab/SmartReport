@@ -1745,17 +1745,18 @@ namespace SmartReport
                 //dgvFiles.DataSource = _fileBindingSource;
 
                 //MessageBox.Show("검색 완료: " + _files.Count + "건");
+                string strDownloadPath = "D:\\work\\Report\\0_now";
 
-                int count = await _downloader.DownloadFoldersAsync(@"D:\work\Report\0now");
+                int count = await _downloader.DownloadFoldersAsync(strDownloadPath);
 
                 if (count > 0)
                 {
-                    ExtractAllZipFiles(@"D:\work\Report\0now");
+                    ExtractAllZipFiles(strDownloadPath);
                     AddLog("INFO", keyword + " 검색 완료: " + count + "건 다운로드 완료");
 
-                    await DownloadPreviousReportAsync(@"D:\work\Report\0now");
+                    await DownloadPreviousReportAsync(strDownloadPath);
 
-                    Process.Start("explorer.exe", @"D:\work\Report\0now");
+                    Process.Start("explorer.exe", strDownloadPath);
                 }
                 else
                 {
@@ -2602,13 +2603,20 @@ namespace SmartReport
             Cursor = Cursors.WaitCursor;
             Excel.Application xlApp = null;
             Excel.Workbook wb = null;
-            Excel.Worksheet ws = null;
+            Excel.Workbooks workbooks = null;
 
             try
             {
                 xlApp = new Excel.Application { Visible = false, DisplayAlerts = false };
+
+                // =====================================================
+                // Workbooks
+                // =====================================================
+                workbooks = xlApp.Workbooks;
+
+
                 //wb = xlApp.Workbooks.Open(filePath, ReadOnly: false);\
-                wb = xlApp.Workbooks.Open(filePath);
+                wb = workbooks.Open(filePath);
 
 
                 string baseFolder = Path.GetDirectoryName(filePath);
@@ -2617,7 +2625,8 @@ namespace SmartReport
                 // 열화상
                 if (checkBoxFeverPicture.Checked)
                 {
-                    ProcFeverPicture(xlApp, wb, baseFolder, textBoxFeverImageFolder.Text);
+                    //ProcFeverPicture(xlApp, wb, baseFolder, textBoxFeverImageFolder.Text);
+                    report.ProcFeverPicture(tbQuaterSheet.Text.Trim(), checkBoxOcr.Checked, xlApp, wb, baseFolder, textBoxFeverImageFolder.Text);
                 }
 
                 // 품질
@@ -2651,6 +2660,11 @@ namespace SmartReport
                 {
                     ProcBattery(xlApp, wb, baseFolder, tbBattery.Text);
                 }
+
+                if (cbGround.Checked)
+                {
+                    ProcHighVoltage(xlApp, wb, baseFolder, tbGround.Text);
+                }
             }
             catch (Exception ex)
             {
@@ -2661,7 +2675,6 @@ namespace SmartReport
             {
                 try
                 {
-                    if (ws != null) Marshal.ReleaseComObject(ws);
                     if (wb != null)
                     {
                         wb.Close(false);
@@ -2669,6 +2682,19 @@ namespace SmartReport
                     }
                 }
                 catch { }
+
+                if (workbooks != null)
+                {
+                    try
+                    {
+                        Marshal.FinalReleaseComObject(workbooks);
+                    }
+                    catch
+                    {
+                    }
+
+                    workbooks = null;
+                }
 
                 try
                 {
@@ -3073,9 +3099,11 @@ namespace SmartReport
             object text)
         {
             Excel.Worksheet ws = null;
+
             if (report == null)
             {
                 AddLog("Error", "report를 찾을 수 없습니다.");
+                return;
             }
 
             try
@@ -3087,13 +3115,12 @@ namespace SmartReport
                     throw new Exception("축전지 시트를 찾을 수 없습니다.");
                 }
 
-                Excel.Range rng = ws.Range["A21:AG22"];
-                RemovePicturesInRange(ws, rng, true);
-
-                string folderPath = Path.Combine(baseFolder, Convert.ToString(text));
+                string folderPath = Path.Combine(
+                    baseFolder,
+                    Convert.ToString(text));
 
                 // 파일명 숫자를 Key로 사용
-                // 예: 1.jpg → 1, 3.jpg → 3
+                // 예: 1.jpg → 1, 2.jpg → 2, 3.jpg → 3
                 var files = Directory.GetFiles(folderPath, "*.jpg")
                     .Select(f => new
                     {
@@ -3105,57 +3132,98 @@ namespace SmartReport
                             : -1
                     })
                     .Where(x => x.Number > 0)
-                    .ToDictionary(x => x.Number, x => x.Path);
+                    .ToDictionary(
+                        x => x.Number,
+                        x => x.Path);
 
-                if (files.Count < 3)
+                if (!files.ContainsKey(1) ||
+                    !files.ContainsKey(2) ||
+                    !files.ContainsKey(3))
                 {
                     AddLog("Info", "축전지 이미지가 올바르지 않습니다.");
                     return;
                 }
 
-                string startCol = "A";
-                int startRow = 21;
+                // -------------------------------------------------
+                // 페이지 설정
+                // -------------------------------------------------
 
-                int width = 11;   // 이미지당 11열
-                int height = 2;   // 이미지당 2행
-                int baseCol = ExcelColumnToNumber(startCol);
+                int pageHeight = 30;   // 페이지당 행 수
 
-                for (int number = 1; number <= 3; number++)
+                // 1페이지 시작 위치
+                int firstStartRow = 21;
+
+
+                // -------------------------------------------------
+                // 1페이지 + 2페이지에 이미지 삽입
+                // -------------------------------------------------
+
+                for (int page = 0; page < 2; page++)
                 {
-                    // 이미지 번호에 따라 오른쪽으로 11열씩 이동
-                    int fromCol = baseCol + (number - 1) * width;
-                    int toCol = fromCol + width - 1;
+                    int startRow = firstStartRow + page * pageHeight;
+                    int startNumber = page * 3 + 1;
 
-                    int fromRow = startRow;
-                    int toRow = startRow + height - 1;
+                    // 기존 그림 삭제
+                    string cellFrom = $"A{startRow}";
+                    string cellTo = $"AG{startRow + 1}";
 
-                    string cellFrom = $"{ExcelColumnToName(fromCol)}{fromRow}";
-                    string cellTo = $"{ExcelColumnToName(toCol)}{toRow}";
+                    Excel.Range rng = ws.Range[$"{cellFrom}:{cellTo}"];
 
-                    AddLog(
-                        "Info",
-                        $"{number}.jpg → {cellFrom}:{cellTo}");
-
-                    using (var inserter = new ImageInserter(ws, files[number]))
+                    try
                     {
-                        inserter.InsertFit(
-                            cellFrom,
-                            cellTo,
-                            new ImageInsertOptions
-                            {
-                                KeepAspectRatio = false
-                            });
+                        RemovePicturesInRange(ws, rng, true);
+                    }
+                    finally
+                    {
+                        Marshal.ReleaseComObject(rng);
+                    }
+
+                    // 이미지 3개
+                    for (int i = 0; i < 3; i++)
+                    {
+                        int number = startNumber + i;
+
+                        int fromCol =
+                            ExcelColumnToNumber("A") + i * 11;
+
+                        int toCol =
+                            fromCol + 10;
+
+                        string imageFrom =
+                            $"{ExcelColumnToName(fromCol)}{startRow}";
+
+                        string imageTo =
+                            $"{ExcelColumnToName(toCol)}{startRow + 1}";
+
+                        AddLog(
+                            "Info",
+                            $"{number}.jpg → {imageFrom}:{imageTo}");
+
+                        using (var inserter =
+                            new ImageInserter(ws, files[number]))
+                        {
+                            inserter.InsertFit(
+                                imageFrom,
+                                imageTo,
+                                new ImageInsertOptions
+                                {
+                                    KeepAspectRatio = false
+                                });
+                        }
                     }
                 }
 
-                // 이미지마다 저장할 필요 없이 마지막에 한 번만 저장
+
+                // 마지막에 한 번만 저장
                 wb.Save();
 
                 AddLog("Info", "축전지 이미지 삽입 완료");
             }
             catch (Exception ex)
             {
-                AddLog("Error", $"축전지 이미지 삽입 실패: {ex.Message}");
+                AddLog(
+                    "Error",
+                    $"축전지 이미지 삽입 실패: {ex.Message}");
             }
             finally
             {
@@ -3168,33 +3236,35 @@ namespace SmartReport
             }
         }
 
-        private void ProcEquipment(
-                Excel.Application xlApp,
-                Excel.Workbook wb,
-                string baseFolder,
-                object text)
+        private void ProcHighVoltage(
+            Excel.Application xlApp,
+            Excel.Workbook wb,
+            string baseFolder,
+            object text)
         {
             Excel.Worksheet ws = null;
+
             if (report == null)
             {
                 AddLog("Error", "report를 찾을 수 없습니다.");
+                return;
             }
 
             try
             {
-                ws = report.GetWorksheetByName(wb, "설치기기");
+                ws = report.GetWorksheetByName(wb, "3-2");
 
                 if (ws == null)
                 {
-                    throw new Exception("설치기기 시트를 찾을 수 없습니다.");
+                    throw new Exception("3-2 시트를 찾을 수 없습니다.");
                 }
 
-                RemovePictures(ws);
-
-                string folderPath = Path.Combine(baseFolder, Convert.ToString(text));
+                string folderPath = Path.Combine(
+                    baseFolder,
+                    Convert.ToString(text));
 
                 // 파일명 숫자를 Key로 사용
-                // 예: 1.jpg → 1, 3.jpg → 3
+                // 예: 1.jpg → 1, 2.jpg → 2, 3.jpg → 3
                 var files = Directory.GetFiles(folderPath, "*.jpg")
                     .Select(f => new
                     {
@@ -3206,95 +3276,404 @@ namespace SmartReport
                             : -1
                     })
                     .Where(x => x.Number > 0)
-                    .ToDictionary(x => x.Number, x => x.Path);
+                    .ToDictionary(
+                        x => x.Number,
+                        x => x.Path);
 
-                if (files.Count == 0)
+                if (!files.ContainsKey(1) ||
+                    !files.ContainsKey(2) ||
+                    !files.ContainsKey(3))
                 {
-                    AddLog("Info", "설치기기 이미지가 없습니다.");
+                    AddLog("Info", "고압전기설비 이미지가 올바르지 않습니다.");
                     return;
                 }
 
-                // 가장 큰 파일 번호까지 처리
-                int maxNumber = files.Keys.Max();
+                // -------------------------------------------------
+                // 페이지 설정
+                // -------------------------------------------------
 
+                int pageHeight = 56;   // 페이지당 행 수
+
+                // 1페이지 시작 위치
+                int firstPageStartRow = 21;
+
+                // 2페이지 동일 위치
+                int secondPageStartRow =
+                    firstPageStartRow + pageHeight;
+
+
+                // -------------------------------------------------
+                // 1페이지 + 2페이지에 이미지 삽입
+                // -------------------------------------------------
+
+                InsertPictures(
+                    ws,
+                    files,
+                    firstPageStartRow,
+                    "1페이지");
+
+
+                // 마지막에 한 번만 저장
+                wb.Save();
+
+                AddLog("Info", "고압전기설비 이미지 삽입 완료");
+            }
+            catch (Exception ex)
+            {
+                AddLog(
+                    "Error",
+                    $"고압전기설비 이미지 삽입 실패: {ex.Message}");
+            }
+            finally
+            {
+                try
+                {
+                    if (ws != null)
+                        Marshal.ReleaseComObject(ws);
+                }
+                catch { }
+            }
+        }
+
+
+        private void InsertPictures(
+            Excel.Worksheet ws,
+            Dictionary<int, string> files,
+            int startRow,
+            string pageName)
+        {
+            int startCol = ExcelColumnToNumber("A");
+            int endCol = ExcelColumnToNumber("AD");
+
+            int height = 2;
+
+            // 이미지 사이 여백으로 사용할 열 수
+            // 1열을 여백으로 사용
+            int gapCols = 1;
+
+            // 전체 열 수
+            int totalCols = endCol - startCol + 1;
+
+            // 이미지 3개 + 여백 2개
+            int imageCols =
+                (totalCols - gapCols * 2) / 3;
+
+
+            // -------------------------------------------------
+            // 기존 그림 삭제
+            // -------------------------------------------------
+
+            string removeFrom =
+                $"{ExcelColumnToName(startCol)}{startRow}";
+
+            string removeTo =
+                $"{ExcelColumnToName(endCol)}{startRow + height - 1}";
+
+            Excel.Range rng = null;
+
+            try
+            {
+                rng = ws.Range[$"{removeFrom}:{removeTo}"];
+
+                RemovePicturesInRange(ws, rng, true);
+            }
+            finally
+            {
+                if (rng != null)
+                    Marshal.ReleaseComObject(rng);
+            }
+
+
+            // -------------------------------------------------
+            // 이미지 3개
+            // -------------------------------------------------
+
+            for (int i = 0; i < 3; i++)
+            {
+                int number = i + 1;
+
+                // 이미지 시작 열
+                int fromCol =
+                    startCol +
+                    i * (imageCols + gapCols);
+
+                // 이미지 끝 열
+                int toCol =
+                    fromCol + imageCols - 1;
+
+                string cellFrom =
+                    $"{ExcelColumnToName(fromCol)}{startRow}";
+
+                string cellTo =
+                    $"{ExcelColumnToName(toCol)}{startRow + height - 1}";
+
+                AddLog(
+                    "Info",
+                    $"{pageName} : {number}.jpg → " +
+                    $"{cellFrom}:{cellTo}");
+
+                using (var inserter =
+                    new ImageInserter(ws, files[number]))
+                {
+                    inserter.InsertFit(
+                        cellFrom,
+                        cellTo,
+                        new ImageInsertOptions
+                        {
+                            KeepAspectRatio = false
+                        });
+                }
+            }
+        }
+
+        private void ProcEquipment(
+            Excel.Application xlApp,
+            Excel.Workbook wb,
+            string baseFolder,
+            object text)
+        {
+            Excel.Worksheet ws = null;
+
+            Excel.Range rows = null;
+            Excel.Range lastCell = null;
+            Excel.Range endCell = null;
+
+            try
+            {
+                if (report == null)
+                {
+                    AddLog(
+                        "Error",
+                        "report를 찾을 수 없습니다.");
+
+                    return;
+                }
+
+                // =====================================================
+                // 설치기기 Worksheet
+                // =====================================================
+                ws = report.GetWorksheetByName(
+                    wb,
+                    "설치기기");
+
+                if (ws == null)
+                {
+                    throw new Exception(
+                        "설치기기 시트를 찾을 수 없습니다.");
+                }
+
+                // =====================================================
+                // 기존 이미지 제거
+                // =====================================================
+                report.RemovePictures(ws);
+
+                // =====================================================
+                // 이미지 폴더
+                // =====================================================
+                string folderPath =
+                    Path.Combine(
+                        baseFolder,
+                        Convert.ToString(text));
+
+                // =====================================================
+                // 이미지 목록
+                // =====================================================
+                var files =
+                    Directory
+                        .GetFiles(
+                            folderPath,
+                            "*.jpg")
+                        .Select(f => new
+                        {
+                            Path = f,
+
+                            Number = int.TryParse(
+                                Path.GetFileNameWithoutExtension(f),
+                                out int n)
+                                ? n
+                                : -1
+                        })
+                        .Where(x => x.Number > 0)
+                        .ToDictionary(
+                            x => x.Number,
+                            x => x.Path);
+
+                if (files.Count == 0)
+                {
+                    AddLog(
+                        "Info",
+                        "설치기기 이미지가 없습니다.");
+
+                    return;
+                }
+
+                // =====================================================
+                // 최대 이미지 번호
+                // =====================================================
+                int maxNumber =
+                    files.Keys.Max();
+
+                // =====================================================
                 // 필요한 페이지 수
+                //
                 // 1~4   → 1페이지
                 // 5~8   → 2페이지
                 // 9~12  → 3페이지
-                int requiredPages = (maxNumber + 3) / 4;
+                // =====================================================
+                int requiredPages =
+                    (maxNumber + 3) / 4;
 
-                // 현재 설치기기 페이지 수 계산
-                // 기본 페이지가 41행 단위라고 가정
-                int lastUsedRow = ws.Cells[ws.Rows.Count, "A"]
-                                    .End(Excel.XlDirection.xlUp)
-                                    .Row;
+                // =====================================================
+                // 현재 페이지 수 계산
+                //
+                // 기존 코드의
+                //
+                // ws.Cells[ws.Rows.Count, "A"]
+                //     .End(...)
+                //
+                // 같은 COM chaining을 피한다.
+                // =====================================================
 
-                int currentPages = (lastUsedRow + 41) / 42;
+                rows = ws.Rows;
 
+                lastCell =
+                    ws.Cells[
+                        rows.Count,
+                        1];
+
+                endCell = lastCell.End[Excel.XlDirection.xlUp];
+
+                int lastUsedRow =
+                    endCell.Row;
+
+                // 기존 계산 방식 유지
+                int currentPages =
+                    (lastUsedRow + 41) / 42;
+
+                // =====================================================
                 // 부족한 페이지 추가
+                // =====================================================
                 while (currentPages < requiredPages)
                 {
-                    CopyEquipmentPage(ws, currentPages);
+                    CopyEquipmentPage(
+                        ws,
+                        currentPages);
 
                     currentPages++;
                 }
 
-                // ================================
-                // 인쇄영역 업데이트
-                // ================================
-
+                // =====================================================
+                // 인쇄영역 / 페이지 나누기
+                // =====================================================
                 SetEquipmentPrintAreaAndPageBreaks(
                     ws,
-                    requiredPages
-                );
+                    requiredPages);
 
-                for (int number = 1; number <= maxNumber; number++)
+                // =====================================================
+                // 이미지 삽입
+                // =====================================================
+                for (
+                    int number = 1;
+                    number <= maxNumber;
+                    number++)
                 {
-                    // 파일번호를 0부터 시작하는 위치 번호로 변환
-                    int position = number - 1;
+                    // ---------------------------------------------
+                    // 파일번호 → 0부터 시작하는 위치
+                    // ---------------------------------------------
+                    int position =
+                        number - 1;
 
-                    // 페이지당 이미지 4개
-                    int page = position / 4;
+                    // ---------------------------------------------
+                    // 페이지당 4개
+                    // ---------------------------------------------
+                    int page =
+                        position / 4;
 
-                    // 현재 페이지 안에서의 위치 (0~3)
-                    int positionInPage = position % 4;
+                    // ---------------------------------------------
+                    // 페이지 안 위치
+                    // 0,1,2,3
+                    // ---------------------------------------------
+                    int positionInPage =
+                        position % 4;
 
+                    // ---------------------------------------------
                     // 0,1 → 첫 번째 줄
                     // 2,3 → 두 번째 줄
-                    int row = positionInPage / 2;
+                    // ---------------------------------------------
+                    int row =
+                        positionInPage / 2;
 
+                    // ---------------------------------------------
                     // 0,2 → 왼쪽
                     // 1,3 → 오른쪽
-                    int col = positionInPage % 2;
+                    // ---------------------------------------------
+                    int col =
+                        positionInPage % 2;
 
-                    int pageOffset = page * 42;
-                    int rowOffset = row * 17;
+                    int pageOffset =
+                        page * 42;
 
-                    string fromCol = (col == 0) ? "A" : "O";
-                    string toCol = (col == 0) ? "M" : "AA";
+                    int rowOffset =
+                        row * 17;
 
-                    int startRow = 8 + pageOffset + rowOffset;
-                    int endRow = 21 + pageOffset + rowOffset;
+                    string fromCol =
+                        col == 0
+                            ? "A"
+                            : "O";
 
-                    string cellFrom = $"{fromCol}{startRow}";
-                    string cellTo = $"{toCol}{endRow}";
+                    string toCol =
+                        col == 0
+                            ? "M"
+                            : "AA";
 
+                    int startRow =
+                        8 +
+                        pageOffset +
+                        rowOffset;
 
-                    // 해당 번호의 파일이 없으면 칸을 비워두고 넘어감
-                    if (!files.TryGetValue(number, out string imagePath))
+                    int endRow =
+                        21 +
+                        pageOffset +
+                        rowOffset;
+
+                    string cellFrom =
+                        $"{fromCol}{startRow}";
+
+                    string cellTo =
+                        $"{toCol}{endRow}";
+
+                    // =================================================
+                    // 이미지가 없는 경우
+                    // =================================================
+                    if (!files.TryGetValue(
+                            number,
+                            out string imagePath))
                     {
-                        AddDiagonalLine(ws, cellFrom, cellTo);
-                        AddLog("Info", $"{number}.jpg 없음 - 해당 칸 건너뜀");
+                        //AddDiagonalLine(
+                        //    ws,
+                        //    cellFrom,
+                        //    cellTo);
+
+                        AddLog(
+                            "Info",
+                            $"{number}.jpg 없음 - 해당 칸 건너뜀");
+
                         continue;
                     }
 
                     AddLog(
                         "Info",
-                        $"{number}.jpg → {cellFrom}:{cellTo}");
+                        $"{number}.jpg → " +
+                        $"{cellFrom}:{cellTo}");
 
-
-
-                    using (var inserter = new ImageInserter(ws, imagePath))
+                    // =================================================
+                    // 이미지 삽입
+                    // =================================================
+                    using (
+                        var inserter =
+                            new ImageInserter(
+                                ws,
+                                imagePath))
                     {
                         inserter.InsertFit(
                             cellFrom,
@@ -3306,23 +3685,90 @@ namespace SmartReport
                     }
                 }
 
-                // 이미지마다 저장할 필요 없이 마지막에 한 번만 저장
+                // =====================================================
+                // 마지막에 한 번만 저장
+                // =====================================================
                 wb.Save();
 
-                AddLog("Info", "설치기기 이미지 삽입 완료");
+                AddLog(
+                    "Info",
+                    "설치기기 이미지 삽입 완료");
             }
             catch (Exception ex)
             {
-                AddLog("Error", $"설치기기 이미지 삽입 실패: {ex.Message}");
+                AddLog(
+                    "Error",
+                    $"설치기기 이미지 삽입 실패: {ex.Message}");
             }
             finally
             {
-                try
+                // =====================================================
+                // End Range
+                // =====================================================
+                if (endCell != null)
                 {
-                    if (ws != null)
-                        Marshal.ReleaseComObject(ws);
+                    try
+                    {
+                        Marshal.FinalReleaseComObject(
+                            endCell);
+                    }
+                    catch
+                    {
+                    }
+
+                    endCell = null;
                 }
-                catch { }
+
+                // =====================================================
+                // Last Cell
+                // =====================================================
+                if (lastCell != null)
+                {
+                    try
+                    {
+                        Marshal.FinalReleaseComObject(
+                            lastCell);
+                    }
+                    catch
+                    {
+                    }
+
+                    lastCell = null;
+                }
+
+                // =====================================================
+                // Rows
+                // =====================================================
+                if (rows != null)
+                {
+                    try
+                    {
+                        Marshal.FinalReleaseComObject(
+                            rows);
+                    }
+                    catch
+                    {
+                    }
+
+                    rows = null;
+                }
+
+                // =====================================================
+                // Worksheet
+                // =====================================================
+                if (ws != null)
+                {
+                    try
+                    {
+                        Marshal.FinalReleaseComObject(
+                            ws);
+                    }
+                    catch
+                    {
+                    }
+
+                    ws = null;
+                }
             }
         }
         #endregion
@@ -4004,9 +4450,9 @@ namespace SmartReport
 
         #region [열화상 이미지 분기 시트 삽입]
         private void EnsureFeverPicturePages(
-    Excel.Worksheet ws,
-    int imageCount)
-        {
+            Excel.Worksheet ws,
+            int imageCount)
+                {
             if (ws == null || imageCount <= 0)
                 return;
 
@@ -4658,6 +5104,7 @@ namespace SmartReport
         {
             Excel.Application xlApp = null;
             Excel.Workbook wb = null;
+            Excel.Workbooks wss = null;
             Excel.Worksheet ws = null;
 
             try
@@ -4668,7 +5115,8 @@ namespace SmartReport
                     DisplayAlerts = false
                 };
 
-                wb = xlApp.Workbooks.Open(xlsFile);
+                wss = xlApp.Workbooks;
+                wb = wss.Open(xlsFile);
 
                 // 첫 번째 시트
                 ws = (Excel.Worksheet)wb.Worksheets[1];
@@ -4743,6 +5191,9 @@ namespace SmartReport
                 if (ws != null)
                     Marshal.ReleaseComObject(ws);
 
+                if (wss != null)
+                    Marshal.ReleaseComObject(wss);
+
                 if (wb != null)
                 {
                     wb.Close(true);
@@ -4767,11 +5218,14 @@ namespace SmartReport
 
             Excel.Application app = null;
             Excel.Workbook wb = null;
+            Excel.Workbooks wss = null;
+
 
             try
             {
                 app = new Excel.Application();
-                wb = app.Workbooks.Open(xlsPath);
+                wss = app.Workbooks;
+                wb = wss.Open(xlsPath);
 
                 wb.ExportAsFixedFormat(
                     Excel.XlFixedFormatType.xlTypePDF,
@@ -4785,6 +5239,10 @@ namespace SmartReport
                 {
                     wb.Close(false);
                     Marshal.ReleaseComObject(wb);
+                }
+                if (wss != null)
+                {
+                    Marshal.ReleaseComObject(wss);
                 }
 
                 if (app != null)
@@ -4912,7 +5370,7 @@ namespace SmartReport
         #region [서버에서 자동으로 파일 다운로드하기]
         private void MoveFoldersToRoot()
         {
-            string sourceFolder = @"D:\work\Report\0now";
+            string sourceFolder = @"D:\work\Report\0_now";
             string targetFolder = @"D:\work\Report";
 
             try
@@ -5343,7 +5801,7 @@ namespace SmartReport
                 }
             };
 
-            string localRoot = @"D:\work\Report\0now";
+            string localRoot = @"D:\work\Report\0_now";
 
             using (var downloader = new SynologyIntegration.SynologyFileDownloader(config))
             {
@@ -5982,9 +6440,9 @@ namespace SmartReport
                 bool isLeft = true;
 
                 int pageStartRow = 7;
-                int pageEndRow = 27;
+                int pageEndRow = 26;
 
-                const int pageHeight = 21; // 7~27
+                const int pageHeight = 20; // 7~27
                 const int pageGap = 6;     // 28~33
                 const int pageStep = pageHeight + pageGap; // 27
 
@@ -6412,6 +6870,7 @@ namespace SmartReport
             Excel.Application app = null;
             bool openedHere = false;
             Excel.Worksheet wsSrc = null;
+            Excel.Workbooks wss = null;
             Excel.Range usedRange = null;
 
             try
@@ -6428,7 +6887,9 @@ namespace SmartReport
                     app.Visible = false;
                     app.DisplayAlerts = false;
 
-                    wb = app.Workbooks.Open(filePath);
+                    wss = app.Workbooks;
+
+                    wb = wss.Open(filePath);
                     openedHere = true;
                 }
 
@@ -6457,11 +6918,20 @@ namespace SmartReport
 
                     string newDate = $"{year}년 {month}월";
 
+                    bool hasCorona = ExcelComHelper.HasCoronaSheet(wb);
+                    string strCorona = "";
+                    strCorona = (hasCorona) ? ",코로나방전" : "";
+
+                    bool hasYebi = ExcelComHelper.HasYebiSheet(wb);
+                    string additional = "";
+                    string strYebi = (hasYebi)? ",6":"";
+                    additional = (hasYebi) ? $"2~8{strCorona},축전지" : $"2,3,4,5,7,8{strCorona},축전지";
+
                     string papers =
                         report.isAnnual
-                            ? "2~8,코로나방전,축전지"
+                            ? additional
                             : report.isHalfYear
-                                ? "2접지,6,7"
+                                ? $"2접지{strYebi},7"
                                 : "7";
 
                     string newPaperText = $"첨부 별지서식 : {papers}";
@@ -6515,6 +6985,9 @@ namespace SmartReport
                             Marshal.ReleaseComObject(cell);
                         }
                     }
+                    
+                    string strBreak = (ExcelComHelper.HasNaeryuckSheet(wb))?"정전 및 ":"";
+                    wsSrc.Range["A7"].Value2 = $"안내를 받아 {strBreak}무정전에 의한 점검 및 목시점검을 완료하고 그 결과를 점검보고서로 제출 합니다.";
 
                     if (!dateChanged)
                         AddLog("WARN", "제출문에서 'XXXX년 XX월' 형식의 셀을 찾지 못했습니다.");
@@ -6537,6 +7010,11 @@ namespace SmartReport
                 if (usedRange != null)
                     Marshal.ReleaseComObject(usedRange);
 
+                if (wss != null)
+                {
+                    Marshal.ReleaseComObject(wss);
+                }
+
                 if (wsSrc != null)
                     Marshal.ReleaseComObject(wsSrc);
 
@@ -6551,9 +7029,77 @@ namespace SmartReport
             }
         }
 
-        private void SetDateForOpinion(Excel.Workbook wb, string filePath)
+        private void AddHaemnidaBelow(
+            Excel.Worksheet ws,
+            Excel.Range foundCell)
+        {
+            Excel.Range mergeArea = null;
+            Excel.Range targetRange = null;
+            Excel.Range insertRange = null;
+
+            try
+            {
+                // 병합 영역
+                mergeArea = foundCell.MergeArea;
+
+                int startRow = mergeArea.Row;
+                int startCol = mergeArea.Column;
+                int rowCount = mergeArea.Rows.Count;
+                int colCount = mergeArea.Columns.Count;
+
+                // 기존 셀의 행 높이
+                double rowHeight = ws.Rows[startRow].RowHeight;
+
+                // 병합 영역 바로 아래 행
+                int newRow = startRow + rowCount;
+
+                // 삽입할 범위
+                insertRange = ws.Range[
+                    ws.Cells[newRow, startCol],
+                    ws.Cells[newRow, startCol + colCount - 1]
+                ];
+
+                // 행 삽입
+                insertRange.Insert(
+                    Excel.XlInsertShiftDirection.xlShiftDown,
+                    Excel.XlInsertFormatOrigin.xlFormatFromLeftOrAbove
+                );
+
+                // 새로 만들어진 범위
+                targetRange = ws.Range[
+                    ws.Cells[newRow, startCol],
+                    ws.Cells[newRow, startCol + colCount - 1]
+                ];
+
+                // 병합
+                if (colCount > 1)
+                {
+                    targetRange.Merge();
+                }
+
+                // 같은 행 높이
+                ws.Rows[newRow].RowHeight = rowHeight;
+
+                // 내용
+                targetRange.Value2 = "     제출 하고 있습니다.";
+            }
+            finally
+            {
+                if (targetRange != null)
+                    Marshal.ReleaseComObject(targetRange);
+
+                if (insertRange != null)
+                    Marshal.ReleaseComObject(insertRange);
+
+                if (mergeArea != null)
+                    Marshal.ReleaseComObject(mergeArea);
+            }
+        }
+
+        private void SetDateForOpinion(Excel.Workbook wb, Excel.Workbooks wss, string filePath)
         {
             Excel.Application app = null;
+            //Excel.Workbooks wss = null;
             Excel.Worksheet wsSrc = null;
             bool openedHere = false;
 
@@ -6571,23 +7117,108 @@ namespace SmartReport
                     app.Visible = false;
                     app.DisplayAlerts = false;
 
-                    wb = app.Workbooks.Open(filePath);
+                    wss = app.Workbooks;
+
+                    wb = wss.Open(filePath);
                     openedHere = true;
                 }
 
-                wsSrc = wb.Worksheets["의견"];
+                bool hasYebi = ExcelComHelper.HasYebiSheet(wb);
+                string strYebi = "";
+                strYebi = (hasYebi)?",6":"";
+
+                bool hasCorona = ExcelComHelper.HasCoronaSheet(wb);
+                string strCorona = "";
+                strCorona = (hasCorona) ? ",코로나방전" : "";
+
+                //wsSrc = wb.Worksheets["의견"];
+                wsSrc = report.GetWorksheetByName(wb, "의견");
 
                 if (report != null)
                 {
                     string papers =
                         report.isAnnual
-                            ? "2,3,4,5,6,7,8,코로나방전,축전지"
+                            ? $"2,3,4,5{strYebi},7,8{strCorona},축전지"
                             : report.isHalfYear
-                                ? "2접지,6,7"
+                                ? $"2접지{strYebi},,7"
                                 : "7";
 
 
-                    wsSrc.Range["A5"].Value2 = $"  ○ 전기안전관리자 직무고시 점검 : 별지서식 [{papers}] 점검.";
+                    Excel.Range usedRange = null;
+                    Excel.Range foundCell = null;
+
+                    try
+                    {
+                        usedRange = wsSrc.UsedRange;
+
+                        foundCell = usedRange.Find(
+                            What: "○ 전기안전관리자 직무고시 점검 : 별지서식",
+                            LookIn: Excel.XlFindLookIn.xlValues,
+                            LookAt: Excel.XlLookAt.xlPart,
+                            SearchOrder: Excel.XlSearchOrder.xlByRows,
+                            SearchDirection: Excel.XlSearchDirection.xlNext,
+                            MatchCase: false
+                        );
+
+                        if (foundCell != null)
+                        {
+                            foundCell.Value2 =
+                                $"  ○ 전기안전관리자 직무고시 점검 : 별지서식 [{papers}] 점검.";
+                        }
+                    }
+                    finally
+                    {
+                        if (foundCell != null)
+                            Marshal.ReleaseComObject(foundCell);
+
+                        if (usedRange != null)
+                            Marshal.ReleaseComObject(usedRange);
+                    }
+
+                    try
+                    {
+                        usedRange = wsSrc.UsedRange;
+
+                        foundCell = usedRange.Find(
+                            What: "저압설비점검 /",
+                            LookIn: Excel.XlFindLookIn.xlValues,
+                            LookAt: Excel.XlLookAt.xlPart,
+                            SearchOrder: Excel.XlSearchOrder.xlByRows,
+                            SearchDirection: Excel.XlSearchDirection.xlNext,
+                            MatchCase: false
+                        );
+
+                        if (foundCell != null)
+                        {
+                            bool hasNaeryuckSheet = ExcelComHelper.HasNaeryuckSheet(wb);
+
+                            if ((hasNaeryuckSheet &&
+                                !foundCell.Value2.Contain("고압설비점검")) ||
+                                 (!hasNaeryuckSheet &&
+                                foundCell.Value2.Contain("고압설비점검")))
+                            {
+
+                                string strHighVoltage = hasNaeryuckSheet
+                                    ? $"     저압설비점검 / 고압설비점검 / 열화상측정점검 /전원품질분석 등 전기안전점검을 실시하여 점검자료를"
+                                    : "     저압설비점검 / 열화상측정점검 /전원품질분석 등 전기안전점검을 실시하여 점검자료를 제출 하고 있습니다.";
+
+                                foundCell.Value2 = strHighVoltage;
+                                if (hasNaeryuckSheet)
+                                {
+                                    AddHaemnidaBelow(wsSrc, foundCell);
+                                }
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        if (foundCell != null)
+                            Marshal.ReleaseComObject(foundCell);
+
+                        if (usedRange != null)
+                            Marshal.ReleaseComObject(usedRange);
+                    }
+
                     Marshal.ReleaseComObject(wsSrc);
                 }
 
@@ -6612,6 +7243,7 @@ namespace SmartReport
                 if (wsSrc != null) Marshal.ReleaseComObject(wsSrc);
                 if (openedHere)
                 {
+                    if (wss != null) Marshal.ReleaseComObject(wss);
                     wb.Close(false);
                     app.Quit();
 
@@ -6624,6 +7256,7 @@ namespace SmartReport
         private void SetDateJeoap(Excel.Workbook wb, string filePath)
         {
             Excel.Application app = null;
+            Excel.Workbooks wss = null;
             Excel.Worksheet wsSrc = null;
             bool openedHere = false;
 
@@ -6646,7 +7279,9 @@ namespace SmartReport
                     app.Visible = false;
                     app.DisplayAlerts = false;
 
-                    wb = app.Workbooks.Open(filePath);
+                    wss = app.Workbooks;
+
+                    wb = wss.Open(filePath);
                     openedHere = true;
                 }
 
@@ -6679,6 +7314,8 @@ namespace SmartReport
                 if (wsSrc != null) Marshal.ReleaseComObject(wsSrc);
                 if (openedHere)
                 {
+                    if (wss != null) Marshal.ReleaseComObject(wss);
+
                     wb.Close(false);
                     app.Quit();
 
@@ -6764,7 +7401,8 @@ namespace SmartReport
             }
             if (report.isOnlyAnnual) return;
 
-            Excel.Application app = null;
+            Excel.Application app = null; 
+            Excel.Workbooks wss = null;
             Excel.Worksheet wsSrc = null;
             bool openedHere = false;
 
@@ -6782,7 +7420,9 @@ namespace SmartReport
                     app.Visible = false;
                     app.DisplayAlerts = false;
 
-                    wb = app.Workbooks.Open(filePath);
+                    wss = app.Workbooks;
+
+                    wb = wss.Open(filePath);
                     openedHere = true;
                 }
 
@@ -6830,6 +7470,8 @@ namespace SmartReport
                 if (wsSrc != null) Marshal.ReleaseComObject(wsSrc);
                 if (openedHere)
                 {
+                    if (wss != null) Marshal.ReleaseComObject(wss);
+
                     wb.Close(false);
                     app.Quit();
 
@@ -6853,13 +7495,15 @@ namespace SmartReport
             app.Visible = false;
             app.DisplayAlerts = false; 
             Excel.Workbook wb;
+            Excel.Workbooks wss = null;
 
-            wb = app.Workbooks.Open(filePath);
+            wss = app.Workbooks;
+            wb = wss.Open(filePath);
 
             // 제출문 시트의 A21 셀 년 월 예시 "2026년 8월" 날짜가 16일 이상이면 현재달 +1로 표시
             SetDateForJechulmoon(wb, filePath);
             // 연계획 시트의 A2 셀 예시 "원흥퍼스트푸르지오시티 2026년 전기 연간점검 계획표" 사이트 + 연 + 전지 연간점검 계획표
-            SetDateForOpinion(wb, filePath);
+            SetDateForOpinion(wb, wss, filePath);
             // 저압, 예비가 포함된 시트 이름을 저압(상)/저압(하), 예비(상)/예비(하)로 변경
             // 저압 A2셀: ◈ 접지저항 측정기록표(하반기), 예비 A2셀: 발전설비 점검기록표(하반기)
             SetDateYaeby(wb, filePath);
@@ -6873,6 +7517,7 @@ namespace SmartReport
             app.Quit();
 
             Marshal.ReleaseComObject(wb);
+            Marshal.ReleaseComObject(wss);
             Marshal.ReleaseComObject(app);
 
             GC.Collect();
