@@ -38,6 +38,7 @@ namespace SmartReport
             this.tabMain = new System.Windows.Forms.TabControl();
             this.tpFunction = new System.Windows.Forms.TabPage();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.btnDeletePicture = new System.Windows.Forms.Button();
             this.btnCompressImages = new System.Windows.Forms.Button();
             this.label9 = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
@@ -52,6 +53,7 @@ namespace SmartReport
             this.btnSnapImage = new System.Windows.Forms.Button();
             this.textBoxSheetForSnapImage = new System.Windows.Forms.TextBox();
             this.gbReport = new System.Windows.Forms.GroupBox();
+            this.cbCheckBreak = new System.Windows.Forms.CheckBox();
             this.btnInsertSign = new System.Windows.Forms.Button();
             this.btnChangeFooterLogo = new System.Windows.Forms.Button();
             this.btnChangeInspector = new System.Windows.Forms.Button();
@@ -67,6 +69,8 @@ namespace SmartReport
             this.checkBoxDate = new System.Windows.Forms.CheckBox();
             this.checkBoxChecker = new System.Windows.Forms.CheckBox();
             this.gbImage = new System.Windows.Forms.GroupBox();
+            this.tbGround = new System.Windows.Forms.TextBox();
+            this.cbGround = new System.Windows.Forms.CheckBox();
             this.tbQuaterSheet = new System.Windows.Forms.TextBox();
             this.tbBattery = new System.Windows.Forms.TextBox();
             this.cbBattery = new System.Windows.Forms.CheckBox();
@@ -122,8 +126,10 @@ namespace SmartReport
             this.lbFolder = new System.Windows.Forms.Label();
             this.cbName = new System.Windows.Forms.ComboBox();
             this.lbName = new System.Windows.Forms.Label();
-            this.tbGround = new System.Windows.Forms.TextBox();
-            this.cbGround = new System.Windows.Forms.CheckBox();
+            this.checkBox2 = new System.Windows.Forms.CheckBox();
+            this.checkBox3 = new System.Windows.Forms.CheckBox();
+            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.cbPlaceInfo = new System.Windows.Forms.CheckBox();
             this.pnlMain.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -196,7 +202,7 @@ namespace SmartReport
             this.splitContainer1.Panel2.Controls.Add(this.tapLog);
             this.splitContainer1.Panel2.Padding = new System.Windows.Forms.Padding(5);
             this.splitContainer1.Size = new System.Drawing.Size(1425, 943);
-            this.splitContainer1.SplitterDistance = 589;
+            this.splitContainer1.SplitterDistance = 702;
             this.splitContainer1.TabIndex = 4;
             // 
             // tabMain
@@ -209,7 +215,7 @@ namespace SmartReport
             this.tabMain.Margin = new System.Windows.Forms.Padding(4);
             this.tabMain.Name = "tabMain";
             this.tabMain.SelectedIndex = 0;
-            this.tabMain.Size = new System.Drawing.Size(1415, 579);
+            this.tabMain.Size = new System.Drawing.Size(1415, 692);
             this.tabMain.TabIndex = 0;
             // 
             // tpFunction
@@ -222,7 +228,7 @@ namespace SmartReport
             this.tpFunction.Margin = new System.Windows.Forms.Padding(4);
             this.tpFunction.Name = "tpFunction";
             this.tpFunction.Padding = new System.Windows.Forms.Padding(4);
-            this.tpFunction.Size = new System.Drawing.Size(1407, 536);
+            this.tpFunction.Size = new System.Drawing.Size(1407, 649);
             this.tpFunction.TabIndex = 1;
             this.tpFunction.Text = "기능";
             this.tpFunction.UseVisualStyleBackColor = true;
@@ -230,6 +236,7 @@ namespace SmartReport
             // groupBox1
             // 
             this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox1.Controls.Add(this.btnDeletePicture);
             this.groupBox1.Controls.Add(this.btnCompressImages);
             this.groupBox1.Controls.Add(this.label9);
             this.groupBox1.Controls.Add(this.label8);
@@ -249,6 +256,16 @@ namespace SmartReport
             this.groupBox1.TabIndex = 27;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "이미지 정렬";
+            // 
+            // btnDeletePicture
+            // 
+            this.btnDeletePicture.Location = new System.Drawing.Point(603, 68);
+            this.btnDeletePicture.Name = "btnDeletePicture";
+            this.btnDeletePicture.Size = new System.Drawing.Size(241, 32);
+            this.btnDeletePicture.TabIndex = 38;
+            this.btnDeletePicture.Text = "시트 이미지 제거";
+            this.btnDeletePicture.UseVisualStyleBackColor = true;
+            this.btnDeletePicture.Click += new System.EventHandler(this.btnDeletePicture_Click);
             // 
             // btnCompressImages
             // 
@@ -378,6 +395,7 @@ namespace SmartReport
             // 
             this.gbReport.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.gbReport.Controls.Add(this.cbCheckBreak);
             this.gbReport.Controls.Add(this.btnInsertSign);
             this.gbReport.Controls.Add(this.btnChangeFooterLogo);
             this.gbReport.Controls.Add(this.btnChangeInspector);
@@ -394,6 +412,16 @@ namespace SmartReport
             this.gbReport.TabIndex = 26;
             this.gbReport.TabStop = false;
             this.gbReport.Text = "보고서";
+            // 
+            // cbCheckBreak
+            // 
+            this.cbCheckBreak.AutoSize = true;
+            this.cbCheckBreak.Location = new System.Drawing.Point(1088, 29);
+            this.cbCheckBreak.Name = "cbCheckBreak";
+            this.cbCheckBreak.Size = new System.Drawing.Size(253, 34);
+            this.cbCheckBreak.TabIndex = 3;
+            this.cbCheckBreak.Text = "자동페이지 생성 확인";
+            this.cbCheckBreak.UseVisualStyleBackColor = true;
             // 
             // btnInsertSign
             // 
@@ -548,6 +576,8 @@ namespace SmartReport
             this.gbImage.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.gbImage.Controls.Add(this.textBox1);
+            this.gbImage.Controls.Add(this.cbPlaceInfo);
             this.gbImage.Controls.Add(this.tbGround);
             this.gbImage.Controls.Add(this.cbGround);
             this.gbImage.Controls.Add(this.tbQuaterSheet);
@@ -574,10 +604,31 @@ namespace SmartReport
             this.gbImage.Controls.Add(this.btnQuntityFileRun);
             this.gbImage.Location = new System.Drawing.Point(5, 250);
             this.gbImage.Name = "gbImage";
-            this.gbImage.Size = new System.Drawing.Size(1399, 303);
+            this.gbImage.Size = new System.Drawing.Size(1399, 392);
             this.gbImage.TabIndex = 24;
             this.gbImage.TabStop = false;
             this.gbImage.Text = "이미지 삽입";
+            // 
+            // tbGround
+            // 
+            this.tbGround.Location = new System.Drawing.Point(185, 233);
+            this.tbGround.Margin = new System.Windows.Forms.Padding(4);
+            this.tbGround.Name = "tbGround";
+            this.tbGround.Size = new System.Drawing.Size(217, 37);
+            this.tbGround.TabIndex = 52;
+            this.tbGround.Text = "03 점검사진\\접지저항";
+            // 
+            // cbGround
+            // 
+            this.cbGround.AutoSize = true;
+            this.cbGround.Checked = true;
+            this.cbGround.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbGround.Location = new System.Drawing.Point(18, 233);
+            this.cbGround.Name = "cbGround";
+            this.cbGround.Size = new System.Drawing.Size(72, 34);
+            this.cbGround.TabIndex = 51;
+            this.cbGround.Text = "3-2";
+            this.cbGround.UseVisualStyleBackColor = true;
             // 
             // tbQuaterSheet
             // 
@@ -590,7 +641,7 @@ namespace SmartReport
             // 
             // tbBattery
             // 
-            this.tbBattery.Location = new System.Drawing.Point(182, 173);
+            this.tbBattery.Location = new System.Drawing.Point(185, 199);
             this.tbBattery.Margin = new System.Windows.Forms.Padding(4);
             this.tbBattery.Name = "tbBattery";
             this.tbBattery.Size = new System.Drawing.Size(217, 37);
@@ -602,7 +653,7 @@ namespace SmartReport
             this.cbBattery.AutoSize = true;
             this.cbBattery.Checked = true;
             this.cbBattery.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbBattery.Location = new System.Drawing.Point(15, 174);
+            this.cbBattery.Location = new System.Drawing.Point(18, 199);
             this.cbBattery.Name = "cbBattery";
             this.cbBattery.Size = new System.Drawing.Size(105, 34);
             this.cbBattery.TabIndex = 48;
@@ -611,19 +662,19 @@ namespace SmartReport
             // 
             // tbEquipment
             // 
-            this.tbEquipment.Location = new System.Drawing.Point(185, 142);
+            this.tbEquipment.Location = new System.Drawing.Point(185, 165);
             this.tbEquipment.Margin = new System.Windows.Forms.Padding(4);
             this.tbEquipment.Name = "tbEquipment";
             this.tbEquipment.Size = new System.Drawing.Size(217, 37);
             this.tbEquipment.TabIndex = 47;
-            this.tbEquipment.Text = "03 점검사진\\설비현황사진";
+            this.tbEquipment.Text = "03 점검사진\\설비현황";
             // 
             // cbEquipment
             // 
             this.cbEquipment.AutoSize = true;
             this.cbEquipment.Checked = true;
             this.cbEquipment.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbEquipment.Location = new System.Drawing.Point(18, 145);
+            this.cbEquipment.Location = new System.Drawing.Point(18, 165);
             this.cbEquipment.Name = "cbEquipment";
             this.cbEquipment.Size = new System.Drawing.Size(127, 34);
             this.cbEquipment.TabIndex = 46;
@@ -634,7 +685,7 @@ namespace SmartReport
             // 
             this.btnUpdateJuapList.Location = new System.Drawing.Point(1001, 178);
             this.btnUpdateJuapList.Name = "btnUpdateJuapList";
-            this.btnUpdateJuapList.Size = new System.Drawing.Size(177, 30);
+            this.btnUpdateJuapList.Size = new System.Drawing.Size(216, 30);
             this.btnUpdateJuapList.TabIndex = 27;
             this.btnUpdateJuapList.Text = "저압 접지저항 목록 업데이트";
             this.btnUpdateJuapList.UseVisualStyleBackColor = true;
@@ -645,7 +696,7 @@ namespace SmartReport
             this.checkBoxCorrect.AutoSize = true;
             this.checkBoxCorrect.Checked = true;
             this.checkBoxCorrect.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxCorrect.Location = new System.Drawing.Point(426, 214);
+            this.checkBoxCorrect.Location = new System.Drawing.Point(895, 102);
             this.checkBoxCorrect.Name = "checkBoxCorrect";
             this.checkBoxCorrect.Size = new System.Drawing.Size(346, 34);
             this.checkBoxCorrect.TabIndex = 3;
@@ -654,7 +705,7 @@ namespace SmartReport
             // 
             // btnConfirmJulyeon
             // 
-            this.btnConfirmJulyeon.Location = new System.Drawing.Point(426, 178);
+            this.btnConfirmJulyeon.Location = new System.Drawing.Point(1001, 142);
             this.btnConfirmJulyeon.Name = "btnConfirmJulyeon";
             this.btnConfirmJulyeon.Size = new System.Drawing.Size(190, 30);
             this.btnConfirmJulyeon.TabIndex = 28;
@@ -665,8 +716,6 @@ namespace SmartReport
             // checkBoxOcr
             // 
             this.checkBoxOcr.AutoSize = true;
-            this.checkBoxOcr.Checked = true;
-            this.checkBoxOcr.CheckState = System.Windows.Forms.CheckState.Checked;
             this.checkBoxOcr.Location = new System.Drawing.Point(413, 25);
             this.checkBoxOcr.Name = "checkBoxOcr";
             this.checkBoxOcr.Size = new System.Drawing.Size(261, 34);
@@ -712,7 +761,7 @@ namespace SmartReport
             // 
             // textBoxPictureFolder
             // 
-            this.textBoxPictureFolder.Location = new System.Drawing.Point(185, 114);
+            this.textBoxPictureFolder.Location = new System.Drawing.Point(185, 131);
             this.textBoxPictureFolder.Margin = new System.Windows.Forms.Padding(4);
             this.textBoxPictureFolder.Name = "textBoxPictureFolder";
             this.textBoxPictureFolder.Size = new System.Drawing.Size(217, 37);
@@ -721,7 +770,7 @@ namespace SmartReport
             // 
             // textBoxCoronaFolder
             // 
-            this.textBoxCoronaFolder.Location = new System.Drawing.Point(185, 84);
+            this.textBoxCoronaFolder.Location = new System.Drawing.Point(185, 97);
             this.textBoxCoronaFolder.Margin = new System.Windows.Forms.Padding(4);
             this.textBoxCoronaFolder.Name = "textBoxCoronaFolder";
             this.textBoxCoronaFolder.Size = new System.Drawing.Size(217, 37);
@@ -730,7 +779,7 @@ namespace SmartReport
             // 
             // textBoxQuntatyFolder
             // 
-            this.textBoxQuntatyFolder.Location = new System.Drawing.Point(185, 54);
+            this.textBoxQuntatyFolder.Location = new System.Drawing.Point(185, 63);
             this.textBoxQuntatyFolder.Margin = new System.Windows.Forms.Padding(4);
             this.textBoxQuntatyFolder.Name = "textBoxQuntatyFolder";
             this.textBoxQuntatyFolder.Size = new System.Drawing.Size(217, 37);
@@ -740,7 +789,7 @@ namespace SmartReport
             // btErrorPageUpdate
             // 
             this.btErrorPageUpdate.Enabled = false;
-            this.btErrorPageUpdate.Location = new System.Drawing.Point(764, 178);
+            this.btErrorPageUpdate.Location = new System.Drawing.Point(1001, 218);
             this.btErrorPageUpdate.Name = "btErrorPageUpdate";
             this.btErrorPageUpdate.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.btErrorPageUpdate.Size = new System.Drawing.Size(222, 30);
@@ -763,7 +812,7 @@ namespace SmartReport
             this.checkBoxFeverPicture.AutoSize = true;
             this.checkBoxFeverPicture.Checked = true;
             this.checkBoxFeverPicture.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxFeverPicture.Location = new System.Drawing.Point(17, 29);
+            this.checkBoxFeverPicture.Location = new System.Drawing.Point(18, 29);
             this.checkBoxFeverPicture.Name = "checkBoxFeverPicture";
             this.checkBoxFeverPicture.Size = new System.Drawing.Size(163, 34);
             this.checkBoxFeverPicture.TabIndex = 28;
@@ -775,7 +824,7 @@ namespace SmartReport
             this.checkBoxPicture.AutoSize = true;
             this.checkBoxPicture.Checked = true;
             this.checkBoxPicture.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxPicture.Location = new System.Drawing.Point(18, 117);
+            this.checkBoxPicture.Location = new System.Drawing.Point(18, 131);
             this.checkBoxPicture.Name = "checkBoxPicture";
             this.checkBoxPicture.Size = new System.Drawing.Size(83, 34);
             this.checkBoxPicture.TabIndex = 26;
@@ -787,7 +836,7 @@ namespace SmartReport
             this.checkBoxCorona.AutoSize = true;
             this.checkBoxCorona.Checked = true;
             this.checkBoxCorona.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxCorona.Location = new System.Drawing.Point(18, 87);
+            this.checkBoxCorona.Location = new System.Drawing.Point(18, 97);
             this.checkBoxCorona.Name = "checkBoxCorona";
             this.checkBoxCorona.Size = new System.Drawing.Size(105, 34);
             this.checkBoxCorona.TabIndex = 25;
@@ -799,7 +848,7 @@ namespace SmartReport
             this.checkBoxQuantity.AutoSize = true;
             this.checkBoxQuantity.Checked = true;
             this.checkBoxQuantity.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxQuantity.Location = new System.Drawing.Point(18, 59);
+            this.checkBoxQuantity.Location = new System.Drawing.Point(18, 63);
             this.checkBoxQuantity.Name = "checkBoxQuantity";
             this.checkBoxQuantity.Size = new System.Drawing.Size(83, 34);
             this.checkBoxQuantity.TabIndex = 24;
@@ -808,11 +857,10 @@ namespace SmartReport
             // 
             // btnQuntityFileRun
             // 
-            this.btnQuntityFileRun.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnQuntityFileRun.Location = new System.Drawing.Point(1259, 22);
+            this.btnQuntityFileRun.Dock = System.Windows.Forms.DockStyle.Right;
+            this.btnQuntityFileRun.Location = new System.Drawing.Point(1262, 33);
             this.btnQuntityFileRun.Name = "btnQuntityFileRun";
-            this.btnQuntityFileRun.Size = new System.Drawing.Size(134, 275);
+            this.btnQuntityFileRun.Size = new System.Drawing.Size(134, 356);
             this.btnQuntityFileRun.TabIndex = 23;
             this.btnQuntityFileRun.Text = "실행";
             this.btnQuntityFileRun.UseVisualStyleBackColor = true;
@@ -896,10 +944,10 @@ namespace SmartReport
             // 
             // tabSortImage
             // 
-            this.tabSortImage.Location = new System.Drawing.Point(4, 28);
+            this.tabSortImage.Location = new System.Drawing.Point(4, 39);
             this.tabSortImage.Name = "tabSortImage";
             this.tabSortImage.Padding = new System.Windows.Forms.Padding(3);
-            this.tabSortImage.Size = new System.Drawing.Size(1407, 547);
+            this.tabSortImage.Size = new System.Drawing.Size(1407, 536);
             this.tabSortImage.TabIndex = 2;
             this.tabSortImage.Text = "이미지 정렬";
             this.tabSortImage.UseVisualStyleBackColor = true;
@@ -913,7 +961,7 @@ namespace SmartReport
             this.tapLog.Location = new System.Drawing.Point(5, 5);
             this.tapLog.Name = "tapLog";
             this.tapLog.SelectedIndex = 0;
-            this.tapLog.Size = new System.Drawing.Size(1415, 340);
+            this.tapLog.Size = new System.Drawing.Size(1415, 227);
             this.tapLog.TabIndex = 0;
             // 
             // all
@@ -922,7 +970,7 @@ namespace SmartReport
             this.all.Location = new System.Drawing.Point(4, 39);
             this.all.Name = "all";
             this.all.Padding = new System.Windows.Forms.Padding(5);
-            this.all.Size = new System.Drawing.Size(1407, 297);
+            this.all.Size = new System.Drawing.Size(1407, 184);
             this.all.TabIndex = 0;
             this.all.Text = "All log";
             this.all.UseVisualStyleBackColor = true;
@@ -935,7 +983,7 @@ namespace SmartReport
             this.richTextBox1.Location = new System.Drawing.Point(5, 5);
             this.richTextBox1.Name = "richTextBox1";
             this.richTextBox1.ReadOnly = true;
-            this.richTextBox1.Size = new System.Drawing.Size(1397, 287);
+            this.richTextBox1.Size = new System.Drawing.Size(1397, 174);
             this.richTextBox1.TabIndex = 1;
             this.richTextBox1.TabStop = false;
             this.richTextBox1.Text = "";
@@ -1192,26 +1240,47 @@ namespace SmartReport
             this.lbName.TabIndex = 5;
             this.lbName.Text = "측정자     : ";
             // 
-            // tbGround
+            // checkBox2
             // 
-            this.tbGround.Location = new System.Drawing.Point(182, 199);
-            this.tbGround.Margin = new System.Windows.Forms.Padding(4);
-            this.tbGround.Name = "tbGround";
-            this.tbGround.Size = new System.Drawing.Size(217, 37);
-            this.tbGround.TabIndex = 52;
-            this.tbGround.Text = "03 점검사진\\접지저항";
+            this.checkBox2.AutoSize = true;
+            this.checkBox2.Location = new System.Drawing.Point(0, 0);
+            this.checkBox2.Name = "checkBox2";
+            this.checkBox2.Size = new System.Drawing.Size(104, 24);
+            this.checkBox2.TabIndex = 0;
+            this.checkBox2.Text = "checkBox2";
             // 
-            // cbGround
+            // checkBox3
             // 
-            this.cbGround.AutoSize = true;
-            this.cbGround.Checked = true;
-            this.cbGround.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbGround.Location = new System.Drawing.Point(15, 200);
-            this.cbGround.Name = "cbGround";
-            this.cbGround.Size = new System.Drawing.Size(72, 34);
-            this.cbGround.TabIndex = 51;
-            this.cbGround.Text = "3-2";
-            this.cbGround.UseVisualStyleBackColor = true;
+            this.checkBox3.AutoSize = true;
+            this.checkBox3.Checked = true;
+            this.checkBox3.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBox3.Location = new System.Drawing.Point(17, 62);
+            this.checkBox3.Name = "checkBox3";
+            this.checkBox3.Size = new System.Drawing.Size(157, 34);
+            this.checkBox3.TabIndex = 1;
+            this.checkBox3.Text = "측정일 적용";
+            this.checkBox3.UseVisualStyleBackColor = true;
+            // 
+            // textBox1
+            // 
+            this.textBox1.Location = new System.Drawing.Point(185, 267);
+            this.textBox1.Margin = new System.Windows.Forms.Padding(4);
+            this.textBox1.Name = "textBox1";
+            this.textBox1.Size = new System.Drawing.Size(217, 37);
+            this.textBox1.TabIndex = 54;
+            this.textBox1.Text = "03 점검사진\\결선도";
+            // 
+            // cbPlaceInfo
+            // 
+            this.cbPlaceInfo.AutoSize = true;
+            this.cbPlaceInfo.Checked = true;
+            this.cbPlaceInfo.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbPlaceInfo.Location = new System.Drawing.Point(18, 267);
+            this.cbPlaceInfo.Name = "cbPlaceInfo";
+            this.cbPlaceInfo.Size = new System.Drawing.Size(105, 34);
+            this.cbPlaceInfo.TabIndex = 53;
+            this.cbPlaceInfo.Text = "결선도";
+            this.cbPlaceInfo.UseVisualStyleBackColor = true;
             // 
             // FormMain
             // 
@@ -1350,6 +1419,12 @@ namespace SmartReport
         private TextBox tbQuaterSheet;
         private TextBox tbGround;
         private CheckBox cbGround;
+        private CheckBox checkBox2;
+        private CheckBox checkBox3;
+        private CheckBox cbCheckBreak;
+        private Button btnDeletePicture;
+        private TextBox textBox1;
+        private CheckBox cbPlaceInfo;
     }
 }
 

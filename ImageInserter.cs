@@ -175,6 +175,303 @@ namespace SmartReport
             return false;
         }
 
+        public void InsertFitPt(
+    double left,
+    double top,
+    double width,
+    double height,
+    ImageInsertOptions option = null)
+        {
+            InsertFitPt(
+                0,
+                left,
+                top,
+                width,
+                height,
+                option);
+        }
+
+        public void InsertFitPt(
+            int page,
+            double left,
+            double top,
+            double width,
+            double height,
+            ImageInsertOptions option = null)
+        {
+            if (option == null)
+                option = new ImageInsertOptions();
+
+            if (page < 0 || page >= _imagePaths.Count)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(page));
+            }
+
+            if (width <= 0)
+                throw new ArgumentOutOfRangeException(
+                    nameof(width));
+
+            if (height <= 0)
+                throw new ArgumentOutOfRangeException(
+                    nameof(height));
+
+            Excel.Shape pic = null;
+            Excel.Shapes shapes = null;
+
+            string tempFixed = null;
+            string tempResized = null;
+            string imagePath = null;
+
+            try
+            {
+                // =====================================================
+                // 1. 이미지 경로
+                // =====================================================
+                imagePath =
+                    GetImagePath(
+                        page,
+                        option);
+
+                tempFixed =
+                    FixImageOrientation(
+                        imagePath);
+
+                // =====================================================
+                // 2. PT 좌표
+                // =====================================================
+                float imageLeft =
+                    (float)left;
+
+                float imageTop =
+                    (float)top;
+
+                float imageWidth =
+                    (float)width;
+
+                float imageHeight =
+                    (float)height;
+
+                Debug.WriteLine(
+                    $"PT 영역: " +
+                    $"Left={imageLeft}, " +
+                    $"Top={imageTop}, " +
+                    $"Width={imageWidth}, " +
+                    $"Height={imageHeight}");
+
+                // =====================================================
+                // 3. 이미지 Resize
+                // =====================================================
+                int pixelWidth =
+                    (int)Math.Ceiling(
+                        imageWidth *
+                        96.0 /
+                        72.0 *
+                        1.3);
+
+                int pixelHeight =
+                    (int)Math.Ceiling(
+                        imageHeight *
+                        96.0 /
+                        72.0 *
+                        1.3);
+
+                tempResized =
+                    ResizeImage(
+                        tempFixed,
+                        pixelWidth,
+                        pixelHeight);
+
+                // =====================================================
+                // 4. Shapes
+                // =====================================================
+                shapes =
+                    _ws.Shapes;
+
+                // =====================================================
+                // 5. 이미지 삽입
+                // =====================================================
+                pic =
+                    shapes.AddPicture(
+                        tempResized,
+                        Office.MsoTriState.msoFalse,
+                        Office.MsoTriState.msoTrue,
+                        imageLeft,
+                        imageTop,
+                        -1,
+                        -1);
+
+                Debug.WriteLine(
+                    $"After AddPicture: " +
+                    $"Left={pic.Left}, " +
+                    $"Top={pic.Top}, " +
+                    $"Width={pic.Width}, " +
+                    $"Height={pic.Height}");
+
+                // =====================================================
+                // 6. 이미지 크기 조정
+                // =====================================================
+                if (option.KeepAspectRatio)
+                {
+                    pic.LockAspectRatio =
+                        Office.MsoTriState.msoTrue;
+
+                    double scaleX =
+                        imageWidth /
+                        pic.Width;
+
+                    double scaleY =
+                        imageHeight /
+                        pic.Height;
+
+                    double scale =
+                        Math.Min(
+                            scaleX,
+                            scaleY);
+
+                    pic.ScaleWidth(
+                        (float)scale,
+                        Office.MsoTriState.msoTrue);
+
+                    pic.ScaleHeight(
+                        (float)scale,
+                        Office.MsoTriState.msoTrue);
+
+                    // 가운데 정렬
+                    pic.Left =
+                        imageLeft +
+                        (imageWidth - pic.Width) / 2f +
+                        option.GapLeft;
+
+                    pic.Top =
+                        imageTop +
+                        (imageHeight - pic.Height) / 2f +
+                        option.GapTop;
+
+                    pic.Width -=
+                        option.GapLeft +
+                        option.GapRight;
+
+                    pic.Height -=
+                        option.GapTop +
+                        option.GapBottom;
+                }
+                else
+                {
+                    pic.LockAspectRatio =
+                        Office.MsoTriState.msoFalse;
+
+                    pic.Left =
+                        imageLeft +
+                        option.GapLeft;
+
+                    pic.Top =
+                        imageTop +
+                        option.GapTop;
+
+                    pic.Width =
+                        imageWidth -
+                        option.GapLeft -
+                        option.GapRight;
+
+                    pic.Height =
+                        imageHeight -
+                        option.GapTop -
+                        option.GapBottom;
+
+                    // =================================================
+                    // 회전 이미지
+                    // =================================================
+                    if (IsRotatedImage(pic))
+                    {
+                        Debug.WriteLine(
+                            $"Rotated Image: " +
+                            $"{pic.Name}, " +
+                            $"Rotation: {pic.Rotation}");
+
+                        pic.Width =
+                            imageHeight -
+                            option.GapLeft -
+                            option.GapRight;
+
+                        pic.Height =
+                            imageWidth -
+                            option.GapTop -
+                            option.GapBottom;
+                    }
+                }
+
+                Debug.WriteLine(
+                    $"PT 이미지: " +
+                    $"Left={pic.Left}, " +
+                    $"Top={pic.Top}, " +
+                    $"Width={pic.Width}, " +
+                    $"Height={pic.Height}");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(
+                    $"InsertFitPt 오류: {ex.Message}");
+
+                if (pic != null)
+                {
+                    try
+                    {
+                        pic.Delete();
+                    }
+                    catch
+                    {
+                    }
+                }
+
+                throw;
+            }
+            finally
+            {
+                // =====================================================
+                // Shape
+                // =====================================================
+                if (pic != null)
+                {
+                    try
+                    {
+                        Marshal.FinalReleaseComObject(pic);
+                    }
+                    catch
+                    {
+                    }
+
+                    pic = null;
+                }
+
+                // =====================================================
+                // Shapes
+                // =====================================================
+                if (shapes != null)
+                {
+                    try
+                    {
+                        Marshal.FinalReleaseComObject(shapes);
+                    }
+                    catch
+                    {
+                    }
+
+                    shapes = null;
+                }
+
+                // =====================================================
+                // 임시 파일
+                // =====================================================
+                DeleteTempFile(
+                    tempFixed,
+                    imagePath);
+
+                DeleteTempFile(
+                    tempResized,
+                    imagePath);
+            }
+        }
 
         public void InsertFit(
             string cellFrom,

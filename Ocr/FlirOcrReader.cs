@@ -273,7 +273,7 @@ namespace WindowsFormsApp1
             Rectangle r = new Rectangle(
                 (int)(bmp.Width * 0.20),
                 (int)(bmp.Height * 0.01),
-                (int)(bmp.Width * 0.11),
+                (int)(bmp.Width * 0.14),
                 (int)(bmp.Height * 0.38));
 
             return bmp.Clone(r, bmp.PixelFormat);

@@ -2,6 +2,7 @@
 using OpenCvSharp;
 using SynologyIntegration;
 using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -2102,6 +2103,7 @@ namespace SmartReport
             Excel.Application xlApp = null;
             Excel.Workbook wb = null;
             string outFile = null;
+            bool checkAutoBreak = false;
 
             try
             {
@@ -2118,6 +2120,16 @@ namespace SmartReport
                 //    candidate = Path.Combine(dir, baseName + "_merged_" + idx + ".pdf");
                 //    idx++;
                 //}
+
+
+                if (report != null && cbCheckBreak.Checked)
+                    checkAutoBreak = report.CheckAllPageBreaks(wb);
+
+                if (checkAutoBreak)
+                {
+                    throw new Exception(
+                        "자동 페이지 나누기가 감지, Log를 확인");
+                }
 
                 // Export entire workbook as a single PDF (모든 시트를 하나의 PDF로)
                 try
@@ -2665,6 +2677,11 @@ namespace SmartReport
                 {
                     ProcHighVoltage(xlApp, wb, baseFolder, tbGround.Text);
                 }
+
+                if (cbPlaceInfo.Checked)
+                {
+                    ProcLineMapImage(xlApp, wb, baseFolder, tbGround.Text);
+                }
             }
             catch (Exception ex)
             {
@@ -2813,7 +2830,7 @@ namespace SmartReport
 
                 for (int page = 0; imageIndex < files.Length; page++)
                 {
-                    int pageOffset = page * 41;
+                    int pageOffset = page * 42;
 
                     for (int row = 0; row < 2; row++)
                     {
@@ -2827,8 +2844,8 @@ namespace SmartReport
                             string fromCol = (col == 0) ? "A" : "O";
                             string toCol = (col == 0) ? "M" : "AA";
 
-                            int startRow = 7 + pageOffset + rowOffset;
-                            int endRow = 20 + pageOffset + rowOffset;
+                            int startRow = 8 + pageOffset + rowOffset;
+                            int endRow = 21 + pageOffset + rowOffset;
 
                             string cellFrom = $"{fromCol}{startRow}";
                             string cellTo = $"{toCol}{endRow}";
@@ -3093,10 +3110,10 @@ namespace SmartReport
         }
 
         private void ProcBattery(
-            Excel.Application xlApp,
-            Excel.Workbook wb,
-            string baseFolder,
-            object text)
+    Excel.Application xlApp,
+    Excel.Workbook wb,
+    string baseFolder,
+    object text)
         {
             Excel.Worksheet ws = null;
 
@@ -3120,8 +3137,9 @@ namespace SmartReport
                     Convert.ToString(text));
 
                 // 파일명 숫자를 Key로 사용
-                // 예: 1.jpg → 1, 2.jpg → 2, 3.jpg → 3
-                var files = Directory.GetFiles(folderPath, "*.jpg")
+                var files = Directory.GetFiles(
+                        folderPath,
+                        "*.jpg")
                     .Select(f => new
                     {
                         Path = f,
@@ -3136,11 +3154,15 @@ namespace SmartReport
                         x => x.Number,
                         x => x.Path);
 
+                // 최소 1, 2, 3번 이미지 필요
                 if (!files.ContainsKey(1) ||
                     !files.ContainsKey(2) ||
                     !files.ContainsKey(3))
                 {
-                    AddLog("Info", "축전지 이미지가 올바르지 않습니다.");
+                    AddLog(
+                        "Info",
+                        "축전지 이미지가 올바르지 않습니다.");
+
                     return;
                 }
 
@@ -3148,43 +3170,99 @@ namespace SmartReport
                 // 페이지 설정
                 // -------------------------------------------------
 
-                int pageHeight = 30;   // 페이지당 행 수
+                int pageHeight = 30;
 
-                // 1페이지 시작 위치
+                // 1페이지 시작 행
                 int firstStartRow = 21;
 
+                // 페이지당 이미지 수
+                int imagesPerPage = 3;
 
                 // -------------------------------------------------
-                // 1페이지 + 2페이지에 이미지 삽입
+                // 이미지 개수에 따라 페이지 수 계산
                 // -------------------------------------------------
 
-                for (int page = 0; page < 2; page++)
+                int pageCount =
+                    (int)Math.Ceiling(
+                        files.Count /
+                        (double)imagesPerPage);
+
+                // 최대 2페이지까지만
+                pageCount =
+                    Math.Min(
+                        pageCount,
+                        2);
+
+                // -------------------------------------------------
+                // 페이지별 이미지 삽입
+                // -------------------------------------------------
+
+                for (int page = 0;
+                     page < pageCount;
+                     page++)
                 {
-                    int startRow = firstStartRow + page * pageHeight;
-                    int startNumber = page * 3 + 1;
+                    int startRow =
+                        firstStartRow +
+                        page * pageHeight;
 
+                    int startNumber =
+                        page * imagesPerPage + 1;
+
+                    // -------------------------------------------------
                     // 기존 그림 삭제
-                    string cellFrom = $"A{startRow}";
-                    string cellTo = $"AG{startRow + 1}";
+                    // -------------------------------------------------
 
-                    Excel.Range rng = ws.Range[$"{cellFrom}:{cellTo}"];
+                    string cellFrom =
+                        $"A{startRow}";
+
+                    string cellTo =
+                        $"AG{startRow + 1}";
+
+                    Excel.Range rng = null;
 
                     try
                     {
-                        RemovePicturesInRange(ws, rng, true);
+                        rng =
+                            ws.Range[
+                                $"{cellFrom}:{cellTo}"];
+
+                        RemovePicturesInRange(
+                            ws,
+                            rng,
+                            true);
                     }
                     finally
                     {
-                        Marshal.ReleaseComObject(rng);
+                        if (rng != null)
+                        {
+                            try
+                            {
+                                Marshal.ReleaseComObject(rng);
+                            }
+                            catch { }
+
+                            rng = null;
+                        }
                     }
 
+                    // -------------------------------------------------
                     // 이미지 3개
-                    for (int i = 0; i < 3; i++)
+                    // -------------------------------------------------
+
+                    for (int i = 0;
+                         i < imagesPerPage;
+                         i++)
                     {
-                        int number = startNumber + i;
+                        int number =
+                            startNumber + i;
+
+                        // 해당 이미지가 없으면 종료
+                        if (!files.ContainsKey(number))
+                            break;
 
                         int fromCol =
-                            ExcelColumnToNumber("A") + i * 11;
+                            ExcelColumnToNumber("A")
+                            + i * 11;
 
                         int toCol =
                             fromCol + 10;
@@ -3197,10 +3275,13 @@ namespace SmartReport
 
                         AddLog(
                             "Info",
-                            $"{number}.jpg → {imageFrom}:{imageTo}");
+                            $"{number}.jpg → " +
+                            $"{imageFrom}:{imageTo}");
 
                         using (var inserter =
-                            new ImageInserter(ws, files[number]))
+                            new ImageInserter(
+                                ws,
+                                files[number]))
                         {
                             inserter.InsertFit(
                                 imageFrom,
@@ -3213,11 +3294,13 @@ namespace SmartReport
                     }
                 }
 
-
                 // 마지막에 한 번만 저장
                 wb.Save();
 
-                AddLog("Info", "축전지 이미지 삽입 완료");
+                AddLog(
+                    "Info",
+                    $"축전지 이미지 삽입 완료 " +
+                    $"({files.Count}개 / {pageCount}페이지)");
             }
             catch (Exception ex)
             {
@@ -3227,12 +3310,16 @@ namespace SmartReport
             }
             finally
             {
-                try
+                if (ws != null)
                 {
-                    if (ws != null)
+                    try
+                    {
                         Marshal.ReleaseComObject(ws);
+                    }
+                    catch { }
+
+                    ws = null;
                 }
-                catch { }
             }
         }
 
@@ -3335,93 +3422,307 @@ namespace SmartReport
             }
         }
 
+        private void ProcLineMapImage(
+            Excel.Application xlApp,
+            Excel.Workbook wb,
+            string baseFolder,
+            object text)
+        {
+            Excel.Worksheet ws = null;
+
+            if (report == null)
+            {
+                AddLog("Error", "report를 찾을 수 없습니다.");
+                return;
+            }
+
+            try
+            {
+                ws = report.GetWorksheetByName(wb, "사업장현황");
+
+                if (ws == null)
+                {
+                    throw new Exception("사업장현황 시트를 찾을 수 없습니다.");
+                }
+
+                string folderPath = Path.Combine(
+                    baseFolder,
+                    Convert.ToString(text));
+
+                // 파일명 
+                var files = Directory.GetFiles(folderPath, "*.jpg")
+                    .Select(f => new
+                    {
+                        Path = f,
+                        Number = int.TryParse(
+                            Path.GetFileNameWithoutExtension(f),
+                            out int n)
+                            ? n
+                            : -1
+                    })
+                    .Where(x => x.Number > 0)
+                    .ToDictionary(
+                        x => x.Number,
+                        x => x.Path);
+
+
+                // -------------------------------------------------
+                // 페이지 설정
+                // -------------------------------------------------
+
+                int pageHeight = 18;   // 다음 이미지 위치
+
+                // 1페이지 시작 위치
+                int firstPageStartRow = 17;
+
+                // 2페이지 동일 위치
+                int secondPageStartRow =
+                    firstPageStartRow + pageHeight;
+
+
+                // -------------------------------------------------
+                // 1페이지 + 2페이지에 이미지 삽입
+                // -------------------------------------------------
+
+                InsertPictures(
+                    ws,
+                    files,
+                    firstPageStartRow,
+                    "1페이지",
+                    "B",
+                    "W",
+                    9);
+
+
+                // 마지막에 한 번만 저장
+                wb.Save();
+
+                AddLog("Info", "고압전기설비 이미지 삽입 완료");
+            }
+            catch (Exception ex)
+            {
+                AddLog(
+                    "Error",
+                    $"고압전기설비 이미지 삽입 실패: {ex.Message}");
+            }
+            finally
+            {
+                try
+                {
+                    if (ws != null)
+                        Marshal.ReleaseComObject(ws);
+                }
+                catch { }
+            }
+        }
+
+
+        //private void InsertPictures(
+        //    Excel.Worksheet ws,
+        //    Dictionary<int, string> files,
+        //    int startRow,
+        //    string pageName)
+        //{
+        //    int startCol = ExcelColumnToNumber("A");
+        //    int endCol = ExcelColumnToNumber("J");
+
+        //    int height = 2;
+
+        //    // 이미지 사이 여백으로 사용할 열 수
+        //    // 1열을 여백으로 사용
+        //    int gapCols = 1;
+
+        //    // 전체 열 수
+        //    int totalCols = endCol - startCol + 1;
+
+        //    // 이미지 3개 + 여백 2개
+        //    int imageCols =
+        //        (totalCols - gapCols * 2) / 3;
+
+
+        //    // -------------------------------------------------
+        //    // 기존 그림 삭제
+        //    // -------------------------------------------------
+
+        //    string removeFrom =
+        //        $"{ExcelColumnToName(startCol)}{startRow}";
+
+        //    string removeTo =
+        //        $"{ExcelColumnToName(endCol)}{startRow + height - 1}";
+
+        //    Excel.Range rng = null;
+
+        //    try
+        //    {
+        //        rng = ws.Range[$"{removeFrom}:{removeTo}"];
+
+        //        RemovePicturesInRange(ws, rng, true);
+        //    }
+        //    finally
+        //    {
+        //        if (rng != null)
+        //            Marshal.ReleaseComObject(rng);
+        //    }
+
+
+        //    // -------------------------------------------------
+        //    // 이미지 3개
+        //    // -------------------------------------------------
+
+        //    for (int i = 0; i < 3; i++)
+        //    {
+        //        int number = i + 1;
+
+        //        // 이미지 시작 열
+        //        int fromCol =
+        //            startCol +
+        //            i * (imageCols + gapCols);
+
+        //        // 이미지 끝 열
+        //        int toCol =
+        //            fromCol + imageCols - 1;
+
+        //        string cellFrom =
+        //            $"{ExcelColumnToName(fromCol)}{startRow}";
+
+        //        string cellTo =
+        //            $"{ExcelColumnToName(toCol)}{startRow + height - 1}";
+
+        //        AddLog(
+        //            "Info",
+        //            $"{pageName} : {number}.jpg → " +
+        //            $"{cellFrom}:{cellTo}");
+
+        //        using (var inserter =
+        //            new ImageInserter(ws, files[number]))
+        //        {
+        //            inserter.InsertFit(
+        //                cellFrom,
+        //                cellTo,
+        //                new ImageInsertOptions
+        //                {
+        //                    KeepAspectRatio = false
+        //                });
+        //        }
+        //    }
+        //}
 
         private void InsertPictures(
             Excel.Worksheet ws,
             Dictionary<int, string> files,
             int startRow,
-            string pageName)
+            string pageName,
+            string strStartCol = "A",
+            string strEndCol = "J",
+            int numInOneRow = 3,
+            int height = 2)
         {
-            int startCol = ExcelColumnToNumber("A");
-            int endCol = ExcelColumnToNumber("AD");
+            int startCol = ExcelColumnToNumber(strStartCol);
+            int endCol = ExcelColumnToNumber(strEndCol);
 
-            int height = 2;
+            //int height = 2;
 
-            // 이미지 사이 여백으로 사용할 열 수
-            // 1열을 여백으로 사용
-            int gapCols = 1;
+            // 이미지 사이 간격
+            double gapPt = 1.0;
 
-            // 전체 열 수
-            int totalCols = endCol - startCol + 1;
-
-            // 이미지 3개 + 여백 2개
-            int imageCols =
-                (totalCols - gapCols * 2) / 3;
-
-
-            // -------------------------------------------------
-            // 기존 그림 삭제
-            // -------------------------------------------------
-
-            string removeFrom =
-                $"{ExcelColumnToName(startCol)}{startRow}";
-
-            string removeTo =
-                $"{ExcelColumnToName(endCol)}{startRow + height - 1}";
-
-            Excel.Range rng = null;
+            Excel.Range area = null;
 
             try
             {
-                rng = ws.Range[$"{removeFrom}:{removeTo}"];
+                string fromCell =
+                    $"{ExcelColumnToName(startCol)}{startRow}";
 
-                RemovePicturesInRange(ws, rng, true);
+                string toCell =
+                    $"{ExcelColumnToName(endCol)}{startRow + height - 1}";
+
+                area =
+                    ws.Range[
+                        fromCell,
+                        toCell];
+
+                // 기존 그림 삭제
+                RemovePicturesInRange(
+                    ws,
+                    area,
+                    true);
+
+                // =====================================================
+                // A21:J22 전체 영역 - PT
+                // =====================================================
+
+                double areaLeft =
+                    area.Left;
+
+                double areaTop =
+                    area.Top;
+
+                double areaWidth =
+                    area.Width;
+
+                double areaHeight =
+                    area.Height;
+
+                // =====================================================
+                // 이미지 하나의 실제 폭
+                // =====================================================
+
+                double imageWidth =
+                    (areaWidth - gapPt * (numInOneRow-1)) / numInOneRow;
+
+                // =====================================================
+                // 이미지 3개
+                // =====================================================
+
+                for (int i = 0; i < numInOneRow; i++)
+                {
+                    int number = i + 1;
+
+                    double left =
+                        areaLeft +
+                        i * (imageWidth + gapPt);
+
+                    double top =
+                        areaTop;
+
+                    AddLog(
+                        "Info",
+                        $"{pageName} : {number}.jpg → " +
+                        $"L={left:F2}, " +
+                        $"T={top:F2}, " +
+                        $"W={imageWidth:F2}, " +
+                        $"H={areaHeight:F2}, " +
+                        $"Gap={gapPt}pt");
+
+                    using (var inserter =
+                        new ImageInserter(
+                            ws,
+                            files[number]))
+                    {
+                        inserter.InsertFitPt(
+                            left,
+                            top,
+                            imageWidth,
+                            areaHeight,
+                            new ImageInsertOptions
+                            {
+                                KeepAspectRatio = false
+                            });
+                    }
+                }
             }
             finally
             {
-                if (rng != null)
-                    Marshal.ReleaseComObject(rng);
-            }
-
-
-            // -------------------------------------------------
-            // 이미지 3개
-            // -------------------------------------------------
-
-            for (int i = 0; i < 3; i++)
-            {
-                int number = i + 1;
-
-                // 이미지 시작 열
-                int fromCol =
-                    startCol +
-                    i * (imageCols + gapCols);
-
-                // 이미지 끝 열
-                int toCol =
-                    fromCol + imageCols - 1;
-
-                string cellFrom =
-                    $"{ExcelColumnToName(fromCol)}{startRow}";
-
-                string cellTo =
-                    $"{ExcelColumnToName(toCol)}{startRow + height - 1}";
-
-                AddLog(
-                    "Info",
-                    $"{pageName} : {number}.jpg → " +
-                    $"{cellFrom}:{cellTo}");
-
-                using (var inserter =
-                    new ImageInserter(ws, files[number]))
+                if (area != null)
                 {
-                    inserter.InsertFit(
-                        cellFrom,
-                        cellTo,
-                        new ImageInsertOptions
-                        {
-                            KeepAspectRatio = false
-                        });
+                    try
+                    {
+                        Marshal.FinalReleaseComObject(area);
+                    }
+                    catch
+                    {
+                    }
+
+                    area = null;
                 }
             }
         }
@@ -5905,7 +6206,8 @@ namespace SmartReport
                 return;
             }
 
-            //세정물류센터_26년3분기연차보고서_260711.xlsx
+            Cursor = Cursors.WaitCursor;
+            //예 세정물류센터_26년3분기연차보고서_260711.xlsx
 
             // Report.ParseReport 호출하여 Report 인스턴스 생성
             try
@@ -5917,8 +6219,7 @@ namespace SmartReport
             {
                 AddLog("Error", $"보고서 파싱 중 오류: {ex.Message}");
             }
-
-
+            Cursor = Cursors.Default;
         }
 
         #region [보고서 이미지 셀 안에 정렬]
@@ -5936,7 +6237,7 @@ namespace SmartReport
             }
 
             Cursor = Cursors.WaitCursor;
-            float gapLeft = 1.5f, gapRight = 1.5f, gapTop = 0f, gapBottom = 0.5f;
+            float gapLeft = 1.5f, gapRight = 1.5f, gapTop = 0.2f, gapBottom = 0.5f;
             float.TryParse(textBoxImageAlignLeftGap.Text.Trim(), out gapLeft);
             float.TryParse(textBoxImageAlignTopGap.Text.Trim(), out gapTop);
             float.TryParse(textBoxImageAlignRightGap.Text.Trim(), out gapRight);
@@ -7435,9 +7736,9 @@ namespace SmartReport
                             bool hasNaeryuckSheet = ExcelComHelper.HasNaeryuckSheet(wb);
 
                             if ((hasNaeryuckSheet &&
-                                !foundCell.Value2.Contain("고압설비점검")) ||
+                                !foundCell.Value2.ToString().Contains("고압설비점검")) ||
                                  (!hasNaeryuckSheet &&
-                                foundCell.Value2.Contain("고압설비점검")))
+                                foundCell.Value2.ToString().Contains("고압설비점검")))
                             {
 
                                 string strHighVoltage = hasNaeryuckSheet
@@ -7507,6 +7808,8 @@ namespace SmartReport
                 AddLog("Error", "report를 찾을 수 없습니다.");
             }
 
+            if (!report.isHalfYear) return;
+
             try
             {
                 if (wb == null)
@@ -7539,8 +7842,11 @@ namespace SmartReport
                 {
                     var half = (report.nMonth>6) ? "하" : "상";
                     wsSrc.Range["A2"].Value2 = $"◈ 접지저항 측정기록표({half}반기)";
+                    wsSrc.Range["G4"].Value2 = $"{report.nYear}-{report.nMonth}-{report.nDay}";
 
                     wsSrc.Name = $"저압({half})";
+
+                    AddLog("Info", $"{wsSrc.Name} 날짜 {wsSrc.Range["G4"].Value2}");
                 }
 
                 if (openedHere)
@@ -7580,6 +7886,7 @@ namespace SmartReport
                     AddLog("WARN", "파일이 존재하지 않습니다.");
                     return;
                 }
+                if (!report.isHalfYear) return;
                 if (wb == null)
                 {
                     if (!File.Exists(filePath))
@@ -7608,8 +7915,11 @@ namespace SmartReport
                 {
                     var half = (report.nMonth > 6) ? "하" : "상";
                     wsSrc.Range["A2"].Value2 = $"발전설비 점검기록표({half}반기)";
+                    wsSrc.Range["J4"].Value2 = $"{report.nYear}-{report.nMonth}-{report.nDay}";
 
                     wsSrc.Name = $"예비({half})";
+
+                    AddLog("Info", $"{wsSrc.Name} 날짜 {wsSrc.Range["J4"].Value2}");
                 }
 
                 if (openedHere)
@@ -7681,6 +7991,7 @@ namespace SmartReport
                     wsSrc.Range["E5"].Value2 = $"{report.nYear}-{report.nMonth}-{report.nDay}"; 
                     wsSrc.Range["L5"].Value2 = $"[{report.nQuater}분기]";
                     wsSrc.Name = $"{report.nQuater}분기";
+                    AddLog("Info", $"열화상 날짜 {wsSrc.Range["E5"].Value2}, 분기 {wsSrc.Range["L5"].Value2}");
                 }
 
                 if (wsSrc != null) Marshal.ReleaseComObject(wsSrc);
@@ -7971,7 +8282,7 @@ namespace SmartReport
                 report.InsertInspectorSigns(
                             filePath,
                             signFolder,
-                            false);
+                            true);
 #if false
 
                 xlApp = new Excel.Application
@@ -8214,6 +8525,83 @@ namespace SmartReport
 
         }
         #endregion
+
+        private void btnDeletePicture_Click(object sender, EventArgs e)
+        {
+            var filePath = tbQuantityFile.Text?.Trim();
+            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+            {
+                MessageBox.Show("엑셀 파일을 먼저 선택하세요.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (textBoxSheetForSnapImage.Text.Trim() == "")
+            {
+                MessageBox.Show("이미지 용량을 줄일 시트 이름을 입력하세요.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (report == null)
+            {
+                AddLog("Error", "report를 찾을 수 없습니다.");
+            }
+
+            Cursor = Cursors.WaitCursor;
+            Excel.Application xlApp = null;
+            Excel.Workbook wb = null;
+            Excel.Worksheet ws = null;
+
+            try
+            {
+                xlApp = new Excel.Application { Visible = false, DisplayAlerts = false };
+                //wb = xlApp.Workbooks.Open(filePath, ReadOnly: false);
+                wb = xlApp.Workbooks.Open(filePath);
+
+
+                string baseFolder = Path.GetDirectoryName(filePath);
+
+                ws = report.GetWorksheetByName(wb, textBoxSheetForSnapImage.Text.Trim());
+
+                if (ws == null)
+                {
+                    throw new Exception($"{textBoxSheetForSnapImage.Text.Trim()} 시트를 찾을 수 없습니다.");
+                }
+
+                report.RemovePictures(ws);
+
+            }
+
+            catch (Exception ex)
+            {
+                AddLog("Error", $"사진 용량 줄이기 실패: {ex.Message}");
+
+            }
+            finally
+            {
+                try
+                {
+                    if (ws != null) Marshal.ReleaseComObject(ws);
+                    if (wb != null)
+                    {
+                        wb.Save();
+                        wb.Close(false);
+                        Marshal.ReleaseComObject(wb);
+                    }
+
+                    if (xlApp != null)
+                    {
+                        xlApp.Quit();
+                        Marshal.ReleaseComObject(xlApp);
+                    }
+
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+
+                    Cursor = Cursors.Default;
+                }
+                catch { }
+            }
+        }
     }
 
 }
