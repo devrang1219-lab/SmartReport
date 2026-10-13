@@ -195,10 +195,17 @@
   <ItemGroup>
     <Compile Include="Comm\Constants.cs" />
     <Compile Include="Comm\ExcelComHelper.cs" />
+    <Compile Include="Comm\IReport.cs" />
     <Compile Include="Comm\ProcResult.cs" />
     <Compile Include="Comm\SoborIni.cs" />
     <Compile Include="Comm\SoborIni2.cs" />
     <Compile Include="Comm\SoborLog.cs" />
+    <Compile Include="Form1.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form1.Designer.cs">
+      <DependentUpon>Form1.cs</DependentUpon>
+    </Compile>
     <Compile Include="NasUploader.cs" />
     <Compile Include="Ocr\FlirOcrReader.cs" />
     <Compile Include="FormMain.cs">
@@ -233,6 +240,9 @@
     <Compile Include="SynologyFileDownloader.cs" />
     <Compile Include="SynologyFileGridItem.cs" />
     <Compile Include="SynologyFileUploader.cs" />
+    <EmbeddedResource Include="Form1.resx">
+      <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FormMain.resx">
       <DependentUpon>FormMain.cs</DependentUpon>
     </EmbeddedResource>

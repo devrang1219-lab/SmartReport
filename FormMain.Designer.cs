@@ -69,6 +69,8 @@ namespace SmartReport
             this.checkBoxDate = new System.Windows.Forms.CheckBox();
             this.checkBoxChecker = new System.Windows.Forms.CheckBox();
             this.gbImage = new System.Windows.Forms.GroupBox();
+            this.tbLineMap = new System.Windows.Forms.TextBox();
+            this.cbPlaceInfo = new System.Windows.Forms.CheckBox();
             this.tbGround = new System.Windows.Forms.TextBox();
             this.cbGround = new System.Windows.Forms.CheckBox();
             this.tbQuaterSheet = new System.Windows.Forms.TextBox();
@@ -128,8 +130,11 @@ namespace SmartReport
             this.lbName = new System.Windows.Forms.Label();
             this.checkBox2 = new System.Windows.Forms.CheckBox();
             this.checkBox3 = new System.Windows.Forms.CheckBox();
-            this.textBox1 = new System.Windows.Forms.TextBox();
-            this.cbPlaceInfo = new System.Windows.Forms.CheckBox();
+            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
+            this.메뉴ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.새폼ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.닫기ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.설정ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pnlMain.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -150,6 +155,7 @@ namespace SmartReport
             this.all.SuspendLayout();
             this.pnlTop.SuspendLayout();
             this.panel3.SuspendLayout();
+            this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // pnlMain
@@ -202,7 +208,7 @@ namespace SmartReport
             this.splitContainer1.Panel2.Controls.Add(this.tapLog);
             this.splitContainer1.Panel2.Padding = new System.Windows.Forms.Padding(5);
             this.splitContainer1.Size = new System.Drawing.Size(1425, 943);
-            this.splitContainer1.SplitterDistance = 702;
+            this.splitContainer1.SplitterDistance = 701;
             this.splitContainer1.TabIndex = 4;
             // 
             // tabMain
@@ -215,7 +221,7 @@ namespace SmartReport
             this.tabMain.Margin = new System.Windows.Forms.Padding(4);
             this.tabMain.Name = "tabMain";
             this.tabMain.SelectedIndex = 0;
-            this.tabMain.Size = new System.Drawing.Size(1415, 692);
+            this.tabMain.Size = new System.Drawing.Size(1415, 691);
             this.tabMain.TabIndex = 0;
             // 
             // tpFunction
@@ -228,7 +234,7 @@ namespace SmartReport
             this.tpFunction.Margin = new System.Windows.Forms.Padding(4);
             this.tpFunction.Name = "tpFunction";
             this.tpFunction.Padding = new System.Windows.Forms.Padding(4);
-            this.tpFunction.Size = new System.Drawing.Size(1407, 649);
+            this.tpFunction.Size = new System.Drawing.Size(1407, 648);
             this.tpFunction.TabIndex = 1;
             this.tpFunction.Text = "기능";
             this.tpFunction.UseVisualStyleBackColor = true;
@@ -576,7 +582,7 @@ namespace SmartReport
             this.gbImage.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.gbImage.Controls.Add(this.textBox1);
+            this.gbImage.Controls.Add(this.tbLineMap);
             this.gbImage.Controls.Add(this.cbPlaceInfo);
             this.gbImage.Controls.Add(this.tbGround);
             this.gbImage.Controls.Add(this.cbGround);
@@ -604,10 +610,31 @@ namespace SmartReport
             this.gbImage.Controls.Add(this.btnQuntityFileRun);
             this.gbImage.Location = new System.Drawing.Point(5, 250);
             this.gbImage.Name = "gbImage";
-            this.gbImage.Size = new System.Drawing.Size(1399, 392);
+            this.gbImage.Size = new System.Drawing.Size(1399, 424);
             this.gbImage.TabIndex = 24;
             this.gbImage.TabStop = false;
             this.gbImage.Text = "이미지 삽입";
+            // 
+            // tbLineMap
+            // 
+            this.tbLineMap.Location = new System.Drawing.Point(185, 267);
+            this.tbLineMap.Margin = new System.Windows.Forms.Padding(4);
+            this.tbLineMap.Name = "tbLineMap";
+            this.tbLineMap.Size = new System.Drawing.Size(217, 37);
+            this.tbLineMap.TabIndex = 54;
+            this.tbLineMap.Text = "03 점검사진\\결선도";
+            // 
+            // cbPlaceInfo
+            // 
+            this.cbPlaceInfo.AutoSize = true;
+            this.cbPlaceInfo.Checked = true;
+            this.cbPlaceInfo.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbPlaceInfo.Location = new System.Drawing.Point(18, 267);
+            this.cbPlaceInfo.Name = "cbPlaceInfo";
+            this.cbPlaceInfo.Size = new System.Drawing.Size(105, 34);
+            this.cbPlaceInfo.TabIndex = 53;
+            this.cbPlaceInfo.Text = "결선도";
+            this.cbPlaceInfo.UseVisualStyleBackColor = true;
             // 
             // tbGround
             // 
@@ -860,7 +887,7 @@ namespace SmartReport
             this.btnQuntityFileRun.Dock = System.Windows.Forms.DockStyle.Right;
             this.btnQuntityFileRun.Location = new System.Drawing.Point(1262, 33);
             this.btnQuntityFileRun.Name = "btnQuntityFileRun";
-            this.btnQuntityFileRun.Size = new System.Drawing.Size(134, 356);
+            this.btnQuntityFileRun.Size = new System.Drawing.Size(134, 388);
             this.btnQuntityFileRun.TabIndex = 23;
             this.btnQuntityFileRun.Text = "실행";
             this.btnQuntityFileRun.UseVisualStyleBackColor = true;
@@ -874,7 +901,7 @@ namespace SmartReport
             this.tpGap.Margin = new System.Windows.Forms.Padding(4);
             this.tpGap.Name = "tpGap";
             this.tpGap.Padding = new System.Windows.Forms.Padding(4);
-            this.tpGap.Size = new System.Drawing.Size(1407, 547);
+            this.tpGap.Size = new System.Drawing.Size(1407, 659);
             this.tpGap.TabIndex = 0;
             this.tpGap.Text = "파일다운로드";
             this.tpGap.UseVisualStyleBackColor = true;
@@ -928,7 +955,7 @@ namespace SmartReport
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(4, 4);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(1399, 539);
+            this.panel1.Size = new System.Drawing.Size(1399, 651);
             this.panel1.TabIndex = 16;
             // 
             // dgvFiles
@@ -944,10 +971,10 @@ namespace SmartReport
             // 
             // tabSortImage
             // 
-            this.tabSortImage.Location = new System.Drawing.Point(4, 39);
+            this.tabSortImage.Location = new System.Drawing.Point(4, 28);
             this.tabSortImage.Name = "tabSortImage";
             this.tabSortImage.Padding = new System.Windows.Forms.Padding(3);
-            this.tabSortImage.Size = new System.Drawing.Size(1407, 536);
+            this.tabSortImage.Size = new System.Drawing.Size(1407, 659);
             this.tabSortImage.TabIndex = 2;
             this.tabSortImage.Text = "이미지 정렬";
             this.tabSortImage.UseVisualStyleBackColor = true;
@@ -961,7 +988,7 @@ namespace SmartReport
             this.tapLog.Location = new System.Drawing.Point(5, 5);
             this.tapLog.Name = "tapLog";
             this.tapLog.SelectedIndex = 0;
-            this.tapLog.Size = new System.Drawing.Size(1415, 227);
+            this.tapLog.Size = new System.Drawing.Size(1415, 228);
             this.tapLog.TabIndex = 0;
             // 
             // all
@@ -970,7 +997,7 @@ namespace SmartReport
             this.all.Location = new System.Drawing.Point(4, 39);
             this.all.Name = "all";
             this.all.Padding = new System.Windows.Forms.Padding(5);
-            this.all.Size = new System.Drawing.Size(1407, 184);
+            this.all.Size = new System.Drawing.Size(1407, 185);
             this.all.TabIndex = 0;
             this.all.Text = "All log";
             this.all.UseVisualStyleBackColor = true;
@@ -983,7 +1010,7 @@ namespace SmartReport
             this.richTextBox1.Location = new System.Drawing.Point(5, 5);
             this.richTextBox1.Name = "richTextBox1";
             this.richTextBox1.ReadOnly = true;
-            this.richTextBox1.Size = new System.Drawing.Size(1397, 174);
+            this.richTextBox1.Size = new System.Drawing.Size(1397, 175);
             this.richTextBox1.TabIndex = 1;
             this.richTextBox1.TabStop = false;
             this.richTextBox1.Text = "";
@@ -994,7 +1021,7 @@ namespace SmartReport
             this.info.Location = new System.Drawing.Point(4, 28);
             this.info.Name = "info";
             this.info.Padding = new System.Windows.Forms.Padding(3);
-            this.info.Size = new System.Drawing.Size(1407, 308);
+            this.info.Size = new System.Drawing.Size(1407, 196);
             this.info.TabIndex = 1;
             this.info.Text = "Info";
             this.info.UseVisualStyleBackColor = true;
@@ -1004,7 +1031,7 @@ namespace SmartReport
             this.tabError.Location = new System.Drawing.Point(4, 28);
             this.tabError.Name = "tabError";
             this.tabError.Padding = new System.Windows.Forms.Padding(5);
-            this.tabError.Size = new System.Drawing.Size(1407, 308);
+            this.tabError.Size = new System.Drawing.Size(1407, 196);
             this.tabError.TabIndex = 2;
             this.tabError.Text = "Error";
             this.tabError.UseVisualStyleBackColor = true;
@@ -1029,12 +1056,12 @@ namespace SmartReport
             this.pnlTop.Controls.Add(this.lbFolder);
             this.pnlTop.Controls.Add(this.cbName);
             this.pnlTop.Controls.Add(this.lbName);
-            this.pnlTop.Dock = System.Windows.Forms.DockStyle.Top;
+            this.pnlTop.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlTop.Location = new System.Drawing.Point(4, 4);
             this.pnlTop.Margin = new System.Windows.Forms.Padding(4);
             this.pnlTop.Name = "pnlTop";
             this.pnlTop.Padding = new System.Windows.Forms.Padding(3);
-            this.pnlTop.Size = new System.Drawing.Size(1425, 175);
+            this.pnlTop.Size = new System.Drawing.Size(1425, 1150);
             this.pnlTop.TabIndex = 3;
             // 
             // btnUploadReport
@@ -1171,7 +1198,7 @@ namespace SmartReport
             // 
             this.panel3.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.panel3.Controls.Add(this.btFolder);
-            this.panel3.Location = new System.Drawing.Point(1245, 6);
+            this.panel3.Location = new System.Drawing.Point(1245, 494);
             this.panel3.Name = "panel3";
             this.panel3.Padding = new System.Windows.Forms.Padding(3);
             this.panel3.Size = new System.Drawing.Size(172, 38);
@@ -1261,26 +1288,47 @@ namespace SmartReport
             this.checkBox3.Text = "측정일 적용";
             this.checkBox3.UseVisualStyleBackColor = true;
             // 
-            // textBox1
+            // menuStrip1
             // 
-            this.textBox1.Location = new System.Drawing.Point(185, 267);
-            this.textBox1.Margin = new System.Windows.Forms.Padding(4);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(217, 37);
-            this.textBox1.TabIndex = 54;
-            this.textBox1.Text = "03 점검사진\\결선도";
+            this.menuStrip1.Dock = System.Windows.Forms.DockStyle.None;
+            this.menuStrip1.GripMargin = new System.Windows.Forms.Padding(2, 2, 0, 2);
+            this.menuStrip1.ImageScalingSize = new System.Drawing.Size(24, 24);
+            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.메뉴ToolStripMenuItem,
+            this.설정ToolStripMenuItem});
+            this.menuStrip1.Location = new System.Drawing.Point(4, 9);
+            this.menuStrip1.Name = "menuStrip1";
+            this.menuStrip1.Size = new System.Drawing.Size(136, 33);
+            this.menuStrip1.TabIndex = 53;
+            this.menuStrip1.Text = "설정";
             // 
-            // cbPlaceInfo
+            // 메뉴ToolStripMenuItem
             // 
-            this.cbPlaceInfo.AutoSize = true;
-            this.cbPlaceInfo.Checked = true;
-            this.cbPlaceInfo.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbPlaceInfo.Location = new System.Drawing.Point(18, 267);
-            this.cbPlaceInfo.Name = "cbPlaceInfo";
-            this.cbPlaceInfo.Size = new System.Drawing.Size(105, 34);
-            this.cbPlaceInfo.TabIndex = 53;
-            this.cbPlaceInfo.Text = "결선도";
-            this.cbPlaceInfo.UseVisualStyleBackColor = true;
+            this.메뉴ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.새폼ToolStripMenuItem,
+            this.닫기ToolStripMenuItem});
+            this.메뉴ToolStripMenuItem.Name = "메뉴ToolStripMenuItem";
+            this.메뉴ToolStripMenuItem.Size = new System.Drawing.Size(64, 29);
+            this.메뉴ToolStripMenuItem.Text = "메뉴";
+            // 
+            // 새폼ToolStripMenuItem
+            // 
+            this.새폼ToolStripMenuItem.Name = "새폼ToolStripMenuItem";
+            this.새폼ToolStripMenuItem.Size = new System.Drawing.Size(156, 34);
+            this.새폼ToolStripMenuItem.Text = "새 폼";
+            this.새폼ToolStripMenuItem.Click += new System.EventHandler(this.새폼ToolStripMenuItem_Click);
+            // 
+            // 닫기ToolStripMenuItem
+            // 
+            this.닫기ToolStripMenuItem.Name = "닫기ToolStripMenuItem";
+            this.닫기ToolStripMenuItem.Size = new System.Drawing.Size(156, 34);
+            this.닫기ToolStripMenuItem.Text = "닫기";
+            // 
+            // 설정ToolStripMenuItem
+            // 
+            this.설정ToolStripMenuItem.Name = "설정ToolStripMenuItem";
+            this.설정ToolStripMenuItem.Size = new System.Drawing.Size(64, 29);
+            this.설정ToolStripMenuItem.Text = "설정";
             // 
             // FormMain
             // 
@@ -1288,7 +1336,9 @@ namespace SmartReport
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1433, 1158);
             this.Controls.Add(this.pnlMain);
+            this.Controls.Add(this.menuStrip1);
             this.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.MainMenuStrip = this.menuStrip1;
             this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "FormMain";
             this.Text = "보고서매이트";
@@ -1321,7 +1371,10 @@ namespace SmartReport
             this.pnlTop.ResumeLayout(false);
             this.pnlTop.PerformLayout();
             this.panel3.ResumeLayout(false);
+            this.menuStrip1.ResumeLayout(false);
+            this.menuStrip1.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -1423,8 +1476,13 @@ namespace SmartReport
         private CheckBox checkBox3;
         private CheckBox cbCheckBreak;
         private Button btnDeletePicture;
-        private TextBox textBox1;
+        private TextBox tbLineMap;
         private CheckBox cbPlaceInfo;
+        private MenuStrip menuStrip1;
+        private ToolStripMenuItem 메뉴ToolStripMenuItem;
+        private ToolStripMenuItem 새폼ToolStripMenuItem;
+        private ToolStripMenuItem 닫기ToolStripMenuItem;
+        private ToolStripMenuItem 설정ToolStripMenuItem;
     }
 }
 

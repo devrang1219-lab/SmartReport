@@ -82,60 +82,62 @@ namespace WindowsFormsApp1.Comm
             }
         }
 
-        static public bool HasYebiSheet(Excel.Workbook wb)
+        public static bool HasYebiSheet(Excel.Workbook wb)
         {
-            foreach (Excel.Worksheet ws in wb.Worksheets)
-            {
-                try
-                {
-                    if (ws.Name.Contains("예비"))
-                        return true;
-                }
-                finally
-                {
-                    Marshal.ReleaseComObject(ws);
-                }
-            }
-
-            return false;
+            return HasSheet(wb, "예비");
         }
 
-        static public bool HasCoronaSheet(Excel.Workbook wb)
+        public static bool HasCoronaSheet(Excel.Workbook wb)
         {
-            foreach (Excel.Worksheet ws in wb.Worksheets)
-            {
-                try
-                {
-                    if (ws.Name.Contains("영코") || ws.Name.Contains("PD부분방전"))
-                        return true;
-                }
-                finally
-                {
-                    Marshal.ReleaseComObject(ws);
-                }
-            }
-
-            return false;
+            return HasSheet(wb, "영코", "PD부분방전");
         }
 
-        static public bool HasNaeryuckSheet(Excel.Workbook wb)
+        public static bool HasNaeryuckSheet(Excel.Workbook wb)
         {
-            foreach (Excel.Worksheet ws in wb.Worksheets)
-            {
-                try
-                {
-                    if (ws.Name.Contains("내력"))
-                        return true;
-                }
-                finally
-                {
-                    Marshal.ReleaseComObject(ws);
-                }
-            }
-
-            return false;
+            return HasSheet(wb, "내력");
         }
 
+        public static bool HasSheet(
+            Excel.Workbook wb,
+            params string[] sheetNames)
+        {
+            Excel.Sheets sheets = null;
+
+            try
+            {
+                sheets = wb.Worksheets;
+
+                int count = sheets.Count;
+
+                for (int i = 1; i <= count; i++)
+                {
+                    Excel.Worksheet ws = null;
+
+                    try
+                    {
+                        ws = (Excel.Worksheet)sheets[i];
+
+                        string name = ws.Name;
+
+                        foreach (string sheetName in sheetNames)
+                        {
+                            if (name.Contains(sheetName))
+                                return true;
+                        }
+                    }
+                    finally
+                    {
+                        Release(ws);
+                    }
+                }
+
+                return false;
+            }
+            finally
+            {
+                Release(sheets);
+            }
+        }
 
         public static Excel.Worksheet GetWorksheetByLastName(Excel.Workbook wb, string sheetName)
         {
