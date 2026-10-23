@@ -2702,7 +2702,7 @@ namespace SmartReport
                     if (wb != null)
                     {
                         wb.Close(false);
-                        Marshal.ReleaseComObject(wb);
+                        ExcelComHelper.Release(wb);
                     }
                 }
                 catch { }
@@ -2711,13 +2711,11 @@ namespace SmartReport
                 {
                     try
                     {
-                        Marshal.FinalReleaseComObject(workbooks);
+                        ExcelComHelper.Release(workbooks);
                     }
                     catch
                     {
                     }
-
-                    workbooks = null;
                 }
 
                 try
@@ -2725,13 +2723,12 @@ namespace SmartReport
                     if (xlApp != null)
                     {
                         xlApp.Quit();
-                        Marshal.ReleaseComObject(xlApp);
+                        ExcelComHelper.Release(xlApp);
                     }
                 }
                 catch { }
 
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
+                ExcelComHelper.Cleanup();
                 Cursor = Cursors.Default;
             }
         }
@@ -4347,6 +4344,7 @@ namespace SmartReport
             Excel.Workbook newWb = null;
             Excel.Worksheet sourceWs = null;
             Excel.Worksheet ws = null;
+            Excel.Range rng = null;
 
             string sheetName = tbQuaterSheet.Text.Trim();
 
@@ -4384,9 +4382,14 @@ namespace SmartReport
                 }
                 catch { }
 
+                rng = sourceWs.Range["A1:R3"];
 
+                RemovePicturesInRange(
+                    sourceWs,
+                    rng,
+                    false);
                 RemovePictures(ws);
-                RemovePictures(sourceWs);
+                //RemovePictures(sourceWs);
 
 
                 string[] files = Directory.GetFiles(baseFolder + "\\" + pictureFolder, "*.jpg")
@@ -4520,6 +4523,7 @@ namespace SmartReport
                 try
                 {
                     AddLog("Info", $"분기 이미지 삽입 완료");
+                    if (rng != null) Marshal.ReleaseComObject(rng); 
                     if (ws != null) Marshal.ReleaseComObject(ws);
                     if (sourceWs != null) Marshal.ReleaseComObject(sourceWs);   
                     if (newWb != null)
@@ -4527,11 +4531,6 @@ namespace SmartReport
                         newWb.Close(false);
                         Marshal.ReleaseComObject(newWb);
                     }
-                    //if (wb != null)
-                    //{
-                    //    wb.Close(false);
-                    //    Marshal.ReleaseComObject(wb);
-                    //}
                 }
                 catch {
                     AddLog("Error", $"분기 파일 정리 실패");

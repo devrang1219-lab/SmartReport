@@ -157,6 +157,51 @@ namespace WindowsFormsApp1
             }
         }
 
+        public static Excel.Worksheet GetWorksheetByLastName(Excel.Workbook wb, string sheetName)
+        {
+            Excel.Sheets sheets = null;
+
+            try
+            {
+                sheets = wb.Worksheets;
+
+                int count = sheets.Count;
+
+                for (int i = 1; i <= count; i++)
+                {
+                    Excel.Worksheet sheet = null;
+
+                    try
+                    {
+                        sheet = (Excel.Worksheet)sheets[i];
+
+                        string name = sheet.Name;
+
+                        if (name.Trim().EndsWith(
+                                sheetName,
+                                StringComparison.OrdinalIgnoreCase))
+                        {
+                            // 호출자에게 소유권 넘김
+                            Excel.Worksheet result = sheet;
+                            sheet = null;
+
+                            return result;
+                        }
+                    }
+                    finally
+                    {
+                        ExcelComHelper.Release(sheet);
+                    }
+                }
+
+                return null;
+            }
+            finally
+            {
+                ExcelComHelper.Release(sheets);
+            }
+        }
+
         private int GetMonthFromFileName(string filePath)
         {
             string fileName = Path.GetFileNameWithoutExtension(filePath);
@@ -1441,10 +1486,10 @@ namespace WindowsFormsApp1
                             finally
                             {
                                 if (dstRow != null)
-                                    Marshal.ReleaseComObject(dstRow);
+                                    ExcelComHelper.Release(dstRow);
 
                                 if (srcRow != null)
-                                    Marshal.ReleaseComObject(srcRow);
+                                    ExcelComHelper.Release(srcRow);
                             }
                         }
 
@@ -1479,10 +1524,10 @@ namespace WindowsFormsApp1
                             finally
                             {
                                 if (location != null)
-                                    Marshal.ReleaseComObject(location);
+                                    ExcelComHelper.Release(location);
 
                                 if (hp != null)
-                                    Marshal.ReleaseComObject(hp);
+                                    ExcelComHelper.Release(hp);
                             }
                         }
 
@@ -1510,13 +1555,13 @@ namespace WindowsFormsApp1
                     finally
                     {
                         if (breakCell != null)
-                            Marshal.ReleaseComObject(breakCell);
+                            ExcelComHelper.Release(breakCell);
 
                         if (destRange != null)
-                            Marshal.ReleaseComObject(destRange);
+                            ExcelComHelper.Release(destRange);
 
                         if (sourceRange != null)
-                            Marshal.ReleaseComObject(sourceRange);
+                            ExcelComHelper.Release(sourceRange);
                     }
                 }
 
@@ -1532,7 +1577,7 @@ namespace WindowsFormsApp1
             finally
             {
                 if (printAreaRange != null)
-                    Marshal.ReleaseComObject(printAreaRange);
+                    ExcelComHelper.Release(printAreaRange);
             }
         }
 
@@ -1545,10 +1590,11 @@ namespace WindowsFormsApp1
             string pictureFolder)
         {
             Excel.Worksheet sourceWs = null;
-
+            Excel.Range rng = null;
             try
             {
-                sourceWs = ExcelComHelper.GetWorksheetByLastName(wb, sheetName);
+                //sourceWs = ExcelComHelper.GetWorksheetByLastName(wb, sheetName);
+                sourceWs = GetWorksheetByLastName(wb, sheetName);
 
                 if (sourceWs == null)
                 {
@@ -1558,7 +1604,13 @@ namespace WindowsFormsApp1
                 // =====================================================
                 // 기존 그림 제거
                 // =====================================================
-                RemovePictures(sourceWs);
+                //RemovePictures(sourceWs);
+                rng = sourceWs.Range["A1:R3"];
+
+                RemovePicturesInRange(
+                    sourceWs,
+                    rng,
+                    false);
 
                 // =====================================================
                 // 이미지 파일
@@ -1670,6 +1722,10 @@ namespace WindowsFormsApp1
                 // 저장
                 // =====================================================
                 wb.Save();
+
+                AddLog(
+                    $"분기 이미지 삽입 완료", "Info");
+
             }
             catch (Exception ex)
             {
@@ -1678,21 +1734,15 @@ namespace WindowsFormsApp1
             }
             finally
             {
-                AddLog(
-                    "분기 이미지 삽입 완료", "Info");
                 // -----------------------------------------------------
                 // sourceWs
                 // -----------------------------------------------------
-                if (sourceWs != null)
+                try
                 {
-                    try
-                    {
-                        Marshal.FinalReleaseComObject(sourceWs);
-                    }
-                    catch { }
-
-                    sourceWs = null;
+                    if (rng != null) ExcelComHelper.Release(rng);
+                    if (sourceWs != null) ExcelComHelper.Release(sourceWs);
                 }
+                catch { }
             }
         }
         #endregion
@@ -4204,12 +4254,16 @@ namespace WindowsFormsApp1
                 // 저장
                 // =====================================================
                 wb.Save();
+
+                AddLog(
+                    $"영상코로나 이미지 삽입 완료",
+                    "Info");
             }
             catch (Exception ex)
             {
                 AddLog(
-                    "Error",
-                    $"영상코로나 이미지 삽입 실패: {ex.Message}");
+                    $"영상코로나 이미지 삽입 실패: {ex.Message}"
+                    "Error",);
             }
             finally
             {
@@ -4313,7 +4367,8 @@ namespace WindowsFormsApp1
 
             try
             {
-                sourceWs = ExcelComHelper.GetWorksheetByLastName(wb, sheetName);
+                //sourceWs = ExcelComHelper.GetWorksheetByLastName(wb, sheetName);
+                sourceWs = GetWorksheetByLastName(wb, sheetName);
 
                 if (sourceWs == null)
                 {
@@ -4406,6 +4461,8 @@ namespace WindowsFormsApp1
                 // 저장
                 // =====================================================
                 wb.Save();
+                AddLog(
+                    "영코 Cry8025 이미지 삽입 완료", "Info");
                 return true;
             }
             catch (Exception ex)
@@ -4416,8 +4473,6 @@ namespace WindowsFormsApp1
             }
             finally
             {
-                AddLog(
-                    "영코 Cry8025 이미지 삽입 완료", "Info");
                 // -----------------------------------------------------
                 // sourceWs
                 // -----------------------------------------------------

@@ -32,6 +32,31 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabMain = new System.Windows.Forms.TabControl();
             this.tpFunction = new System.Windows.Forms.TabPage();
+            this.gbImage = new System.Windows.Forms.GroupBox();
+            this.label10 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.textBox6 = new System.Windows.Forms.TextBox();
+            this.textBox5 = new System.Windows.Forms.TextBox();
+            this.textBox4 = new System.Windows.Forms.TextBox();
+            this.textBox3 = new System.Windows.Forms.TextBox();
+            this.textBox2 = new System.Windows.Forms.TextBox();
+            this.tbQuaterSheet = new System.Windows.Forms.TextBox();
+            this.tbBattery = new System.Windows.Forms.TextBox();
+            this.cbBattery = new System.Windows.Forms.CheckBox();
+            this.tbEquipment = new System.Windows.Forms.TextBox();
+            this.cbEquipment = new System.Windows.Forms.CheckBox();
+            this.checkBoxOcr = new System.Windows.Forms.CheckBox();
+            this.textBoxPictureFolder = new System.Windows.Forms.TextBox();
+            this.textBoxCoronaFolder = new System.Windows.Forms.TextBox();
+            this.textBoxQuntatyFolder = new System.Windows.Forms.TextBox();
+            this.textBoxFeverImageFolder = new System.Windows.Forms.TextBox();
+            this.checkBoxFeverPicture = new System.Windows.Forms.CheckBox();
+            this.checkBoxPicture = new System.Windows.Forms.CheckBox();
+            this.checkBoxCorona = new System.Windows.Forms.CheckBox();
+            this.checkBoxQuantity = new System.Windows.Forms.CheckBox();
+            this.btnQuntityFileRun = new System.Windows.Forms.Button();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.btnUpdateJuapList = new System.Windows.Forms.Button();
             this.checkBoxCorrect = new System.Windows.Forms.CheckBox();
@@ -65,27 +90,6 @@
             this.btnPageNumber = new System.Windows.Forms.Button();
             this.btnExportForPdf = new System.Windows.Forms.Button();
             this.btnGapjiPictureRelocate = new System.Windows.Forms.Button();
-            this.gbImage = new System.Windows.Forms.GroupBox();
-            this.textBox6 = new System.Windows.Forms.TextBox();
-            this.textBox5 = new System.Windows.Forms.TextBox();
-            this.textBox4 = new System.Windows.Forms.TextBox();
-            this.textBox3 = new System.Windows.Forms.TextBox();
-            this.textBox2 = new System.Windows.Forms.TextBox();
-            this.tbQuaterSheet = new System.Windows.Forms.TextBox();
-            this.tbBattery = new System.Windows.Forms.TextBox();
-            this.cbBattery = new System.Windows.Forms.CheckBox();
-            this.tbEquipment = new System.Windows.Forms.TextBox();
-            this.cbEquipment = new System.Windows.Forms.CheckBox();
-            this.checkBoxOcr = new System.Windows.Forms.CheckBox();
-            this.textBoxPictureFolder = new System.Windows.Forms.TextBox();
-            this.textBoxCoronaFolder = new System.Windows.Forms.TextBox();
-            this.textBoxQuntatyFolder = new System.Windows.Forms.TextBox();
-            this.textBoxFeverImageFolder = new System.Windows.Forms.TextBox();
-            this.checkBoxFeverPicture = new System.Windows.Forms.CheckBox();
-            this.checkBoxPicture = new System.Windows.Forms.CheckBox();
-            this.checkBoxCorona = new System.Windows.Forms.CheckBox();
-            this.checkBoxQuantity = new System.Windows.Forms.CheckBox();
-            this.btnQuntityFileRun = new System.Windows.Forms.Button();
             this.tpGap = new System.Windows.Forms.TabPage();
             this.panel2 = new System.Windows.Forms.Panel();
             this.btnDownload = new System.Windows.Forms.Button();
@@ -99,21 +103,17 @@
             this.richTextBox1 = new System.Windows.Forms.RichTextBox();
             this.info = new System.Windows.Forms.TabPage();
             this.tabError = new System.Windows.Forms.TabPage();
-            this.label2 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
-            this.label5 = new System.Windows.Forms.Label();
-            this.label10 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.tabMain.SuspendLayout();
             this.tpFunction.SuspendLayout();
+            this.gbImage.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.gbReport.SuspendLayout();
-            this.gbImage.SuspendLayout();
             this.tpGap.SuspendLayout();
             this.panel2.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -159,14 +159,300 @@
             this.tpFunction.Controls.Add(this.groupBox2);
             this.tpFunction.Controls.Add(this.groupBox1);
             this.tpFunction.Controls.Add(this.gbReport);
-            this.tpFunction.Location = new System.Drawing.Point(4, 37);
+            this.tpFunction.Location = new System.Drawing.Point(4, 26);
             this.tpFunction.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
             this.tpFunction.Name = "tpFunction";
             this.tpFunction.Padding = new System.Windows.Forms.Padding(6, 7, 6, 7);
-            this.tpFunction.Size = new System.Drawing.Size(1283, 465);
+            this.tpFunction.Size = new System.Drawing.Size(1283, 476);
             this.tpFunction.TabIndex = 1;
             this.tpFunction.Text = "기능";
             this.tpFunction.UseVisualStyleBackColor = true;
+            // 
+            // gbImage
+            // 
+            this.gbImage.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.gbImage.Controls.Add(this.label10);
+            this.gbImage.Controls.Add(this.label5);
+            this.gbImage.Controls.Add(this.label3);
+            this.gbImage.Controls.Add(this.label2);
+            this.gbImage.Controls.Add(this.textBox6);
+            this.gbImage.Controls.Add(this.textBox5);
+            this.gbImage.Controls.Add(this.textBox4);
+            this.gbImage.Controls.Add(this.textBox3);
+            this.gbImage.Controls.Add(this.textBox2);
+            this.gbImage.Controls.Add(this.tbQuaterSheet);
+            this.gbImage.Controls.Add(this.tbBattery);
+            this.gbImage.Controls.Add(this.cbBattery);
+            this.gbImage.Controls.Add(this.tbEquipment);
+            this.gbImage.Controls.Add(this.cbEquipment);
+            this.gbImage.Controls.Add(this.checkBoxOcr);
+            this.gbImage.Controls.Add(this.textBoxPictureFolder);
+            this.gbImage.Controls.Add(this.textBoxCoronaFolder);
+            this.gbImage.Controls.Add(this.textBoxQuntatyFolder);
+            this.gbImage.Controls.Add(this.textBoxFeverImageFolder);
+            this.gbImage.Controls.Add(this.checkBoxFeverPicture);
+            this.gbImage.Controls.Add(this.checkBoxPicture);
+            this.gbImage.Controls.Add(this.checkBoxCorona);
+            this.gbImage.Controls.Add(this.checkBoxQuantity);
+            this.gbImage.Controls.Add(this.btnQuntityFileRun);
+            this.gbImage.Location = new System.Drawing.Point(2, 360);
+            this.gbImage.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
+            this.gbImage.Name = "gbImage";
+            this.gbImage.Padding = new System.Windows.Forms.Padding(4, 6, 4, 6);
+            this.gbImage.Size = new System.Drawing.Size(1274, 285);
+            this.gbImage.TabIndex = 24;
+            this.gbImage.TabStop = false;
+            this.gbImage.Text = "이미지 삽입";
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Font = new System.Drawing.Font("맑은 고딕", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label10.Location = new System.Drawing.Point(676, 35);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(29, 13);
+            this.label10.TabIndex = 63;
+            this.label10.Text = "기능";
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Font = new System.Drawing.Font("맑은 고딕", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label5.Location = new System.Drawing.Point(446, 35);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(71, 13);
+            this.label5.TabIndex = 62;
+            this.label5.Text = "Sheet Name";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Font = new System.Drawing.Font("맑은 고딕", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label3.Location = new System.Drawing.Point(244, 35);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(66, 13);
+            this.label3.TabIndex = 61;
+            this.label3.Text = "이미지 폴더";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Font = new System.Drawing.Font("맑은 고딕", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label2.Location = new System.Drawing.Point(33, 35);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(29, 13);
+            this.label2.TabIndex = 60;
+            this.label2.Text = "항목";
+            // 
+            // textBox6
+            // 
+            this.textBox6.Location = new System.Drawing.Point(445, 241);
+            this.textBox6.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
+            this.textBox6.Name = "textBox6";
+            this.textBox6.Size = new System.Drawing.Size(130, 25);
+            this.textBox6.TabIndex = 59;
+            this.textBox6.Text = "Sheet6";
+            // 
+            // textBox5
+            // 
+            this.textBox5.Location = new System.Drawing.Point(445, 203);
+            this.textBox5.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
+            this.textBox5.Name = "textBox5";
+            this.textBox5.Size = new System.Drawing.Size(130, 25);
+            this.textBox5.TabIndex = 58;
+            this.textBox5.Text = "Sheet5";
+            // 
+            // textBox4
+            // 
+            this.textBox4.Location = new System.Drawing.Point(445, 165);
+            this.textBox4.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
+            this.textBox4.Name = "textBox4";
+            this.textBox4.Size = new System.Drawing.Size(130, 25);
+            this.textBox4.TabIndex = 57;
+            this.textBox4.Text = "Sheet4";
+            // 
+            // textBox3
+            // 
+            this.textBox3.Location = new System.Drawing.Point(445, 126);
+            this.textBox3.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
+            this.textBox3.Name = "textBox3";
+            this.textBox3.Size = new System.Drawing.Size(130, 25);
+            this.textBox3.TabIndex = 56;
+            this.textBox3.Text = "Sheet3";
+            // 
+            // textBox2
+            // 
+            this.textBox2.Location = new System.Drawing.Point(445, 87);
+            this.textBox2.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
+            this.textBox2.Name = "textBox2";
+            this.textBox2.Size = new System.Drawing.Size(130, 25);
+            this.textBox2.TabIndex = 55;
+            this.textBox2.Text = "Sheet2";
+            // 
+            // tbQuaterSheet
+            // 
+            this.tbQuaterSheet.Location = new System.Drawing.Point(445, 50);
+            this.tbQuaterSheet.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
+            this.tbQuaterSheet.Name = "tbQuaterSheet";
+            this.tbQuaterSheet.Size = new System.Drawing.Size(130, 25);
+            this.tbQuaterSheet.TabIndex = 50;
+            this.tbQuaterSheet.Text = "7호";
+            // 
+            // tbBattery
+            // 
+            this.tbBattery.Location = new System.Drawing.Point(158, 241);
+            this.tbBattery.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
+            this.tbBattery.Name = "tbBattery";
+            this.tbBattery.Size = new System.Drawing.Size(270, 25);
+            this.tbBattery.TabIndex = 49;
+            this.tbBattery.Text = "05 Folder\\Picture";
+            // 
+            // cbBattery
+            // 
+            this.cbBattery.AutoSize = true;
+            this.cbBattery.Checked = true;
+            this.cbBattery.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbBattery.Location = new System.Drawing.Point(25, 241);
+            this.cbBattery.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
+            this.cbBattery.Name = "cbBattery";
+            this.cbBattery.Size = new System.Drawing.Size(71, 23);
+            this.cbBattery.TabIndex = 48;
+            this.cbBattery.Text = "Sheet6";
+            this.cbBattery.UseVisualStyleBackColor = true;
+            // 
+            // tbEquipment
+            // 
+            this.tbEquipment.Location = new System.Drawing.Point(158, 203);
+            this.tbEquipment.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
+            this.tbEquipment.Name = "tbEquipment";
+            this.tbEquipment.Size = new System.Drawing.Size(270, 25);
+            this.tbEquipment.TabIndex = 47;
+            this.tbEquipment.Text = "05 Folder";
+            // 
+            // cbEquipment
+            // 
+            this.cbEquipment.AutoSize = true;
+            this.cbEquipment.Checked = true;
+            this.cbEquipment.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbEquipment.Location = new System.Drawing.Point(25, 203);
+            this.cbEquipment.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
+            this.cbEquipment.Name = "cbEquipment";
+            this.cbEquipment.Size = new System.Drawing.Size(71, 23);
+            this.cbEquipment.TabIndex = 46;
+            this.cbEquipment.Text = "Sheet5";
+            this.cbEquipment.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxOcr
+            // 
+            this.checkBoxOcr.AutoSize = true;
+            this.checkBoxOcr.Location = new System.Drawing.Point(597, 52);
+            this.checkBoxOcr.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
+            this.checkBoxOcr.Name = "checkBoxOcr";
+            this.checkBoxOcr.Size = new System.Drawing.Size(169, 23);
+            this.checkBoxOcr.TabIndex = 45;
+            this.checkBoxOcr.Text = "온도 인식값 자동 입력";
+            this.checkBoxOcr.UseVisualStyleBackColor = true;
+            // 
+            // textBoxPictureFolder
+            // 
+            this.textBoxPictureFolder.Location = new System.Drawing.Point(158, 165);
+            this.textBoxPictureFolder.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
+            this.textBoxPictureFolder.Name = "textBoxPictureFolder";
+            this.textBoxPictureFolder.Size = new System.Drawing.Size(270, 25);
+            this.textBoxPictureFolder.TabIndex = 40;
+            this.textBoxPictureFolder.Text = "04 Folder";
+            // 
+            // textBoxCoronaFolder
+            // 
+            this.textBoxCoronaFolder.Location = new System.Drawing.Point(158, 126);
+            this.textBoxCoronaFolder.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
+            this.textBoxCoronaFolder.Name = "textBoxCoronaFolder";
+            this.textBoxCoronaFolder.Size = new System.Drawing.Size(270, 25);
+            this.textBoxCoronaFolder.TabIndex = 38;
+            this.textBoxCoronaFolder.Text = "03 Folder";
+            // 
+            // textBoxQuntatyFolder
+            // 
+            this.textBoxQuntatyFolder.Location = new System.Drawing.Point(158, 87);
+            this.textBoxQuntatyFolder.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
+            this.textBoxQuntatyFolder.Name = "textBoxQuntatyFolder";
+            this.textBoxQuntatyFolder.Size = new System.Drawing.Size(270, 25);
+            this.textBoxQuntatyFolder.TabIndex = 34;
+            this.textBoxQuntatyFolder.Text = "02 Folder";
+            // 
+            // textBoxFeverImageFolder
+            // 
+            this.textBoxFeverImageFolder.Location = new System.Drawing.Point(158, 50);
+            this.textBoxFeverImageFolder.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
+            this.textBoxFeverImageFolder.Name = "textBoxFeverImageFolder";
+            this.textBoxFeverImageFolder.Size = new System.Drawing.Size(270, 25);
+            this.textBoxFeverImageFolder.TabIndex = 30;
+            this.textBoxFeverImageFolder.Text = "01 Folder";
+            // 
+            // checkBoxFeverPicture
+            // 
+            this.checkBoxFeverPicture.AutoSize = true;
+            this.checkBoxFeverPicture.Checked = true;
+            this.checkBoxFeverPicture.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxFeverPicture.Location = new System.Drawing.Point(25, 50);
+            this.checkBoxFeverPicture.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
+            this.checkBoxFeverPicture.Name = "checkBoxFeverPicture";
+            this.checkBoxFeverPicture.Size = new System.Drawing.Size(70, 23);
+            this.checkBoxFeverPicture.TabIndex = 28;
+            this.checkBoxFeverPicture.Text = "열화상";
+            this.checkBoxFeverPicture.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxPicture
+            // 
+            this.checkBoxPicture.AutoSize = true;
+            this.checkBoxPicture.Checked = true;
+            this.checkBoxPicture.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxPicture.Location = new System.Drawing.Point(25, 165);
+            this.checkBoxPicture.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
+            this.checkBoxPicture.Name = "checkBoxPicture";
+            this.checkBoxPicture.Size = new System.Drawing.Size(71, 23);
+            this.checkBoxPicture.TabIndex = 26;
+            this.checkBoxPicture.Text = "Sheet4";
+            this.checkBoxPicture.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxCorona
+            // 
+            this.checkBoxCorona.AutoSize = true;
+            this.checkBoxCorona.Checked = true;
+            this.checkBoxCorona.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxCorona.Location = new System.Drawing.Point(25, 126);
+            this.checkBoxCorona.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
+            this.checkBoxCorona.Name = "checkBoxCorona";
+            this.checkBoxCorona.Size = new System.Drawing.Size(71, 23);
+            this.checkBoxCorona.TabIndex = 25;
+            this.checkBoxCorona.Text = "Sheet3";
+            this.checkBoxCorona.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxQuantity
+            // 
+            this.checkBoxQuantity.AutoSize = true;
+            this.checkBoxQuantity.Checked = true;
+            this.checkBoxQuantity.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxQuantity.Location = new System.Drawing.Point(25, 87);
+            this.checkBoxQuantity.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
+            this.checkBoxQuantity.Name = "checkBoxQuantity";
+            this.checkBoxQuantity.Size = new System.Drawing.Size(71, 23);
+            this.checkBoxQuantity.TabIndex = 24;
+            this.checkBoxQuantity.Text = "Sheet2";
+            this.checkBoxQuantity.UseVisualStyleBackColor = true;
+            // 
+            // btnQuntityFileRun
+            // 
+            this.btnQuntityFileRun.Dock = System.Windows.Forms.DockStyle.Right;
+            this.btnQuntityFileRun.Location = new System.Drawing.Point(1089, 24);
+            this.btnQuntityFileRun.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
+            this.btnQuntityFileRun.Name = "btnQuntityFileRun";
+            this.btnQuntityFileRun.Size = new System.Drawing.Size(181, 255);
+            this.btnQuntityFileRun.TabIndex = 23;
+            this.btnQuntityFileRun.Text = "실행";
+            this.btnQuntityFileRun.TextImageRelation = System.Windows.Forms.TextImageRelation.TextBeforeImage;
+            this.btnQuntityFileRun.UseVisualStyleBackColor = true;
             // 
             // groupBox2
             // 
@@ -200,7 +486,7 @@
             this.checkBoxCorrect.Location = new System.Drawing.Point(268, 53);
             this.checkBoxCorrect.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
             this.checkBoxCorrect.Name = "checkBoxCorrect";
-            this.checkBoxCorrect.Size = new System.Drawing.Size(316, 32);
+            this.checkBoxCorrect.Size = new System.Drawing.Size(221, 23);
             this.checkBoxCorrect.TabIndex = 29;
             this.checkBoxCorrect.Text = "교정 (unchecked 시 배경 노랑)";
             this.checkBoxCorrect.UseVisualStyleBackColor = true;
@@ -268,7 +554,7 @@
             this.label9.Location = new System.Drawing.Point(18, 64);
             this.label9.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(55, 28);
+            this.label9.Size = new System.Drawing.Size(38, 19);
             this.label9.TabIndex = 45;
             this.label9.Text = "right";
             // 
@@ -278,7 +564,7 @@
             this.label8.Location = new System.Drawing.Point(183, 64);
             this.label8.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(80, 28);
+            this.label8.Size = new System.Drawing.Size(55, 19);
             this.label8.TabIndex = 43;
             this.label8.Text = "bottom";
             // 
@@ -287,7 +573,7 @@
             this.textBoxImageAlignBottomGap.Location = new System.Drawing.Point(269, 61);
             this.textBoxImageAlignBottomGap.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
             this.textBoxImageAlignBottomGap.Name = "textBoxImageAlignBottomGap";
-            this.textBoxImageAlignBottomGap.Size = new System.Drawing.Size(68, 34);
+            this.textBoxImageAlignBottomGap.Size = new System.Drawing.Size(68, 25);
             this.textBoxImageAlignBottomGap.TabIndex = 44;
             this.textBoxImageAlignBottomGap.Text = "0.5";
             this.textBoxImageAlignBottomGap.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
@@ -297,7 +583,7 @@
             this.textBoxImageAlignRightGap.Location = new System.Drawing.Point(83, 61);
             this.textBoxImageAlignRightGap.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
             this.textBoxImageAlignRightGap.Name = "textBoxImageAlignRightGap";
-            this.textBoxImageAlignRightGap.Size = new System.Drawing.Size(68, 34);
+            this.textBoxImageAlignRightGap.Size = new System.Drawing.Size(68, 25);
             this.textBoxImageAlignRightGap.TabIndex = 42;
             this.textBoxImageAlignRightGap.Text = "0";
             this.textBoxImageAlignRightGap.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
@@ -308,7 +594,7 @@
             this.label6.Location = new System.Drawing.Point(216, 27);
             this.label6.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(43, 28);
+            this.label6.Size = new System.Drawing.Size(30, 19);
             this.label6.TabIndex = 40;
             this.label6.Text = "top";
             // 
@@ -317,7 +603,7 @@
             this.textBoxImageAlignTopGap.Location = new System.Drawing.Point(269, 24);
             this.textBoxImageAlignTopGap.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
             this.textBoxImageAlignTopGap.Name = "textBoxImageAlignTopGap";
-            this.textBoxImageAlignTopGap.Size = new System.Drawing.Size(68, 34);
+            this.textBoxImageAlignTopGap.Size = new System.Drawing.Size(68, 25);
             this.textBoxImageAlignTopGap.TabIndex = 41;
             this.textBoxImageAlignTopGap.Text = "1.5";
             this.textBoxImageAlignTopGap.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
@@ -328,7 +614,7 @@
             this.label4.Location = new System.Drawing.Point(32, 27);
             this.label4.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(41, 28);
+            this.label4.Size = new System.Drawing.Size(28, 19);
             this.label4.TabIndex = 38;
             this.label4.Text = "left";
             // 
@@ -337,7 +623,7 @@
             this.textBoxImageAlignLeftGap.Location = new System.Drawing.Point(83, 24);
             this.textBoxImageAlignLeftGap.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
             this.textBoxImageAlignLeftGap.Name = "textBoxImageAlignLeftGap";
-            this.textBoxImageAlignLeftGap.Size = new System.Drawing.Size(68, 34);
+            this.textBoxImageAlignLeftGap.Size = new System.Drawing.Size(68, 25);
             this.textBoxImageAlignLeftGap.TabIndex = 39;
             this.textBoxImageAlignLeftGap.Text = "1.5";
             this.textBoxImageAlignLeftGap.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
@@ -348,7 +634,7 @@
             this.label1.Location = new System.Drawing.Point(4, 26);
             this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(125, 28);
+            this.label1.Size = new System.Drawing.Size(86, 19);
             this.label1.TabIndex = 39;
             this.label1.Text = "Sheet Name";
             // 
@@ -378,7 +664,7 @@
             this.label7.Location = new System.Drawing.Point(498, 60);
             this.label7.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(0, 28);
+            this.label7.Size = new System.Drawing.Size(0, 19);
             this.label7.TabIndex = 33;
             // 
             // btnSnapImage
@@ -396,7 +682,7 @@
             this.textBoxSheetForSnapImage.Location = new System.Drawing.Point(146, 23);
             this.textBoxSheetForSnapImage.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
             this.textBoxSheetForSnapImage.Name = "textBoxSheetForSnapImage";
-            this.textBoxSheetForSnapImage.Size = new System.Drawing.Size(94, 34);
+            this.textBoxSheetForSnapImage.Size = new System.Drawing.Size(94, 25);
             this.textBoxSheetForSnapImage.TabIndex = 28;
             this.textBoxSheetForSnapImage.Text = "Sheet3";
             this.textBoxSheetForSnapImage.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
@@ -416,6 +702,7 @@
             this.gbReport.Controls.Add(this.btnPageNumber);
             this.gbReport.Controls.Add(this.btnExportForPdf);
             this.gbReport.Controls.Add(this.btnGapjiPictureRelocate);
+            this.gbReport.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
             this.gbReport.Location = new System.Drawing.Point(-1, 0);
             this.gbReport.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
             this.gbReport.Name = "gbReport";
@@ -428,6 +715,8 @@
             // button1
             // 
             this.button1.BackColor = System.Drawing.Color.Khaki;
+            this.button1.FlatAppearance.BorderSize = 0;
+            this.button1.FlatStyle = System.Windows.Forms.FlatStyle.System;
             this.button1.Location = new System.Drawing.Point(784, 80);
             this.button1.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
             this.button1.Name = "button1";
@@ -439,6 +728,8 @@
             // btnInsertSign
             // 
             this.btnInsertSign.BackColor = System.Drawing.Color.Khaki;
+            this.btnInsertSign.FlatAppearance.BorderSize = 0;
+            this.btnInsertSign.FlatStyle = System.Windows.Forms.FlatStyle.System;
             this.btnInsertSign.Location = new System.Drawing.Point(937, 80);
             this.btnInsertSign.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
             this.btnInsertSign.Name = "btnInsertSign";
@@ -450,6 +741,8 @@
             // btnChangeFooterLogo
             // 
             this.btnChangeFooterLogo.BackColor = System.Drawing.Color.Khaki;
+            this.btnChangeFooterLogo.FlatAppearance.BorderSize = 0;
+            this.btnChangeFooterLogo.FlatStyle = System.Windows.Forms.FlatStyle.System;
             this.btnChangeFooterLogo.Location = new System.Drawing.Point(325, 80);
             this.btnChangeFooterLogo.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
             this.btnChangeFooterLogo.Name = "btnChangeFooterLogo";
@@ -461,6 +754,8 @@
             // btnChangeInspector
             // 
             this.btnChangeInspector.BackColor = System.Drawing.Color.Khaki;
+            this.btnChangeInspector.FlatAppearance.BorderSize = 0;
+            this.btnChangeInspector.FlatStyle = System.Windows.Forms.FlatStyle.System;
             this.btnChangeInspector.Location = new System.Drawing.Point(1090, 80);
             this.btnChangeInspector.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
             this.btnChangeInspector.Name = "btnChangeInspector";
@@ -468,10 +763,13 @@
             this.btnChangeInspector.TabIndex = 46;
             this.btnChangeInspector.Text = "측정자 변경";
             this.btnChangeInspector.UseVisualStyleBackColor = false;
+            this.btnChangeInspector.Click += new System.EventHandler(this.btnChangeInspector_Click);
             // 
             // btnSeasonCorrect
             // 
             this.btnSeasonCorrect.BackColor = System.Drawing.Color.Khaki;
+            this.btnSeasonCorrect.FlatAppearance.BorderSize = 0;
+            this.btnSeasonCorrect.FlatStyle = System.Windows.Forms.FlatStyle.System;
             this.btnSeasonCorrect.Location = new System.Drawing.Point(478, 81);
             this.btnSeasonCorrect.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
             this.btnSeasonCorrect.Name = "btnSeasonCorrect";
@@ -497,7 +795,7 @@
             this.tbQuantityFile.Location = new System.Drawing.Point(169, 29);
             this.tbQuantityFile.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
             this.tbQuantityFile.Name = "tbQuantityFile";
-            this.tbQuantityFile.Size = new System.Drawing.Size(878, 34);
+            this.tbQuantityFile.Size = new System.Drawing.Size(878, 25);
             this.tbQuantityFile.TabIndex = 25;
             this.tbQuantityFile.TextChanged += new System.EventHandler(this.tbQuantityFile_TextChanged);
             // 
@@ -507,13 +805,15 @@
             this.lbQuantityFile.Location = new System.Drawing.Point(14, 32);
             this.lbQuantityFile.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.lbQuantityFile.Name = "lbQuantityFile";
-            this.lbQuantityFile.Size = new System.Drawing.Size(178, 28);
+            this.lbQuantityFile.Size = new System.Drawing.Size(126, 19);
             this.lbQuantityFile.TabIndex = 23;
             this.lbQuantityFile.Text = "보고서 파일명    : ";
             // 
             // btnPageNumber
             // 
             this.btnPageNumber.BackColor = System.Drawing.Color.Khaki;
+            this.btnPageNumber.FlatAppearance.BorderSize = 0;
+            this.btnPageNumber.FlatStyle = System.Windows.Forms.FlatStyle.System;
             this.btnPageNumber.Location = new System.Drawing.Point(172, 80);
             this.btnPageNumber.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
             this.btnPageNumber.Name = "btnPageNumber";
@@ -525,6 +825,8 @@
             // btnExportForPdf
             // 
             this.btnExportForPdf.BackColor = System.Drawing.Color.Khaki;
+            this.btnExportForPdf.FlatAppearance.BorderSize = 0;
+            this.btnExportForPdf.FlatStyle = System.Windows.Forms.FlatStyle.System;
             this.btnExportForPdf.Location = new System.Drawing.Point(631, 80);
             this.btnExportForPdf.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
             this.btnExportForPdf.Name = "btnExportForPdf";
@@ -537,6 +839,8 @@
             // btnGapjiPictureRelocate
             // 
             this.btnGapjiPictureRelocate.BackColor = System.Drawing.Color.Khaki;
+            this.btnGapjiPictureRelocate.FlatAppearance.BorderSize = 0;
+            this.btnGapjiPictureRelocate.FlatStyle = System.Windows.Forms.FlatStyle.System;
             this.btnGapjiPictureRelocate.Location = new System.Drawing.Point(19, 80);
             this.btnGapjiPictureRelocate.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
             this.btnGapjiPictureRelocate.Name = "btnGapjiPictureRelocate";
@@ -545,261 +849,15 @@
             this.btnGapjiPictureRelocate.Text = "표지 사진 중앙 정렬";
             this.btnGapjiPictureRelocate.UseVisualStyleBackColor = false;
             // 
-            // gbImage
-            // 
-            this.gbImage.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.gbImage.Controls.Add(this.label10);
-            this.gbImage.Controls.Add(this.label5);
-            this.gbImage.Controls.Add(this.label3);
-            this.gbImage.Controls.Add(this.label2);
-            this.gbImage.Controls.Add(this.textBox6);
-            this.gbImage.Controls.Add(this.textBox5);
-            this.gbImage.Controls.Add(this.textBox4);
-            this.gbImage.Controls.Add(this.textBox3);
-            this.gbImage.Controls.Add(this.textBox2);
-            this.gbImage.Controls.Add(this.tbQuaterSheet);
-            this.gbImage.Controls.Add(this.tbBattery);
-            this.gbImage.Controls.Add(this.cbBattery);
-            this.gbImage.Controls.Add(this.tbEquipment);
-            this.gbImage.Controls.Add(this.cbEquipment);
-            this.gbImage.Controls.Add(this.checkBoxOcr);
-            this.gbImage.Controls.Add(this.textBoxPictureFolder);
-            this.gbImage.Controls.Add(this.textBoxCoronaFolder);
-            this.gbImage.Controls.Add(this.textBoxQuntatyFolder);
-            this.gbImage.Controls.Add(this.textBoxFeverImageFolder);
-            this.gbImage.Controls.Add(this.checkBoxFeverPicture);
-            this.gbImage.Controls.Add(this.checkBoxPicture);
-            this.gbImage.Controls.Add(this.checkBoxCorona);
-            this.gbImage.Controls.Add(this.checkBoxQuantity);
-            this.gbImage.Controls.Add(this.btnQuntityFileRun);
-            this.gbImage.Location = new System.Drawing.Point(2, 360);
-            this.gbImage.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
-            this.gbImage.Name = "gbImage";
-            this.gbImage.Padding = new System.Windows.Forms.Padding(4, 6, 4, 6);
-            this.gbImage.Size = new System.Drawing.Size(1274, 285);
-            this.gbImage.TabIndex = 24;
-            this.gbImage.TabStop = false;
-            this.gbImage.Text = "이미지 삽입";
-            // 
-            // textBox6
-            // 
-            this.textBox6.Location = new System.Drawing.Point(445, 241);
-            this.textBox6.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
-            this.textBox6.Name = "textBox6";
-            this.textBox6.Size = new System.Drawing.Size(130, 34);
-            this.textBox6.TabIndex = 59;
-            this.textBox6.Text = "Sheet6";
-            // 
-            // textBox5
-            // 
-            this.textBox5.Location = new System.Drawing.Point(445, 203);
-            this.textBox5.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
-            this.textBox5.Name = "textBox5";
-            this.textBox5.Size = new System.Drawing.Size(130, 34);
-            this.textBox5.TabIndex = 58;
-            this.textBox5.Text = "Sheet5";
-            // 
-            // textBox4
-            // 
-            this.textBox4.Location = new System.Drawing.Point(445, 165);
-            this.textBox4.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
-            this.textBox4.Name = "textBox4";
-            this.textBox4.Size = new System.Drawing.Size(130, 34);
-            this.textBox4.TabIndex = 57;
-            this.textBox4.Text = "Sheet4";
-            // 
-            // textBox3
-            // 
-            this.textBox3.Location = new System.Drawing.Point(445, 126);
-            this.textBox3.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
-            this.textBox3.Name = "textBox3";
-            this.textBox3.Size = new System.Drawing.Size(130, 34);
-            this.textBox3.TabIndex = 56;
-            this.textBox3.Text = "Sheet3";
-            // 
-            // textBox2
-            // 
-            this.textBox2.Location = new System.Drawing.Point(445, 87);
-            this.textBox2.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
-            this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(130, 34);
-            this.textBox2.TabIndex = 55;
-            this.textBox2.Text = "Sheet2";
-            // 
-            // tbQuaterSheet
-            // 
-            this.tbQuaterSheet.Location = new System.Drawing.Point(445, 50);
-            this.tbQuaterSheet.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
-            this.tbQuaterSheet.Name = "tbQuaterSheet";
-            this.tbQuaterSheet.Size = new System.Drawing.Size(130, 34);
-            this.tbQuaterSheet.TabIndex = 50;
-            this.tbQuaterSheet.Text = "7호";
-            // 
-            // tbBattery
-            // 
-            this.tbBattery.Location = new System.Drawing.Point(158, 241);
-            this.tbBattery.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
-            this.tbBattery.Name = "tbBattery";
-            this.tbBattery.Size = new System.Drawing.Size(270, 34);
-            this.tbBattery.TabIndex = 49;
-            this.tbBattery.Text = "05 Folder\\Picture";
-            // 
-            // cbBattery
-            // 
-            this.cbBattery.AutoSize = true;
-            this.cbBattery.Checked = true;
-            this.cbBattery.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbBattery.Location = new System.Drawing.Point(25, 241);
-            this.cbBattery.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
-            this.cbBattery.Name = "cbBattery";
-            this.cbBattery.Size = new System.Drawing.Size(101, 32);
-            this.cbBattery.TabIndex = 48;
-            this.cbBattery.Text = "Sheet6";
-            this.cbBattery.UseVisualStyleBackColor = true;
-            // 
-            // tbEquipment
-            // 
-            this.tbEquipment.Location = new System.Drawing.Point(158, 203);
-            this.tbEquipment.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
-            this.tbEquipment.Name = "tbEquipment";
-            this.tbEquipment.Size = new System.Drawing.Size(270, 34);
-            this.tbEquipment.TabIndex = 47;
-            this.tbEquipment.Text = "05 Folder";
-            // 
-            // cbEquipment
-            // 
-            this.cbEquipment.AutoSize = true;
-            this.cbEquipment.Checked = true;
-            this.cbEquipment.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbEquipment.Location = new System.Drawing.Point(25, 203);
-            this.cbEquipment.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
-            this.cbEquipment.Name = "cbEquipment";
-            this.cbEquipment.Size = new System.Drawing.Size(101, 32);
-            this.cbEquipment.TabIndex = 46;
-            this.cbEquipment.Text = "Sheet5";
-            this.cbEquipment.UseVisualStyleBackColor = true;
-            // 
-            // checkBoxOcr
-            // 
-            this.checkBoxOcr.AutoSize = true;
-            this.checkBoxOcr.Location = new System.Drawing.Point(597, 52);
-            this.checkBoxOcr.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
-            this.checkBoxOcr.Name = "checkBoxOcr";
-            this.checkBoxOcr.Size = new System.Drawing.Size(239, 32);
-            this.checkBoxOcr.TabIndex = 45;
-            this.checkBoxOcr.Text = "온도 인식값 자동 입력";
-            this.checkBoxOcr.UseVisualStyleBackColor = true;
-            // 
-            // textBoxPictureFolder
-            // 
-            this.textBoxPictureFolder.Location = new System.Drawing.Point(158, 165);
-            this.textBoxPictureFolder.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
-            this.textBoxPictureFolder.Name = "textBoxPictureFolder";
-            this.textBoxPictureFolder.Size = new System.Drawing.Size(270, 34);
-            this.textBoxPictureFolder.TabIndex = 40;
-            this.textBoxPictureFolder.Text = "04 Folder";
-            // 
-            // textBoxCoronaFolder
-            // 
-            this.textBoxCoronaFolder.Location = new System.Drawing.Point(158, 126);
-            this.textBoxCoronaFolder.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
-            this.textBoxCoronaFolder.Name = "textBoxCoronaFolder";
-            this.textBoxCoronaFolder.Size = new System.Drawing.Size(270, 34);
-            this.textBoxCoronaFolder.TabIndex = 38;
-            this.textBoxCoronaFolder.Text = "03 Folder";
-            // 
-            // textBoxQuntatyFolder
-            // 
-            this.textBoxQuntatyFolder.Location = new System.Drawing.Point(158, 87);
-            this.textBoxQuntatyFolder.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
-            this.textBoxQuntatyFolder.Name = "textBoxQuntatyFolder";
-            this.textBoxQuntatyFolder.Size = new System.Drawing.Size(270, 34);
-            this.textBoxQuntatyFolder.TabIndex = 34;
-            this.textBoxQuntatyFolder.Text = "02 Folder";
-            // 
-            // textBoxFeverImageFolder
-            // 
-            this.textBoxFeverImageFolder.Location = new System.Drawing.Point(158, 50);
-            this.textBoxFeverImageFolder.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
-            this.textBoxFeverImageFolder.Name = "textBoxFeverImageFolder";
-            this.textBoxFeverImageFolder.Size = new System.Drawing.Size(270, 34);
-            this.textBoxFeverImageFolder.TabIndex = 30;
-            this.textBoxFeverImageFolder.Text = "01 Folder";
-            // 
-            // checkBoxFeverPicture
-            // 
-            this.checkBoxFeverPicture.AutoSize = true;
-            this.checkBoxFeverPicture.Checked = true;
-            this.checkBoxFeverPicture.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxFeverPicture.Location = new System.Drawing.Point(25, 50);
-            this.checkBoxFeverPicture.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
-            this.checkBoxFeverPicture.Name = "checkBoxFeverPicture";
-            this.checkBoxFeverPicture.Size = new System.Drawing.Size(98, 32);
-            this.checkBoxFeverPicture.TabIndex = 28;
-            this.checkBoxFeverPicture.Text = "열화상";
-            this.checkBoxFeverPicture.UseVisualStyleBackColor = true;
-            // 
-            // checkBoxPicture
-            // 
-            this.checkBoxPicture.AutoSize = true;
-            this.checkBoxPicture.Checked = true;
-            this.checkBoxPicture.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxPicture.Location = new System.Drawing.Point(25, 165);
-            this.checkBoxPicture.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
-            this.checkBoxPicture.Name = "checkBoxPicture";
-            this.checkBoxPicture.Size = new System.Drawing.Size(101, 32);
-            this.checkBoxPicture.TabIndex = 26;
-            this.checkBoxPicture.Text = "Sheet4";
-            this.checkBoxPicture.UseVisualStyleBackColor = true;
-            // 
-            // checkBoxCorona
-            // 
-            this.checkBoxCorona.AutoSize = true;
-            this.checkBoxCorona.Checked = true;
-            this.checkBoxCorona.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxCorona.Location = new System.Drawing.Point(25, 126);
-            this.checkBoxCorona.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
-            this.checkBoxCorona.Name = "checkBoxCorona";
-            this.checkBoxCorona.Size = new System.Drawing.Size(101, 32);
-            this.checkBoxCorona.TabIndex = 25;
-            this.checkBoxCorona.Text = "Sheet3";
-            this.checkBoxCorona.UseVisualStyleBackColor = true;
-            // 
-            // checkBoxQuantity
-            // 
-            this.checkBoxQuantity.AutoSize = true;
-            this.checkBoxQuantity.Checked = true;
-            this.checkBoxQuantity.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxQuantity.Location = new System.Drawing.Point(25, 87);
-            this.checkBoxQuantity.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
-            this.checkBoxQuantity.Name = "checkBoxQuantity";
-            this.checkBoxQuantity.Size = new System.Drawing.Size(101, 32);
-            this.checkBoxQuantity.TabIndex = 24;
-            this.checkBoxQuantity.Text = "Sheet2";
-            this.checkBoxQuantity.UseVisualStyleBackColor = true;
-            // 
-            // btnQuntityFileRun
-            // 
-            this.btnQuntityFileRun.Dock = System.Windows.Forms.DockStyle.Right;
-            this.btnQuntityFileRun.Location = new System.Drawing.Point(1089, 33);
-            this.btnQuntityFileRun.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
-            this.btnQuntityFileRun.Name = "btnQuntityFileRun";
-            this.btnQuntityFileRun.Size = new System.Drawing.Size(181, 246);
-            this.btnQuntityFileRun.TabIndex = 23;
-            this.btnQuntityFileRun.Text = "실행";
-            this.btnQuntityFileRun.TextImageRelation = System.Windows.Forms.TextImageRelation.TextBeforeImage;
-            this.btnQuntityFileRun.UseVisualStyleBackColor = true;
-            // 
             // tpGap
             // 
             this.tpGap.Controls.Add(this.panel2);
             this.tpGap.Controls.Add(this.panel1);
-            this.tpGap.Location = new System.Drawing.Point(4, 37);
+            this.tpGap.Location = new System.Drawing.Point(4, 22);
             this.tpGap.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
             this.tpGap.Name = "tpGap";
             this.tpGap.Padding = new System.Windows.Forms.Padding(6, 7, 6, 7);
-            this.tpGap.Size = new System.Drawing.Size(1590, 814);
+            this.tpGap.Size = new System.Drawing.Size(1283, 480);
             this.tpGap.TabIndex = 0;
             this.tpGap.Text = "파일다운로드";
             this.tpGap.UseVisualStyleBackColor = true;
@@ -813,7 +871,7 @@
             this.panel2.Location = new System.Drawing.Point(6, 7);
             this.panel2.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(1578, 82);
+            this.panel2.Size = new System.Drawing.Size(1271, 82);
             this.panel2.TabIndex = 17;
             // 
             // btnDownload
@@ -831,7 +889,7 @@
             this.tbCompany.Location = new System.Drawing.Point(223, 28);
             this.tbCompany.Margin = new System.Windows.Forms.Padding(6, 7, 6, 7);
             this.tbCompany.Name = "tbCompany";
-            this.tbCompany.Size = new System.Drawing.Size(891, 34);
+            this.tbCompany.Size = new System.Drawing.Size(891, 25);
             this.tbCompany.TabIndex = 16;
             // 
             // lbCompany
@@ -840,7 +898,7 @@
             this.lbCompany.Location = new System.Drawing.Point(25, 34);
             this.lbCompany.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.lbCompany.Name = "lbCompany";
-            this.lbCompany.Size = new System.Drawing.Size(111, 28);
+            this.lbCompany.Size = new System.Drawing.Size(79, 19);
             this.lbCompany.TabIndex = 15;
             this.lbCompany.Text = "업체명    : ";
             // 
@@ -851,7 +909,7 @@
             this.panel1.Location = new System.Drawing.Point(6, 7);
             this.panel1.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(1578, 800);
+            this.panel1.Size = new System.Drawing.Size(1271, 466);
             this.panel1.TabIndex = 16;
             // 
             // dgvFiles
@@ -867,11 +925,11 @@
             // 
             // tabSortImage
             // 
-            this.tabSortImage.Location = new System.Drawing.Point(4, 37);
+            this.tabSortImage.Location = new System.Drawing.Point(4, 22);
             this.tabSortImage.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
             this.tabSortImage.Name = "tabSortImage";
             this.tabSortImage.Padding = new System.Windows.Forms.Padding(4, 6, 4, 6);
-            this.tabSortImage.Size = new System.Drawing.Size(1609, 909);
+            this.tabSortImage.Size = new System.Drawing.Size(1283, 480);
             this.tabSortImage.TabIndex = 2;
             this.tabSortImage.Text = "이미지 정렬";
             this.tabSortImage.UseVisualStyleBackColor = true;
@@ -891,10 +949,10 @@
             // all
             // 
             this.all.Controls.Add(this.richTextBox1);
-            this.all.Location = new System.Drawing.Point(4, 37);
+            this.all.Location = new System.Drawing.Point(4, 26);
             this.all.Name = "all";
             this.all.Padding = new System.Windows.Forms.Padding(5);
-            this.all.Size = new System.Drawing.Size(1283, 214);
+            this.all.Size = new System.Drawing.Size(1283, 225);
             this.all.TabIndex = 0;
             this.all.Text = "All log";
             this.all.UseVisualStyleBackColor = true;
@@ -907,7 +965,7 @@
             this.richTextBox1.Location = new System.Drawing.Point(5, 5);
             this.richTextBox1.Name = "richTextBox1";
             this.richTextBox1.ReadOnly = true;
-            this.richTextBox1.Size = new System.Drawing.Size(1273, 204);
+            this.richTextBox1.Size = new System.Drawing.Size(1273, 215);
             this.richTextBox1.TabIndex = 1;
             this.richTextBox1.TabStop = false;
             this.richTextBox1.Text = "";
@@ -915,67 +973,27 @@
             // 
             // info
             // 
-            this.info.Location = new System.Drawing.Point(4, 37);
+            this.info.Location = new System.Drawing.Point(4, 22);
             this.info.Name = "info";
             this.info.Padding = new System.Windows.Forms.Padding(3);
-            this.info.Size = new System.Drawing.Size(1407, 186);
+            this.info.Size = new System.Drawing.Size(1283, 229);
             this.info.TabIndex = 1;
             this.info.Text = "Info";
             this.info.UseVisualStyleBackColor = true;
             // 
             // tabError
             // 
-            this.tabError.Location = new System.Drawing.Point(4, 37);
+            this.tabError.Location = new System.Drawing.Point(4, 22);
             this.tabError.Name = "tabError";
             this.tabError.Padding = new System.Windows.Forms.Padding(5);
-            this.tabError.Size = new System.Drawing.Size(1407, 186);
+            this.tabError.Size = new System.Drawing.Size(1283, 229);
             this.tabError.TabIndex = 2;
             this.tabError.Text = "Error";
             this.tabError.UseVisualStyleBackColor = true;
             // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Font = new System.Drawing.Font("맑은 고딕", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.label2.Location = new System.Drawing.Point(33, 35);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(42, 21);
-            this.label2.TabIndex = 60;
-            this.label2.Text = "항목";
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Font = new System.Drawing.Font("맑은 고딕", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.label3.Location = new System.Drawing.Point(244, 35);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(96, 21);
-            this.label3.TabIndex = 61;
-            this.label3.Text = "이미지 폴더";
-            // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.Font = new System.Drawing.Font("맑은 고딕", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.label5.Location = new System.Drawing.Point(446, 35);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(105, 21);
-            this.label5.TabIndex = 62;
-            this.label5.Text = "Sheet Name";
-            // 
-            // label10
-            // 
-            this.label10.AutoSize = true;
-            this.label10.Font = new System.Drawing.Font("맑은 고딕", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.label10.Location = new System.Drawing.Point(676, 35);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(42, 21);
-            this.label10.TabIndex = 63;
-            this.label10.Text = "기능";
-            // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(11F, 28F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1301, 775);
             this.Controls.Add(this.splitContainer1);
@@ -992,6 +1010,8 @@
             this.splitContainer1.ResumeLayout(false);
             this.tabMain.ResumeLayout(false);
             this.tpFunction.ResumeLayout(false);
+            this.gbImage.ResumeLayout(false);
+            this.gbImage.PerformLayout();
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
             this.groupBox1.ResumeLayout(false);
@@ -1000,8 +1020,6 @@
             this.groupBox3.PerformLayout();
             this.gbReport.ResumeLayout(false);
             this.gbReport.PerformLayout();
-            this.gbImage.ResumeLayout(false);
-            this.gbImage.PerformLayout();
             this.tpGap.ResumeLayout(false);
             this.panel2.ResumeLayout(false);
             this.panel2.PerformLayout();

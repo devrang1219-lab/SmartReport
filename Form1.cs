@@ -277,5 +277,10 @@ namespace WindowsFormsApp1
                 Cursor = Cursors.Default;
             }
         }
+
+        private void btnChangeInspector_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }

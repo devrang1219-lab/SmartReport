@@ -173,7 +173,7 @@ namespace WindowsFormsApp1
                     }
                 }
 
-                return value;
+                return Math.Truncate(value * 10) / 10;
             }
 
             if (Math.Abs(value - prevValue.Value) <= 90)
@@ -192,11 +192,11 @@ namespace WindowsFormsApp1
                     out double newValue))
                 {
                     if (Math.Abs(newValue - prevValue.Value) <= 90)
-                        return newValue;
+                        return Math.Truncate(newValue * 10) / 10;
                 }
             }
 
-            return value;
+            return Math.Truncate(value * 10) / 10;
         }
 
         private string NormalizeTemperature(string text)

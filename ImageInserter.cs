@@ -718,6 +718,11 @@ namespace SmartReport
                         fromCell,
                         Excel.XlBordersIndex.xlEdgeTop);
 
+                float borderRightGap =
+                   GetBorderGap(
+                       fromCell,
+                       Excel.XlBordersIndex.xlEdgeRight);
+
                 // =====================================================
                 // 5. 이미지 Resize
                 // =====================================================
@@ -883,6 +888,9 @@ namespace SmartReport
                 pic.Width -=
                     borderLeftGap;
 
+                pic.Width +=
+                    (1.85f - borderRightGap);
+
                 pic.Height -=
                     borderTopGap;
 
@@ -1042,8 +1050,18 @@ namespace SmartReport
                         break;
 
                     case Excel.XlBorderWeight.xlThick:
-                        var offset = (borderIndex == Excel.XlBordersIndex.xlEdgeLeft) ? 0.75f : 0f;
-                        gap = 2.25f - offset;
+                        if (borderIndex == Excel.XlBordersIndex.xlEdgeLeft)
+                        {
+                            gap = 1.5f;
+                        }
+                        else if (borderIndex == Excel.XlBordersIndex.xlEdgeRight)
+                        {
+                            gap = 4.0f;
+                        }
+                        else
+                        {
+                            gap = 2.25f;
+                        }
                         break;
                 }
 
